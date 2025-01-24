@@ -1,0 +1,35 @@
+$IMAGES-DIR: './assets/images';
+
+$BUTTON-IMAGE: 'circle-icon.svg';
+$CHAT-ICON: 'chat-icon-white.svg';
+$CLOSE-BUTTON: 'close_icon.svg';
+$CLOSE-WHITE-BUTTON: 'close_icon-white.svg';
+$DEFAULT-ICON: 'default-icon.png';
+$DEFAULT-ICON-WHITE: 'default-icon-white.png';
+$DEFAULT-ICON-BLUE: 'default-icon-blue.png';
+$DROPDOWN-BLACK-AROW: 'black-arrow.svg';
+$ELIPSIS-BLACK-ICON: 'vertical_elipsis_black.svg';
+$ELIPSIS-WHITE-ICON: 'vertical_elipsis_white.svg';
+$FULFILLED-NUMBER-DROPDOWN: 'fulfilled-number-dropdown.svg';
+$FULFILLED-RIGHT-IOCN: 'fulfilled-right-number-icon.svg';
+$HELP-ICON: 'help-white.svg';
+$LOCK-CLOSED-WHITE: 'lock-white.svg';
+$LOCK-CLOSED: 'lock.svg';
+$LOCK-OPNEDD: 'lock-icon.png';
+$LOGIN-BACKGROUND: 'login-bg.png';
+$LOGIN-ERROR-CLOSE-BUTTON: 'error-close-button.svg';
+$NOTIFICATION-ICON: 'notification-white.svg';
+$NOTIFICATION-ICON: 'notification-white.svg';
+$NAVBAR-BACKGROUND-IMAGE: 'nave-bg-image.png';
+$PROGRESS-BAR: 'progress-bar.png';
+$PARTIAL-PRIORITY-SHIELD-ICON: 'partial-priority-shield-icon.svg';
+$SEARCH-BOX-IOCN: 'search-box-iocn.svg';
+$SUB-NAV-DROPDOWN: 'sub-nav-dropdown.svg';
+$ULOCK-CLOSED-WHITE: 'unlock-white.svg';
+$ULOCK-CLOSED: 'unlock.svg';
+$USER-ICON: 'user-icon.svg';
+$USER-BIG-ICON: 'user-big-icon-image.svg';
+
+@function iconUrl($icon_name) {
+  @return url($IMAGES-DIR+$icon_name);
+}

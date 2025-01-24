@@ -1,0 +1,332 @@
+@use "../../assets/scss/variables" as *;
+
+/* header-section styles */
+#header-section.main-header {
+  border-bottom: 1px solid $llion-color-light-gray;
+  height: 56px;
+  min-height: 56px;
+  max-height: 56px;
+  background: $llion-color-primary-container;
+}
+
+#header-section .header-style {
+  line-height: 40px;
+  height: 40px;
+  padding: 8px;
+  list-style: none;
+  cursor: pointer;
+  text-align: center;
+  font-size: $llion-font-size-12;
+}
+
+#header-section .border-left {
+  border-left: 1px solid $llion-color-font;
+  width: 20em;
+}
+
+#header-section .float-left {
+  float: left;
+  span {
+    padding-top: 0.5em;
+    padding-left: 1.5px;
+    font-size: 2.25rem !important;
+    font-weight: bolder;
+    color: $llion-color-medium-gray;
+  }
+}
+
+#header-section .float-left img {
+  height: 40px; 
+  vertical-align: 0px;
+
+}
+
+#header-section .icon-menu {
+  width: 40px;
+}
+/* custom code start */
+.sb-content-tab #wrapper {
+  display: none;
+}
+
+.center {
+  text-align: center;
+  display: none;
+  font-size: 13px;
+  font-weight: 400;
+  margin-top: 20px;
+}
+
+#header-section .e-input-group {
+  margin-top: 20px;
+  margin-left: 180px;
+  width: 300px;
+  font-size: $llion-font-size-12;
+}
+
+.sb-content-tab .center {
+  display: block;
+}
+
+#header-section .float-right ,
+  #sidebar-treeview .e-treeview .e-icon-collapsible,
+  #sidebar-treeview .e-treeview .e-icon-expandable {
+  float: right;
+}
+
+.e-menu-wrapper ul.e-menu .e-menu-item .e-menu-icon {
+  width: 2em;
+  vertical-align: middle;
+  margin: 4px ;
+}
+
+#header-section .header-list,
+#sidebar-treeview .e-treeview,
+#sidebar-treeview .e-treeview .e-ul {
+  padding: 0;
+  margin: 0;
+}
+
+#sidebar-treeview {
+  height: 100vh;
+}
+
+@media (max-width: 800px) {
+  #header-section .support {
+    display: none;
+  }
+
+  #header-section .nav-pane {
+    width: 75%;
+  }
+}
+
+
+#hamburger{
+  background-color: $llion-color-mercury;
+  background: linear-gradient(0deg, rgba(var(--color-sf-primary), 0.08), rgba(var(--color-sf-primary), 0.08)), rgba(var(--color-sf-surface));
+  display: flex;
+  flex-wrap: nowrap; 
+  align-content: space-around;
+  align-items: center;
+  height: 40px;
+ 
+  a {
+    padding: 5px;
+  }
+  h4 {
+    font-weight:bold;
+  }
+}
+
+#hamburguer-a {
+  // font-size: larger !important;
+  height: 30px;
+}
+#hamburger-b {
+  display: flex;
+  justify-content: space-between;
+  align-content: space-between;
+  width: calc(100% - 290px);
+  padding-left: 15px;
+  padding-right: 15px;
+  height: 30px;
+}
+#system-date {
+  align-content: center;
+}
+
+
+.svg-inline--fa {
+    height: 2rem;
+}
+
+
+.e-sidebar {
+  background-color: $llion-color-mercury;
+  background: linear-gradient(0deg, rgba(var(--color-sf-primary), 0.08), rgba(var(--color-sf-primary), 0.08)), rgba(var(--color-sf-surface));
+  height: max-content;
+    // box-shadow: rgba(0, 0, 0, 0.25) 0px 54px 55px,
+    //     rgba(0, 0, 0, 0.12) 0px -12px 30px, rgba(0, 0, 0, 0.12) 0px 4px 6px,
+    //     rgba(0, 0, 0, 0.17) 0px 12px 13px, rgba(0, 0, 0, 0.09) 0px -3px 5px;
+}
+.e-treeview .e-list-text {
+  color: $llion-color-font;
+  font-size: $llion-font-size-12;
+  font-weight: normal ;
+  position: inherit;
+  margin-right: auto;
+}
+.e-treeview .e-list-icon {
+  font-size: $llion-font-size-18 !important;
+  position: absolute;
+  left: 5px;
+}
+
+.e-treeview .e-list-item>.e-text-content { 
+  display: flex;
+  align-items: center;
+  flex-direction: row-reverse;
+  justify-content:space-between  ;
+}
+  
+.e-treeview .e-list-item.e-active>.e-text-content {
+  background-color: $llion-color-primary-container;
+  border-left: 5px solid $llion-color-primary;
+}
+
+.e-treeview .e-list-item.e-active>.e-text-content .e-list-text, 
+.e-treeview .e-list-item.e-active>.e-text-content .e-list-icon, 
+.e-treeview .e-list-item.e-active>.e-text-content .e-icons, 
+.e-treeview .e-list-item.e-active.e-hover>.e-text-content .e-icons
+ {
+  color: $llion-color-font !important;
+  // font-weight: bolder;
+}
+
+.e-treeview .e-list-item.e-hover {
+    background-color: $llion-color-light-gray;
+}
+
+.e-treeview .e-fullrow {
+  height: 70px !important;
+}
+
+.custom.e-treeview .e-list-text {
+  line-height: 46px;
+}
+
+.custom.e-treeview .e-list-item.e-active>.e-fullrow {
+  height: 48px;
+}
+
+.custom.e-treeview .e-list-item.e-hover>.e-fullrow {
+  height: 48px;
+}
+
+.treeview-image {
+  margin-left: -25px;
+}
+.treeview-text {
+  padding-left: 15px; 
+}
+
+
+/* end of content area styles */
+/* custom code start */
+/* body and html styles */
+body {
+  margin: 0;
+  font-family: "MPlus1p", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  -webkit-tap-highlight-color: transparent;
+  overflow-x: hidden;
+  overflow-y: hidden;
+}
+/* custom code end */
+/* end of body and html styles */
+
+/* newTab support styles */
+
+.ej2-new .sb-header,
+.ej2-new .sb-bread-crumb,
+.ej2-new #action-description,
+.ej2-new #description-section,
+.ej2-new .action,
+.ej2-new #description {
+  display: none;
+}
+
+.ej2-new .control-section {
+  padding-left: 0px;
+}
+
+.ej2-new app-root > div:first-child {
+  padding-left: 0px !important;
+}
+
+.ej2-new .container-fluid,
+.ej2-new .container-fluid .control-section,
+#sidebar-section {
+  padding: 0;
+}
+
+.ej2-new .sample-browser > .content.e-view {
+  top: 0;
+  padding: 0;
+  height: 100%;
+  text-align: initial;
+}
+
+/* end of newTab support styles */
+.e-menu-item {
+  color: $llion-color-font;
+  background-color: $llion-color-primary-container;
+}
+.e-menu-icon {
+  margin-top: 9px;;
+}
+#menuHeadItem {
+  background-color: $llion-color-primary-container;
+}
+
+
+.ll-test-account {
+  width: 24px;
+  background-image: url(../../assets/images/icons8/24/icons8-test-account-24.png);
+  background-repeat: no-repeat;
+}
+
+.ll-edit-account {
+ 
+  width: 24px;
+  background-image: url(../../assets/images/icons8/24/icons8-edit-account-24.png);
+  background-repeat: no-repeat;
+}
+
+.ll-logout {
+  width: 24px;
+  background-image: url(../../assets/images/icons8/24/icons8-logout-24.png);
+  background-repeat: no-repeat;
+}
+
+.ll-exit {
+  width: 24px;
+  background-image: url(../../assets/images/icons8/24/icons8-imac-exit-24.png);
+  background-repeat: no-repeat;
+}
+
+// Icons
+.fa-login::before {
+  font-family: "FontAwesome";
+  font-weight: 900;
+  content: "\f2bd";
+}
+.fa-profile::before {
+  font-family: "FontAwesome";
+  font-weight: 900;
+  font-size: 20px;
+  content: "\f2bb";
+}
+.fa-settings::before {
+  font-family: "FontAwesome";
+  font-weight: 900;
+  font-size: 20px;
+  content: "\f013";
+}
+
+.fa-logout::before {
+  font-family: "FontAwesome";
+  font-weight: 900;
+  font-size: 20px;
+  content: "\e780";
+}
+.fa-search::before {
+  font-family: "FontAwesome";
+  font-weight: 900;
+  font-size: 20px;
+  content: "\f002";
+}
+
+
+
+/* end of icon styles */

@@ -1,0 +1,46 @@
+<div id="container" class="container">
+  <div class="row">
+    <div class="col-lg-4">
+      <div class="row">
+        <div class="col-md-12">
+          <h5>centro de costos</h5>
+        </div>
+      </div>
+      <div id="classes-grid">
+        <ejs-grid
+          #classesgrid
+          [toolbar]="toolbar"
+          [searchSettings]="searchSettings"
+          (actionBegin)="actionBegin($event)"
+          (toolbarClick)="onToolbarClick($event)"
+          (rowSelected)="onRowSelected($event)"
+          (rowDeselected)="onRowDeselected($event)"
+          (recordDoubleClick)="onRecordDoubleClick($event)"
+          (commandClick)="commandClick($event)"
+        >
+          <e-columns>
+            <e-column width="50" [commands]="commands"></e-column>
+            <e-column
+              field="description"
+              headerText="Descripción"
+              width="250"
+            ></e-column>
+            <e-column
+              field="classId"
+              [isPrimaryKey]="true"
+              [visible]="false"
+            ></e-column>
+          </e-columns>
+        </ejs-grid>
+      </div>
+    </div>
+    <div class="col-lg-4">
+      <llion-class-detail></llion-class-detail>
+    </div>
+    <div class="col-lg-4">
+      <llion-class-detail-input></llion-class-detail-input>
+    </div>
+  </div>
+  
+  <div id="ej2Toast" #toast></div>
+</div>

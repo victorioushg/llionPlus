@@ -1,0 +1,25 @@
+<div id="address-grid">
+  <ejs-grid
+    #grid
+    [dataSource]="addresses$ | async"
+    [height]="gridHeight"
+    [toolbar]="toolbar"
+    [allowTextWrap]="enabled$ | async" 
+    (toolbarClick)="onToolbarClick($event)"
+    (recordDoubleClick)="onRecordDoubleClick($event)"
+  >
+    <e-columns>
+      <e-column width="50" [commands]="commands"></e-column>
+      <e-column
+        field="displayAddress"
+        headerText="Dirección"
+        width="250"
+      ></e-column>
+      <e-column
+        field="addressId"
+        [isPrimaryKey]="true"
+        [visible]="false"
+      ></e-column>
+    </e-columns>
+  </ejs-grid>
+</div>

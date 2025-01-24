@@ -1,0 +1,22 @@
+<div id="email-grid">
+  <ejs-grid
+    #emailgrid
+    [dataSource]="emails$ | async"
+    [height]="gridHeight"
+    [toolbar]="toolbar"
+    [allowTextWrap]="enabled$ | async" 
+    (toolbarClick)="onToolbarClick($event)"
+    (recordDoubleClick)="onRecordDoubleClick($event)"
+    
+  >
+    <e-columns>
+      <e-column width=50 [commands]='commands'></e-column>
+      <e-column field="emailAddress"></e-column>
+      <e-column
+        field="emailId"
+        [isPrimaryKey]="true"
+        [visible]="false"
+      ></e-column>
+    </e-columns>
+  </ejs-grid>
+</div>

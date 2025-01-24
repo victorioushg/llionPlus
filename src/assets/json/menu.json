@@ -1,0 +1,192 @@
+[
+  {
+    "nodeId": "01",
+    "nodeText": "dashboard",
+    "image": "../../assets/images/icons8/24/icons8-combo-chart-24.png",
+    "nodeChild": [
+      {
+        "nodeId": "01-01",
+        "nodeText": "mediciones",
+        "image": "../../assets/images/transparent-icon.png"
+      },
+      {
+        "nodeId": "01-02",
+        "nodeText": "reportes gerenciales",
+        "image": "../../assets/images/transparent-icon.png"
+      }
+    ]
+  },
+  {
+    "nodeId": "02",
+    "nodeText": "contabilidad",
+    "image": "../../assets/images/icons8/24/icons8-ledger-24.png",
+    "nodeChild": [
+      {
+        "nodeId": "02-01",
+        "nodeText": "cuentas",
+        "image": "../../assets/images/transparent-icon.png"
+      },
+      {
+        "nodeId": "02-02",
+        "nodeText": "centro de costos",
+        "image": "../../assets/images/transparent-icon.png"
+      },
+      {
+        "nodeId": "02-03",
+        "nodeText": "asientos contables",
+        "image": "../../assets/images/transparent-icon.png"
+      },
+      {
+        "nodeId": "02-04",
+        "nodeText": "activos fijos",
+        "image": "../../assets/images/transparent-icon.png"
+      }
+    ]
+  },
+  {
+    "nodeId": "03",
+    "nodeText": "bancos y cajas",
+    "image": "../../assets/images/icons8/24/icons8-bank-24.png",
+    "nodeChild": [
+      {
+        "nodeId": "03-01",
+        "nodeText": "bancos",
+        "image": "../../assets/images/transparent-icon.png"
+      },
+      {
+        "nodeId": "03-02",
+        "nodeText": "cajas",
+        "image": "../../assets/images/transparent-icon.png"
+      },
+      {
+        "nodeId": "03-03",
+        "nodeText": "reportes tesorería",
+        "image": "../../assets/images/transparent-icon.png"
+      }
+    ]
+  },
+  {
+    "nodeId": "04",
+    "nodeText": "recursos humanos",
+    "image": "../../assets/images/icons8/24/icons8-human-resources-24.png",
+    "nodeChild": [
+      {
+        "nodeId": "04-01",
+        "nodeText": "trabajadores",
+        "image": "../../assets/images/transparent-icon.png"
+      },
+      {
+        "nodeId": "03-02",
+        "nodeText": "contratos",
+        "image": "../../assets/images/transparent-icon.png"
+      },
+      {
+        "nodeId": "03-03",
+        "nodeText": "nómima",
+        "image": "../../assets/images/transparent-icon.png"
+      }
+    ]
+  },
+  {
+    "nodeId": "05",
+    "nodeText": "proveedores",
+    "image": "../../assets/images/icons8/24/icons8-customers-24.png",
+    "nodeChild": [
+      {
+        "nodeId": "05-01",
+        "nodeText": "proveedores",
+        "image": "../../assets/images/transparent-icon.png"
+      },
+      {
+        "nodeId": "05-02",
+        "nodeText": "reportes proveedores",
+        "image": "../../assets/images/transparent-icon.png"
+      }
+    ]
+  },
+  {
+    "nodeId": "06",
+    "nodeText": "clientes",
+    "image": "../../assets/images/icons8/24/icons8-group-24.png",
+    "nodeChild": [
+      {
+        "nodeId": "06-01",
+        "nodeText": "clientes",
+        "image": "../../assets/images/transparent-icon.png"
+      },
+      {
+        "nodeId": "06-02",
+        "nodeText": "reportes clientes",
+        "image": "../../assets/images/transparent-icon.png"
+      }
+    ]
+  },
+  {
+    "nodeId": "07",
+    "nodeText": "puntos de ventas",
+    "image": "../../assets/images/icons8/24/icons8-receipt-24.png",
+    "nodeChild": [
+      {
+        "nodeId": "06-01",
+        "nodeText": "clientes",
+        "image": "../../assets/images/transparent-icon.png"
+      },
+      {
+        "nodeId": "06-02",
+        "nodeText": "reportes clientes",
+        "image": "../../assets/images/transparent-icon.png"
+      }
+    ]
+  },
+  {
+    "nodeId": "08",
+    "nodeText": "mercancías",
+    "image": "../../assets/images/icons8/24/icons8-inventory-flow-24.png",
+    "nodeChild": [
+      {
+        "nodeId": "08-01",
+        "nodeText": "mercancías",
+        "image": "../../assets/images/transparent-icon.png"
+      },
+      {
+        "nodeId": "08-02",
+        "nodeText": "reportes mercancías",
+        "image": "../../assets/images/transparent-icon.png"
+      }
+    ]
+  },
+  {
+    "nodeId": "09",
+    "nodeText": "Control",
+    "image": "../../assets/images/icons8/24/icons8-slider-24.png",
+    "nodeChild": [
+      {
+        "nodeId": "09-01",
+        "nodeText": "Parámetros",
+        "image": "../../assets/images/transparent-icon.png"
+      },
+      {
+        "nodeId": "09-02",
+        "nodeText": "Monedas y Cambios",
+        "image": "../../assets/images/transparent-icon.png"
+      }
+    ]
+  },
+  {
+    "nodeId": "10",
+    "nodeText": "administración",
+    "image": "../../assets/images/icons8/24/icons8-admin-settings-male-24.png",
+    "nodeChild": [
+      {
+        "nodeId": "10-01",
+        "nodeText": "organizaciones",
+        "image": "../../assets/images/transparent-icon.png"
+      },
+      {
+        "nodeId": "10-02",
+        "nodeText": "usuarios",
+        "image": "../../assets/images/transparent-icon.png"
+      }
+    ]
+  }
+]

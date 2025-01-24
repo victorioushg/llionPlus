@@ -1,0 +1,199 @@
+@mixin full-size {
+  width: 100%;
+  height: 100%;
+}
+
+@mixin full-width {
+  width: 100%;
+}
+
+@mixin flex-centered {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@mixin flex-left {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+@mixin absolute-full-size {
+  position: absolute;
+  @include full-size;
+  top: 0;
+  left: 0;
+}
+
+@mixin inline-flex-centered {
+  display: inline-flex;
+  align-items: center;
+}
+
+@mixin inline-flex-centered-justify-centered {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@mixin flex-content-area {
+  display: flex;
+  flex-wrap: wrap;
+  width: 100%;
+}
+
+@mixin flex-column-hidden {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+@mixin background-border-none {
+  box-shadow: none;
+  background: none;
+}
+
+@each $size in 14, 16, 18, 24 {
+  .bg-icon-size-#{$size} {
+    background-repeat: no-repeat;
+    background-position: center center;
+    background-size: #{$size}px #{$size}px;
+  }
+}
+
+// Media Query mixin
+@mixin respond-to($media) {
+  // 2500x1400px
+  @if $media == extra-extra-large-devices {
+    @media only screen and (max-width: $EXTRA-EXTRA-LARGE-DEVICES) {
+      @content;
+    }
+  }
+
+  // 1920x1980px
+  @else if $media == xtra-large-devices {
+    @media only screen and (max-width: $EXTRA-LARGE-DEVICES) {
+      @content;
+    }
+  }
+
+  // 1366x768px
+  @else if $media == large-devices {
+    @media only screen and (max-width: $LARGE-DEVICES) {
+      @content;
+    }
+  }
+
+  // 1024x768px
+  @else if $media == large-medium-devices {
+    @media only screen and (max-width: $LARGE-MEDIUM-DEVICES) {
+      @content;
+    }
+  }
+
+  // 980x620px
+  @else if $media == medium-devices {
+    @media only screen and (max-width: $MEDIUM-DEVICES) {
+      @content;
+    }
+  }
+  // 768px
+  @else if $media == small-devices {
+    @media only screen and (max-width: $SMALL-DEVICES) {
+      @content;
+    }
+  }
+}
+
+// Box Shadow
+@mixin box-shadow($left, $top, $radius, $color) {
+  box-shadow: $left $top $radius $color;
+  -webkit-box-shadow: $left $top $radius $color;
+  -moz-box-shadow: $left $top $radius $color;
+}
+
+// Transition
+@mixin transition($property) {
+  -webkit-transition: $property;
+  -moz-transition: $property;
+  -ms-transition: $property;
+  -o-transition: $property;
+  transition: $property;
+}
+
+// Border Radius
+@mixin border-radius($radius) {
+  border-radius: $radius;
+  -webkit-border-radius: $radius;
+  -moz-border-radius: $radius;
+}
+
+// Toolbar Position
+@mixin toolbar-position {
+  right: 0px !important;
+  top: 48px !important;
+  left: auto !important;
+}
+
+// Button Primary
+@mixin outline-primary-button {
+  border: $DEFAULT-BORDER;
+  @include border-radius(2px);
+  background-color: $INTEK-WHITE;
+
+  height: $PRIMARY-BUTTON-HEIGHT;
+  width: $PRIMARY-BUTTON-WIDTH;
+
+  padding: 0 #{$INTEK-PADDING-16 - 4px} 0 #{$INTEK-PADDING-16 - 4px};
+  cursor: pointer;
+
+  box-sizing: border-box;
+  color: $INTEK-GRAY;
+  &:hover {
+    background-color: $INTEK-HOVER-COLOR;
+  }
+  &:focus {
+    outline: none;
+  }
+  &:visited {
+    background-color: $INTEK-HOVER-COLOR;
+  }
+}
+
+// Button Primary
+@mixin ellipses-button {
+  border: none;
+
+  height: 100%;
+
+  padding: 0px #{$INTEK-PADDING-16 + 6px} 0px #{$INTEK-PADDING-16 + 6px};
+
+  background-size: #{$ICON-WIDTH - 6px} #{$ICON-HEIGHT - 6px};
+  background-color: transparent;
+
+  cursor: pointer;
+
+  &:focus {
+    outline: none;
+  }
+}
+
+// Searchbox Primary
+@mixin primary-input-type {
+  height: $PRIMARY-INPUT-HEIGHT;
+  border: $DEFAULT-BORDER;
+  color: $PRIMARY-INPUT-TEXT-COLOR;
+  background-color: $INTEK-WHITE;
+}
+
+// Background Gradient
+@mixin linear-gradient($direction, $color-stops...) {
+  background: nth(nth($color-stops, 1), 1);
+  background: linear-gradient($direction, $color-stops);
+  background: -moz-linear-gradient(legacy-direction($direction), $color-stops);
+  background: -ms-linear-gradient(legacy-direction($direction), $color-stops);
+  background: -o-linear-gradient(legacy-direction($direction), $color-stops);
+  background: -webkit-linear-gradient(legacy-direction($direction), $color-stops);
+  background: -webkit-gradient(legacy-direction($direction), $color-stops);
+}

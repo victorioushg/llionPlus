@@ -1,0 +1,47 @@
+<div id="container" class="container">
+  <div class="row">
+    <div class="col-lg-4">
+      <div class="row">
+        <div class="col-md-12">
+          <h5>Parameters</h5>
+        </div>
+      </div>
+      <div id="parameters-grid">
+        <ejs-grid
+          #parametersgrid
+          [toolbar]="toolbar"
+          [searchSettings]="searchSettings"
+          (actionBegin)="actionBegin($event)"
+          (toolbarClick)="onToolbarClick($event)"
+          (rowSelected)="onRowSelected($event)"
+          (rowDeselected)="onRowDeselected($event)"
+          (recordDoubleClick)="onRecordDoubleClick($event)"
+          (commandClick)="commandClick($event)"
+        >
+          <e-columns>
+            <e-column field="module" headerText="Module" width="100"></e-column>
+            <e-column
+              field="submodule"
+              headerText="SubModule"
+              width="100"
+            ></e-column>
+            <e-column
+              field="description"
+              headerText="Description"
+              width="100"
+            ></e-column>
+            <e-column field="value" headerText="Value" width="100"></e-column>
+          </e-columns>
+        </ejs-grid>
+      </div>
+    </div>
+    <div class="col-lg-4">
+      <llion-parameter-detail></llion-parameter-detail>
+    </div>
+    <div class="col-lg-4">
+      <llion-parameter-detail-input></llion-parameter-detail-input>
+    </div>
+  </div>
+
+  <div id="ej2Toast" #toast></div>
+</div>

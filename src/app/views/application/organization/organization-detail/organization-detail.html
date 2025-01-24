@@ -1,0 +1,143 @@
+<div class="wrapper-detail" *ngIf="organization$ | async as org">
+  <!-- <div class="row">
+    <div class="col-md-12">
+      <h5>organización</h5>
+    </div>
+  </div> -->
+  <form
+    id="organization-detail-form"
+    class="organization-detail-form"
+    [formGroup]="organizationForm"
+  >
+    <div class="row">
+      <div class="col-md-12">
+        <ejs-textbox
+          id="organization-txt"
+          placeholder="organización"
+          floatLabelType="Always"
+          formControlName="name"
+          [enabled]="enabled$ | async"
+          [value]="org.name"
+        ></ejs-textbox>
+        <ejs-textbox
+          id="activity-txt"
+          placeholder="actividad comercial"
+          floatLabelType="Always"
+          formControlName="activity"
+          [enabled]="enabled$ | async"
+          [value]="org.activity"
+        ></ejs-textbox>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-6">
+        <ejs-textbox
+          id="tax-registrastion-id"
+          placeholder="Regisdtro de Informacón Fiscal (RIF)"
+          floatLabelType="Always"
+          formControlName="taxRegistrationID"
+          [enabled]="enabled$ | async"
+          [value]="org.taxRegistrationID"
+        ></ejs-textbox>
+      </div>
+      <div class="col-md-6"></div>
+    </div>
+    <div class="row">
+      <div class="col-md-6">
+        <ejs-dropdownlist
+          id="organization-type-ddl"
+          formControlName="organizationType"
+          #otypes
+          [dataSource]="organizationTypes$ | async"
+          [value]="org.organizationType"
+          [fields]="ofields"
+          [enabled]="enabled$ | async"
+          floatLabelType="Always"
+          placeholder="tipo de organización"
+        ></ejs-dropdownlist>
+      </div>
+      <div class="col-md-6">
+        <ejs-dropdownlist
+          id="association-type-ddl"
+          formControlName="associationType"
+          #atypes
+          [dataSource]="assosiationTypes$ | async"
+          [value]="org.assosiationType"
+          [fields]="afields"
+          [enabled]="enabled$ | async"
+          floatLabelType="Always"
+          placeholder="tipo de asociación"
+        ></ejs-dropdownlist>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-12">
+        <llion-grid-address></llion-grid-address>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-12">
+        <llion-grid-phone></llion-grid-phone>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-12">
+        <llion-grid-email></llion-grid-email>
+      </div>
+    </div>
+    <br />
+    <div class="row">
+      <div class="col-md-6">
+        <ejs-datepicker
+          [value]="org.addedOn"
+          format="dd/MM/yyyy"
+          placeholder="Fecha Ingreso"
+          floatLabelType="Always"
+          formControlName="addedOn"
+          [enabled]="enabled$ | async"
+        >
+        </ejs-datepicker>
+      </div>
+      <div class="col-md-6" style="margin-top: auto">
+        <table style="width: 100%">
+          <tr>
+            <td style="width: 50%">Organización Activa</td>
+            <td style="width: 50%">
+              <ejs-switch
+                formControlName="deactivated"
+                [checked]="!org.deactivated"
+                [disabled]="!(enabled$ | async)"
+              >
+              </ejs-switch>
+            </td>
+          </tr>
+        </table>
+      </div>
+    </div>
+    <br />
+    <div class="row">
+      <div class="col-md-6"></div>
+      <div class="col-md-6">
+        <div id="form-buttons" >
+          <button 
+            ejs-button
+            (click)="onCancelClick()"
+            [disabled]="!(enabled$ | async)"
+            style="float: right"
+          >
+            Cancelar
+          </button>
+          <button 
+            ejs-button
+            (click)="onSaveClick()"
+            cssClass="e-primary"
+            [disabled]="!(enabled$ | async)"
+            style="float: right"
+          >
+            Aceptar
+          </button>
+        </div>
+      </div>
+    </div>
+  </form>
+</div>

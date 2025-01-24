@@ -1,0 +1,21 @@
+@use "../../../../assets/scss/variables" as *;
+
+.e-grid .e-gridheader {
+   display: none;
+}
+
+#address-grid .e-toolbar {
+  background-color: $llion-color-primary-container;
+}
+
+::ng-deep #address-grid .e-toolbar .e-toolbar-item.e-overlay {
+  background: #fafafa;
+  opacity: 0.5;
+  color: rgba(0, 0, 0, 0.26);
+  visibility: hidden;
+}
+
+::ng-deep #address-grid .e-toolbar-item.e-template {
+  padding-top: 0px;
+  padding-bottom: 0px;
+}

@@ -1,0 +1,300 @@
+@import "../base/base.scss";
+@import "../dropdowns/drop-down-list.scss";
+@import "../inputs/input.scss";
+@import "../popups/popup.scss";
+@import "../popups/spinner.scss";
+@import "../dropdowns/drop-down-base.scss";
+@import "../dropdowns/auto-complete.scss";
+@import "../buttons/button.scss";
+@import "../calendars/calendar.scss";
+@import "../buttons/check-box.scss";
+@import "../splitbuttons/drop-down-button.scss";
+@import "../inputs/numerictextbox.scss";
+@import "../popups/tooltip.scss";
+@import "../dropdowns/combo-box.scss";
+@import "../navigations/context-menu.scss";
+@import "../calendars/datepicker.scss";
+@import "../buttons/radio-button.scss";
+@import "../lists/list-view.scss";
+@import "../lists/sortable.scss";
+@import "../calendars/datetimepicker.scss";
+@import "../popups/dialog.scss";
+@import "../navigations/h-scroll.scss";
+@import "../navigations/v-scroll.scss";
+@import "../navigations/toolbar.scss";
+@import "../navigations/pager.scss";
+@import "../grids/excel-filter.scss";
+@import "../grids/grid.scss";
+
+$header-font-weight: 500 !default;
+$multicolumn-grid-height: 32px !default;
+$multicolumn-margin-top-value: 1px !default;
+$footer-border-width: 0 1px 0 1px !default;
+$grid-border-width: 1px !default;
+$multicolumn-popup-border-radius: 4px !default;
+
+$multicolumn-grid-small-height: 26px !default;
+$multicolumn-margin-top-small-value: 1px !default;
+
+$multicolumn-grid-bigger-height: 40px !default;
+$multicolumn-margin-top-bigger-value: 1px !default;
+
+$multicolumn-grid-bigger-small-height: 36px !default;
+$multicolumn-margin-top-bigger-small-value: 1px !default;
+
+$footer-border-color: rgba($border-light) !default;
+$popup-text-color: $content-text-color-alt1 !default;
+$grid-content-color: $content-text-color !default;
+$grid-content-hover-bg-color: $flyout-bg-color-hover !default;
+$grid-content-active-bg-color: $flyout-bg-color-selected !default;
+$grid-content-active-color: $flyout-text-color-selected !default;
+$grid-footer-bg-color: rgba($content-bg-color) !default;
+$grid-footer-color: $content-text-color-alt1 !default;
+$grid-group-content-header-color: $content-text-color-alt1 !default;
+$grid-group-content-header-bg-color: rgba($content-bg-color) !default;
+$grid-header-content-bg-color: $transparent !default;
+$grid-header-content-color: $content-text-color-alt1 !default;
+$altrow-bg-color: $content-bg-color-alt1 !default;
+$popup-box-shadow: $shadow-md !default;
+$nodata-bg-color: $flyout-bg-color !default;
+$nodata-border-color: $flyout-bg-color !default;
+
+@mixin multicolumn-combobox-styles($margin-top-value) {
+  &.e-multicolumn-list {
+    margin-top: $margin-top-value;
+  }
+}
+
+@include export-module('multicolumn-combobox-layout') {
+  .e-multicolumn-grid tr.e-groupcaptionrow {
+    position: sticky;
+    top: 0;
+  }
+  .e-multicolumn-grid th.e-grouptopleftcell.e-lastgrouptopleftcell,
+  .e-multicolumn-grid th.e-grouptopleftcell.e-lastgroupleftcell,
+  .e-multicolumn-grid td.e-recordplusexpand,
+  .e-multicolumn-grid td.e-indentcell,
+  .e-multicolumn-grid col.e-group-intent,
+  .e-multicolumn-list .e-no-records + .e-grid {
+    display: none;
+  }
+  .e-multicolumn-grid td.e-rowcell{
+    cursor: default;
+  }
+
+  .e-multicolumn-grid.e-rtl .e-gridheader {
+    @if ($skin-name == 'highcontrast') {
+      .e-headercelldiv {
+        margin: 0;
+      }
+    }
+  }
+
+  .e-multicolumn-grid .e-gridheader .e-headercelldiv {
+    overflow: hidden;
+  }
+  .e-multicolumn-list .e-popup-footer {
+    vertical-align: middle;
+    border-style: solid;
+    border-width: $footer-border-width;
+    font-size: 14px;
+    height: $multicolumn-grid-height;
+    display: flex;
+    align-items: center;
+    border-radius: 0 0 $multicolumn-popup-border-radius $multicolumn-popup-border-radius;
+  }
+  .e-multicolumn-grid.e-grid {
+    border-width: $grid-border-width;
+    border-radius: $multicolumn-popup-border-radius;
+    .e-gridcontent {
+      border-radius: 0 0 $multicolumn-popup-border-radius $multicolumn-popup-border-radius;
+    }
+  }
+  .e-input-group.e-multicolumn-list {
+    input[readonly].e-input {
+      pointer-events: none;
+    }
+  }
+  .e-multicolumn-list {
+    &:has(.e-popup-footer) {
+      .e-multicolumn-grid.e-grid {
+        border-radius: $multicolumn-popup-border-radius $multicolumn-popup-border-radius 0 0;
+        .e-gridcontent {
+          border-radius: 0;
+        }
+      }
+    }
+    &.e-icon-anim .e-multicolumn-list-icon::before {
+      transform: rotate(180deg);
+    }
+    &:not(.e-icon-anim) .e-multicolumn-list-icon::before {
+      transform: rotate(0deg);
+    }
+    .e-multicolumn-list-icon::before {
+      transition: transform 300ms ease;
+    }
+  }
+  .e-multicolumn-grid .e-grid {
+    overflow: auto;
+  }
+  .e-multicolumn-grid .e-row,
+  .e-multicolumn-grid .e-emptyrow {
+    height: $multicolumn-grid-height;
+  }
+  .e-multicolumn-group .e-sortnumber {
+    display: none;
+  }
+  .e-popup.e-multicolumn-list {
+    position: absolute;
+    border-radius: $multicolumn-popup-border-radius;
+    margin-top: $multicolumn-margin-top-value;
+    .e-nodata {
+      cursor: default;
+      font-family: inherit;
+      font-size: 14px;
+      padding: 14px 16px;
+      text-align: center;
+      border-radius: inherit;
+    }
+    .e-headertext {
+      font-weight: $header-font-weight;
+    }
+    .e-gridheader {
+      position: sticky;
+      top: 0;
+      z-index: 1;
+      border-radius: $multicolumn-popup-border-radius $multicolumn-popup-border-radius 0 0;
+    }
+  }
+
+  .e-multicolumn-grid .e-headercontent {
+    border-right-color: transparent; /* stylelint-disable-line declaration-no-important */
+  }
+
+  .e-multicolumn-grid.e-rtl .e-headercontent {
+    border-left-color: transparent; /* stylelint-disable-line declaration-no-important */
+  }
+
+  .e-multicolumn-grid .e-content {
+    overflow: auto !important; /* stylelint-disable-line declaration-no-important */
+  }
+
+  .e-multicolumn-container .e-input-group-icon.e-multicolumn-list-icon.e-ddl-disable-icon {
+    position: relative;
+  }
+
+  .e-small.e-popup,
+  .e-small .e-popup {
+    .e-multicolumn-grid .e-headercelldiv,
+    .e-multicolumn-grid .e-rowcell,
+    &.e-multicolumn-list .e-popup-footer {
+      font-size: 12px;
+    }
+    &.e-multicolumn-list .e-popup-footer,
+    .e-multicolumn-grid .e-row,
+    .e-multicolumn-grid .e-emptyrow {
+      height: $multicolumn-grid-small-height;
+    }
+    @include multicolumn-combobox-styles($multicolumn-margin-top-small-value);
+  }
+}
+
+
+@include export-module('multicolumn-combobox-theme') {
+  .e-multicolumn-list .e-popup-footer {
+    background: $grid-footer-bg-color;
+    color: $grid-footer-color;
+    border-color: $footer-border-color;
+  }
+  .e-input-group.e-multicolumn-list:focus-visible {
+    outline: transparent;
+  }
+  .e-popup.e-multicolumn-list {
+    background: transparent;
+    box-shadow: $popup-box-shadow;
+    .e-nodata {
+      color: $popup-text-color;
+      border: 1px solid $nodata-border-color;
+      background: $nodata-bg-color;
+    }
+    .e-multicolumn-grid .e-rowcell {
+      color: $grid-content-color;
+    }
+    .e-multicolumn-grid .e-focused {
+      box-shadow: none;
+    }
+    .e-gridhover .e-row:hover .e-rowcell:not(.e-active),
+    .e-gridcontent .e-row-focus {
+      background: $grid-content-hover-bg-color !important; /* stylelint-disable-line declaration-no-important */
+    }
+    .e-multicolumn-grid td.e-active {
+      background: $grid-content-active-bg-color;
+      color: $grid-content-active-color;
+    }
+    .e-groupcaption {
+      color: $grid-group-content-header-color;
+      background: $grid-group-content-header-bg-color;
+    }
+    .e-gridheader,
+    .e-gridheader colgroup {
+      background: $grid-header-content-bg-color;
+    }
+    .e-altrow {
+      background: $altrow-bg-color;
+    }
+    .e-grid .e-headercell {
+      background-color: unset;
+    }
+    .e-headertext,
+    .e-grid th.e-headercell[aria-sort = 'ascending'] .e-headertext,
+    .e-grid th.e-headercell[aria-sort = 'descending'] .e-headertext {
+      color: $grid-header-content-color;
+    }
+  }
+}
+
+
+@include export-module('multicolumncombobox-material3-icons') {
+  .e-input-group.e-control-wrapper .e-multicolumn-list-icon::before {
+    content: '\e70d';
+    font-family: 'e-icons';
+  }
+}
+
+@mixin multicolumn-combobox-styles($margin-top-value) {
+  &.e-multicolumn-list {
+    margin-top: $margin-top-value;
+  }
+}
+
+@include export-module('multicolumn-combobox-bigger') {
+  .e-bigger.e-popup,
+  .e-bigger .e-popup {
+    &.e-multicolumn-list .e-popup-footer {
+      font-size: 16px;
+    }
+    &.e-multicolumn-list .e-popup-footer,
+    .e-multicolumn-grid .e-row,
+    .e-multicolumn-grid .e-emptyrow {
+      height: $multicolumn-grid-bigger-height;
+    }
+    @include multicolumn-combobox-styles($multicolumn-margin-top-bigger-value);
+  }
+
+  .e-bigger.e-small.e-popup,
+  .e-bigger.e-small .e-popup,
+  .e-bigger .e-small.e-popup,
+  .e-small .e-bigger.e-popup {
+    .e-multicolumn-grid .e-headercelldiv,
+    .e-multicolumn-grid .e-rowcell,
+    &.e-multicolumn-list .e-popup-footer {
+      font-size: 14px;
+    }
+    &.e-multicolumn-list .e-popup-footer,
+    .e-multicolumn-grid .e-row,
+    .e-multicolumn-grid .e-emptyrow {
+      height: $multicolumn-grid-bigger-small-height;
+    }
+    @include multicolumn-combobox-styles($multicolumn-margin-top-bigger-small-value);
+  }
+}

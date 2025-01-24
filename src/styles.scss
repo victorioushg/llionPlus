@@ -1,0 +1,247 @@
+@use "../src/assets/scss/material-llion-3/material3.scss";
+@use "../src/assets/scss/variables" as *;
+
+
+@font-face {
+  font-family: "MPlus1p";
+  src: local("MPluss1p"),
+    url(./assets/fonts/MPLUS1p-Regular.ttf) format("truetype");
+}
+
+* {
+  font-family: MPlus1p, Roboto, Helvetica, Arial, sans-serif;
+  font-size: $llion-font-size-12 !important;
+  color: $llion-color-font;  
+}
+
+.container {
+  max-width: 3440px !important;
+  margin: 15px !important;
+  width: calc(100% - 4em) !important;
+}
+
+h1 {
+  font-size: 42px !important;
+}
+
+h2 {
+  font-size: 32px !important;
+}
+
+h3 {
+  font-size: 24px !important;
+}
+
+h4 {
+  font-size: 20px !important;
+}
+
+h5 {
+  font-size: 16px !important;
+}
+
+h6 {
+  font-size: 14px !important;
+}
+
+.module-title {
+  background-color: $llion-color-primary;
+  color: $llion-color-white;
+  height: 40px;
+  padding: 10px;
+}
+
+.e-control, .e-float-input, .e-float-input.e-control-wrapper {
+  // font-family: MPlus1p, Roboto, Helvetica, Arial, sans-serif;
+  font-size: $llion-font-size-12 !important;
+  color: $llion-color-font;
+  
+}
+
+.e-control.e-grid .e-rowcell {
+  font-size: $llion-font-size-10 !important;
+}
+
+.e-icon {
+  font-size: $llion-font-size-16 !important;
+}
+
+// ADD
+.fa-add::before {
+  font-family: "FontAwesome";
+  content: "\f067";
+}
+
+.e-plus::before {
+  content: "\e805";
+}
+
+// EDIT
+.fa-edit::before {
+  font-family: "FontAwesome";
+  content: "\f040";
+}
+
+// DELETE
+.fa-delete::before {
+  font-family: "FontAwesome";
+  content: "\f1f8";
+}
+
+.e-trash::before {
+  content: "\e820";
+}
+
+// Success 
+.e-circle-check::before {
+  content: "\e72b";
+}
+
+// Information 
+.e-circle-info::before {
+  content: "\e800";
+}
+
+// Error 
+.e-circle-error::before {
+  content: "\e878";
+}  
+
+// Warning 
+.e-warning::before {
+  content: "\e88b";
+}
+
+// Toast
+.e-toast-container .e-toast .e-toast-message .e-toast-title {
+  font-family: "MPlus1p";
+  font-size: 16px !important;
+  font-weight: 500;
+}
+
+.e-toast-container .e-toast .e-toast-message .e-toast-content {
+  font-family: "MPlus1p";
+  font-size: 12px !important;
+  font-weight: normal;
+}
+
+.e-toast-container .e-toast .e-toast-icon {
+  font-size: 28px !important;
+  margin-top: 8px !important;
+}
+
+.e-toast-container .e-toast.e-toast-success {
+  background-color: $llion-color-success !important;
+  color: $llion-color-success-text !important;
+}
+
+.e-toast-container .e-toast.e-toast-success:hover {
+  background-color: $llion-color-success !important;
+  box-shadow: 0 3px 6px 0 rgba(0, 0, 0, 0.26);
+  color: $llion-color-success-text !important;
+}
+
+.e-toast-container .e-toast.e-toast-info {
+  background-color: $llion-color-info !important;
+  color: $llion-color-info-text !important;
+}
+
+.e-toast-container .e-toast.e-toast-info:hover {
+  background-color: $llion-color-info !important;
+  box-shadow: 0 3px 6px 0 rgba(0, 0, 0, 0.26);
+  color: $llion-color-info-text !important;
+}
+
+.e-toast-container .e-toast.e-toast-warning {
+  background-color: $llion-color-warning !important;
+  color: $llion-color-warning-text !important;
+}
+
+.e-toast-container .e-toast.e-toast-warning:hover {
+  background-color: $llion-color-warning !important;
+  box-shadow: 0 3px 6px 0 rgba(0, 0, 0, 0.26);
+  color: $llion-color-warning-text !important;
+}
+
+.e-toast-container .e-toast.e-toast-danger {
+  background-color: $llion-color-error !important;
+  color: $llion-color-error-text !important;
+}
+
+.e-toast-container .e-toast.e-toast-danger:hover {
+  background-color: $llion-color-error !important;
+  box-shadow: 0 3px 6px 0 rgba(0, 0, 0, 0.26);
+  color: $llion-color-error-text !important;
+}
+
+.e-toast-container .e-toast .e-toast-progress {
+  background-color: $llion-color-white !important; // rgb(6, 151, 214);
+}
+
+.e-toast-container .e-toast .e-toast-actions .e-btn {
+  background-color: $llion-color-white !important; // transparent;
+  border-color: $llion-color-white !important; // transparent;
+  box-shadow: none;
+  color: #2fbcf9;
+}
+
+.e-toast-container .e-toast .e-toast-actions .e-btn:hover {
+  background-color: $llion-color-white !important; // transparent;
+  color: #2fbcf9;
+}
+
+.e-toast-container .e-toast .e-toast-actions .e-btn:focus {
+  background-color: $llion-color-white !important; // transparent;
+  color: #2fbcf9;
+}
+
+.e-toast-container .e-toast .e-toast-actions .e-btn:active {
+  background-color: $llion-color-white !important; // transparent;
+  color: #2fbcf9;
+}
+
+// Grids 
+.grid-label {
+  border-left: 7px solid $llion-color-font;
+  padding: 10px;
+  width: 140px;
+  color: $llion-color-font;
+  height: 48px;
+}
+
+.e-grid .e-focused:not(.e-menu-item):not(.e-editedbatchcell) {
+  box-shadow: 0 0 0 0px rgba(var(--color-sf-primary)) inset;
+}
+
+
+.e-toolbar .e-toolbar-item .e-tbar-btn {
+  background: transparent;
+  box-shadow: 0 1px 3px 1px rgba(0, 0, 0, 0.15),
+ 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+
+  color: rgba(var(--color-sf-on-surface-variant));
+  border: none;                                                  
+}
+
+.disablegrid {
+  pointer-events: none;
+  opacity: 0.4;
+}
+
+.wrapper {
+  cursor: not-allowed;
+}
+
+/// Tabs
+/// 
+// .e-tab .e-tab-header {
+//   background: #badfba !important;
+// }
+
+.e-tab-text {
+  font-family: "MPlus1p";
+  font-size: 12px !important;
+  font-weight: 400 !important;
+  text-transform: lowercase !important;
+}
+

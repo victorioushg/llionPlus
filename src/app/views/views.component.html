@@ -1,0 +1,79 @@
+<div id="wrapper">
+  <!--header-section  declaration -->
+  <div class="main-header" id="header-section">
+    <ul class="header-list">
+      <li class="float-left header-style nav-pane">
+        <img src="../../assets/images/llion4.png" alt="logo" />
+        <span id="title-path">{{ pathTitle }}</span>
+      </li>
+
+      <li class="header-style float-right">
+        <ejs-menu
+          #menu
+          [items]="menuItems"
+          (select)="select($event)"
+        ></ejs-menu>
+      </li>
+    </ul>
+  </div>
+
+  <div id="hamburger">
+    <div id="hamburger-a" style="width: 290px">
+      <a (click)="openClick()">
+        <fa-icon [icon]="faSquare" size="2x"> </fa-icon>
+      </a>
+    </div>
+    <div id="hamburger-b">
+      <a id="title-path">{{ title }}</a>
+      <div id="system-date">
+        {{ systemDate | date : "MMM, dd yyyy" }}
+        {{ systemDate | date : "h:mm:ss a" }}
+      </div>
+    </div>
+  </div>
+
+  <!--end of header-section  declaration -->
+  <!-- sidebar element declaration -->
+  <ejs-sidebar
+    id="sidebar-treeview"
+    class="sidebar-treeview"
+    #sidebarInstance
+    [width]="width"
+    [mediaQuery]="mediaQuery"
+    [target]="target"
+    [type]="type"
+    style="top: 97px"
+    [isOpen]="true"
+  >
+    <div class="main-menu">
+      <!-- Treevie element declaration -->
+      <ejs-treeview
+        id="main-treeview"
+        #treeviewInstance
+        [fields]="field"
+        [cssClass]="cssClass"
+        expandOn="Click"
+        (nodeSelecting)="onSelect($event)"
+        (nodeExpanding)="onSelect($event)"
+      >
+        <ng-template #nodeTemplate="" let-data="">
+          <div>
+            <img class="treeview-image" src="{{ data.image }}" />
+            <span class="treeview-text">{{ data.nodeText }}</span>
+          </div>
+        </ng-template>
+      </ejs-treeview>
+    </div>
+  </ejs-sidebar>
+  <!-- end of sidebar element -->
+
+  <!-- main-content declaration -->
+  <div class="main-content" id="main-content">
+    <div class="sidebar-content">
+      <router-outlet>
+        <llion-content> </llion-content>
+      </router-outlet>
+    </div>
+  </div>
+  <!-- end of main-content -->
+</div>

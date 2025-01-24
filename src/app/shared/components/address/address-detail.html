@@ -1,0 +1,116 @@
+<ng-container class="wrapper-container" *ngIf="vm$ | async as vm">
+  <div [hidden]="!addressVisible"> 
+  <!-- <div> -->
+    <form
+      id="address-detail-form"
+      class="address-detail-form"
+      [formGroup]="addressForm"
+    >
+      <div class="row">
+        <div class="col-md-12">
+          <h5>dirección</h5>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-md-12">
+          <ejs-textbox
+            id="address1"
+            formControlName="address1"
+            placeholder="dirección"
+            floatLabelType="Always"
+            [value]="vm.address.address1"
+          ></ejs-textbox>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-md-12">
+          <ejs-textbox
+            id="address2"
+            formControlName="address2"
+            placeholder=""
+            floatLabelType="Always"
+            [value]="vm.address.address2"
+          ></ejs-textbox>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-md-6">
+          <ejs-dropdownlist
+            id="address-type-ddl"
+            [dataSource]="addressTypes$ | async"
+            [fields]="addressFields"
+            formControlName="addresstypeddl"
+            floatLabelType="Always"
+            placeholder="tipo de dirección"
+            [value]="vm.address.addressTypeId"
+          ></ejs-dropdownlist>
+        </div>
+        <div class="col-md-6">
+          <ejs-dropdownlist
+            id="postal-code-ddl"
+            formControlName="postalcodeddl"
+            floatLabelType="Always"
+            placeholder="código postal"
+            [value]="vm.address.postalCode"
+          ></ejs-dropdownlist>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-md-6">
+          <ejs-textbox
+            id="city"
+            formControlName="city"
+            placeholder="ciudad/pueblo/aldea"
+            floatLabelType="Always"
+            [value]="vm.address.city"
+          ></ejs-textbox>
+        </div>
+        <div class="col-md-6">
+          <ejs-textbox
+            id="county"
+            formControlName="county"
+            placeholder="municipio/cantón"
+            floatLabelType="Always"
+            [value]="vm.address.county"
+          ></ejs-textbox>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-md-6">
+          <ejs-textbox
+            id="state"
+            formControlName="state"
+            placeholder="estado/departament"
+            floatLabelType="Always"
+            [value]="vm.address.state"
+          ></ejs-textbox>
+        </div>
+        <div class="col-md-6">
+          <ejs-textbox
+            id="country"
+            formControlName="country"
+            placeholder="país"
+            floatLabelType="Always"
+            [value]="vm.address.county"
+          ></ejs-textbox>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-md-6"></div>
+        <div class="col-md-6">
+          <button ejs-button (click)="onCancelClick()" style="float: right">
+            Cancelar
+          </button>
+          <button
+            ejs-button
+            (click)="onSaveClick()"
+            cssClass="e-primary"
+            style="float: right"
+          >
+            Aceptar
+          </button>
+        </div>
+      </div>
+    </form>
+  </div>
+</ng-container>

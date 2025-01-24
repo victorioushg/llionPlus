@@ -1,0 +1,10 @@
+[
+  {
+    "type": "Delete",
+    "buttonOption": 
+    { 
+      "cssClass": "e-btn", 
+      "iconCss": "e-trash e-icons" 
+    }
+  }
+]

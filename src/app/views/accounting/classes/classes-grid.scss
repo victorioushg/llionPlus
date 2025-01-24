@@ -1,0 +1,35 @@
+@import "/src/assets/scss/imports";
+
+.e-grid td:first-child.e-selectionbackground {
+  border-left: 7px solid $LLION-COLOR-PRIMARY;
+}
+
+.e-grid td:first-child:not(.e-selectionbackground) {
+  border-left: 7px solid $LLION-COLOR-WHITE;
+}
+
+#classes-grid .e-toolbar {
+  background-color: $LLION-COLOR-SECONDARY-D;
+}
+
+::ng-deep #accounts-grid .e-toolbar-item.e-search-wrapper {
+  padding-bottom: 1px;
+  padding-top: 1px;
+}
+
+::ng-deep #accounts-grid .e-grid .e-toolbar-items .e-toolbar-item.e-search-wrapper .e-search {
+  background-color: $LLION-COLOR-WHITE;
+}
+
+.e-grid .e-gridheader {
+  display: none;
+}
+
+.disablegrid {
+  pointer-events: none;
+  opacity: 0.4;
+}
+
+.wrapper {
+  cursor: not-allowed;
+}

@@ -1,0 +1,55 @@
+<div id="login-main-wrapper" class="login-main-wrapper">
+  <div id="login-form-wrapper" class="login-form-wrapper">
+    <form
+      id="login-form"
+      class="login-form"
+      [formGroup]="loginForm"
+      (submit)="onLogin()"
+    >
+      <br />
+      <div style="display: flex; padding-left: 40px;padding-right: 40px;">
+        <img src="../../assets/images/llion5.png" width="100" alt="logo" /><h1 style="align-self: flex-end; padding-bottom: 0px;">llion</h1>
+      </div>
+      
+      <ejs-textbox
+        placeholder="User Name"
+        showClearButton="true"
+        floatLabelType="Auto"
+        formControlName="username"
+        type="text"
+        required
+      >
+      </ejs-textbox>
+      <ejs-textbox
+        placeholder="Password"
+        showClearButton="true"
+        floatLabelType="Auto"
+        formControlName="password"
+        type="password"
+      >
+      </ejs-textbox>
+      <button
+        ejs-button
+        class="login-button"
+        cssClass="e-primary"
+        type="submit"
+      >
+        Sign In
+      </button>
+      <button
+        ejs-button
+        class="link-button"
+        cssClass="e-link"
+        routerLink=""
+        type="button"
+      >
+        forgot your password?
+      </button>
+    </form>
+  </div>
+  <div id="login-inner-wrapper-blank" class="login-inner-wrapper">
+    <div id="login-wrapper-opacity-blank" class="login-wrapper-opacity">
+      &nbsp;
+    </div>
+  </div>
+</div>

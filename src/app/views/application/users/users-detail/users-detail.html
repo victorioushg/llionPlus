@@ -1,0 +1,74 @@
+<div class="wrapper-detail" *ngIf="user$ | async as user">
+  <div class="row">
+    <div class="col-md-12">
+      <h5>Usuario</h5>
+    </div>
+  </div>
+  <form
+    id="user-detail-form"
+    class="user-detail-form"
+    [formGroup]="userForm" 
+  >
+    <div class="row">
+      <div class="col-md-6">
+        <ejs-textbox
+          id="firstname-txt"
+          placeholder="Nombre"
+          floatLabelType="Always"
+          formControlName="firstname"
+          [enabled]="enabled$ | async"
+          [value]="user.firstname"
+        ></ejs-textbox>
+      </div>
+      <div class="col-md-6">
+        <ejs-textbox
+          id="lastname-txt"
+          placeholder="Apellido"
+          floatLabelType="Always"
+          formControlName="lastname"
+          [enabled]="enabled$ | async"
+          [value]="user.lastname"
+        ></ejs-textbox>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-12">
+        <llion-grid-address></llion-grid-address>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-12">
+        <llion-grid-phone></llion-grid-phone>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-12">
+        <llion-grid-email></llion-grid-email>
+      </div>
+    </div>
+    <br />
+    <div class="row">
+    </div>
+    <br />
+    <div class="row">
+      <div class="col-md-6"></div>
+      <div class="col-md-6">
+        <div id="form-buttons" >
+          <button 
+            ejs-button
+            style="float: right"
+          >
+            Cancelar
+          </button>
+          <button 
+            ejs-button
+            cssClass="e-primary"
+            style="float: right"
+          >
+            Aceptar
+          </button>
+        </div>
+      </div>
+    </div>
+  </form>
+</div>

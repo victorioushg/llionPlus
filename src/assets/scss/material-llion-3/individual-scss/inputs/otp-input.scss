@@ -1,0 +1,297 @@
+@import "../base/base.scss";
+
+$otp-input-width: 32px !default;
+$otp-input-height: 32px !default;
+$otp-input-gap: 14px !default;
+$otp-separator-input-gap: 6px !default;
+$otp-input-padding: 0 !default;
+$otp-input-font-size: 14px !default;
+$otp-input-font-weight: 400 !default;
+$otp-input-password-font-size: 18px !default;
+$otp-input-line-height: 20px !default;
+$otp-input-border-radius-outlined: 4px !default;
+$otp-input-border-radius-underlined: 0 !default;
+$otp-input-border-radius-filled: 4px 4px 0 0 !default;
+$otp-separator-font-size: 16px !default;
+$otp-separator-font-weight: 400 !default;
+$otp-separator-line-height: 24px !default;
+
+$otp-small-input-width: 24px !default;
+$otp-small-input-height: 24px !default;
+$otp-small-input-gap: 8px !default;
+$otp-small-separator-input-gap: 4px !default;
+$otp-small-input-font-size: 12px !default;
+$otp-small-input-password-font-size: 18px !default;
+$otp-small-input-line-height: 16px !default;
+$otp-small-separator-font-size: 16px !default;
+$otp-small-separator-line-height: 24px !default;
+
+$otp-bigger-small-input-width: 36px !default;
+$otp-bigger-small-input-height: 36px !default;
+$otp-bigger-small-input-gap: 16px !default;
+$otp-bigger-small-separator-input-gap: 6px !default;
+$otp-bigger-small-input-font-size: 14px !default;
+$otp-bigger-small-input-password-font-size: 20px !default;
+$otp-bigger-small-input-line-height: 20px !default;
+$otp-bigger-small-separator-font-size: 16px !default;
+$otp-bigger-small-separator-line-height: 24px !default;
+
+$otp-bigger-input-width: 40px !default;
+$otp-bigger-input-height: 40px !default;
+$otp-bigger-input-gap: 16px !default;
+$otp-bigger-separator-input-gap: 8px !default;
+$otp-bigger-input-font-size: 16px !default;
+$otp-bigger-input-password-font-size: 20px !default;
+$otp-bigger-input-line-height: 24px !default;
+$otp-bigger-separator-font-size: 16px !default;
+$otp-bigger-separator-line-height: 24px !default;
+
+$otp-input-text-color: rgba($content-text-color) !default;
+$otp-background-color: $transparent !default;
+$otp-input-border-color: rgba($border) !default;
+$otp-input-border-bottom-color: rgba($border) !default;
+$otp-input-filled-bg-color: rgba($series-1) !default;
+$otp-input-error-color: rgba($border-error) !default;
+$otp-input-success-color: rgba($border-success) !default;
+$otp-input-warning-color: rgba($border-warning) !default;
+$otp-input-separator-color: $border !default;
+$otp-input-underlined-bg-color: $transparent !default;
+$otp-input-disabled-color: rgba($content-text-color) !default;
+$otp-input-disabled-border-color: rgba($border) !default;
+$otp-input-disabled-bg-color: $otp-background-color !default;
+
+@include export-module('otp-input-layout') {
+  .e-otpinput {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: $otp-input-gap;
+    flex-direction: row;
+    &:has(.e-otp-separator):not(:empty) {
+      gap: $otp-separator-input-gap;
+    }
+    .e-otp-input-field {
+      min-width: $otp-input-width;
+      min-height: $otp-input-height;
+      text-align: center;
+      padding: $otp-input-padding;
+      font-size: $otp-input-font-size;
+      font-weight: $otp-input-font-weight;
+      line-height: $otp-input-line-height;
+      border: none;
+      &input[type = 'password'],
+      &[type = 'password'] {
+        font-size: $otp-input-password-font-size;
+      }
+      &.e-input.e-otp-input-focus:focus {
+        padding-bottom: 0;
+      }
+    }
+    &.e-outline {
+      .e-otp-input-field {
+        border-radius: $otp-input-border-radius-outlined;
+      }
+    }
+    &.e-underlined {
+      .e-otp-input-field {
+        border-radius: $otp-input-border-radius-underlined;
+      }
+    }
+    &.e-filled {
+      .e-otp-input-field {
+        border-radius: $otp-input-border-radius-filled;
+        padding: 0;
+      }
+    }
+    .e-otp-separator {
+      font-size: $otp-separator-font-size;
+      font-weight: $otp-separator-font-weight;
+      line-height: $otp-separator-line-height;
+    }
+    input[type = 'number']::-webkit-inner-spin-button,
+    [type = 'number']::-webkit-outer-spin-button {
+      /* stylelint-disable property-no-vendor-prefix */
+      -webkit-appearance: none;
+      /* stylelint-enable property-no-vendor-prefix */
+      margin: 0;
+    }
+    // Remove spin buttons in Firefox
+    input[type = 'number'] {
+      /* stylelint-disable property-no-vendor-prefix */
+      -moz-appearance: textfield;
+      /* stylelint-enable property-no-vendor-prefix */
+    }
+  }
+
+  .e-small.e-otpinput,
+  .e-small .e-otpinput {
+    gap: $otp-small-input-gap;
+    &:has(.e-otp-separator):not(:empty) {
+      gap: $otp-small-separator-input-gap;
+    }
+    .e-otp-input-field {
+      min-width: $otp-small-input-width;
+      min-height: $otp-small-input-height;
+      font-size: $otp-small-input-font-size;
+      line-height: $otp-small-input-line-height;
+      padding: $otp-input-padding;
+      &input[type = 'password'],
+      &[type = 'password'] {
+        font-size: $otp-small-input-password-font-size;
+      }
+      &.e-input.e-otp-input-focus:focus {
+        padding-bottom: 0;
+      }
+    }
+    .e-otp-separator {
+      font-size: $otp-small-separator-font-size;
+      line-height: $otp-small-separator-line-height;
+    }
+    &.e-filled {
+      .e-otp-input-field {
+        padding: 0;
+      }
+    }
+  }
+}
+
+
+@include export-module('otp-input-theme') {
+  .e-otpinput {
+    .e-otp-input-field {
+      color: $otp-input-text-color;
+      background: $otp-background-color;
+    }
+    .e-otp-separator {
+      color: $otp-input-separator-color;
+    }
+    &.e-outline {
+      .e-otp-input-field {
+        border: 1px solid $otp-input-border-color;
+      }
+    }
+    &.e-outline,
+    &.e-underlined,
+    &.e-filled {
+      .e-otp-input-field {
+        @if ($skin-name == 'bootstrap5.3') {
+          border-bottom: 1px solid $otp-input-border-bottom-color;
+        }
+        @else {
+          border-bottom: 2px solid $otp-input-border-bottom-color;
+        }
+      }
+      .e-otp-input-field:disabled {
+        border-color: $otp-input-disabled-border-color;
+        color: $otp-input-disabled-color;
+        background: $otp-input-disabled-bg-color;
+      }
+    }
+    &.e-filled {
+      .e-otp-input-field {
+        background: $otp-input-filled-bg-color;
+      }
+    }
+    &.e-underlined {
+      .e-otp-input-field {
+        background: $otp-input-underlined-bg-color;
+      }
+    }
+    &.e-error {
+      &.e-outline,
+      &.e-underlined,
+      &.e-filled  {
+        .e-otp-input-field,
+        .e-otp-input-field.e-otp-input-focus {
+          border-color: $otp-input-error-color;
+        }
+      }
+    }
+    &.e-success {
+      &.e-outline,
+      &.e-underlined,
+      &.e-filled {
+        .e-otp-input-field,
+        .e-otp-input-field.e-otp-input-focus {
+          border-color: $otp-input-success-color;
+        }
+      }
+    }
+    &.e-warning {
+      &.e-outline,
+      &.e-underlined,
+      &.e-filled {
+        .e-otp-input-field,
+        .e-otp-input-field.e-otp-input-focus {
+          border-color: $otp-input-warning-color;
+        }
+      }
+    }
+  }
+}
+
+@include export-module('otp-input-bigger') {
+  .e-bigger.e-otpinput,
+  .e-bigger .e-otpinput {
+    gap: $otp-bigger-input-gap;
+    &:has(.e-otp-separator):not(:empty) {
+      gap: $otp-bigger-separator-input-gap;
+    }
+    .e-otp-input-field {
+      min-width: $otp-bigger-input-width;
+      min-height: $otp-bigger-input-height;
+      font-size: $otp-bigger-input-font-size;
+      line-height: $otp-bigger-input-line-height;
+      padding: $otp-input-padding;
+      &input[type = 'password'],
+      &[type = 'password'] {
+        font-size: $otp-bigger-input-password-font-size;
+      }
+      &.e-input.e-otp-input-focus:focus {
+        padding-bottom: 0;
+      }
+    }
+    .e-otp-separator {
+      font-size: $otp-bigger-separator-font-size;
+      line-height: $otp-bigger-separator-line-height;
+    }
+    &.e-filled {
+      .e-otp-input-field {
+        padding: 0;
+      }
+    }
+  }
+
+  .e-bigger.e-small.e-otpinput,
+  .e-bigger.e-small .e-otpinput,
+  .e-bigger .e-small.e-otpinput,
+  .e-small .e-bigger.e-otpinput {
+    gap: $otp-bigger-small-input-gap;
+    &:has(.e-otp-separator):not(:empty) {
+      gap: $otp-bigger-small-separator-input-gap;
+    }
+    .e-otp-input-field {
+      min-width: $otp-bigger-small-input-width;
+      min-height: $otp-bigger-small-input-height;
+      font-size: $otp-bigger-small-input-font-size;
+      line-height: $otp-bigger-small-input-line-height;
+      padding: $otp-input-padding;
+      &input[type = 'password'],
+      &[type = 'password'] {
+        font-size: $otp-bigger-small-input-password-font-size;
+      }
+      &.e-input.e-otp-input-focus:focus {
+        padding-bottom: 0;
+      }
+    }
+    .e-otp-separator {
+      font-size: $otp-bigger-small-separator-font-size;
+      line-height: $otp-bigger-small-separator-line-height;
+    }
+    &.e-filled {
+      .e-otp-input-field {
+        padding: 0;
+      }
+    }
+  }
+}

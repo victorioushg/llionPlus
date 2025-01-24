@@ -1,0 +1,44 @@
+<ng-container class="wrapper-container" *ngIf="vm$ | async as vm">
+  <div [hidden]="!emailVisible">
+    <form
+      id="email-detail-form"
+      class="email-detail-form"
+      [formGroup]="emailForm"
+    >
+      <div class="row">
+        <div class="col-md-12">
+          <h5>email</h5>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-md-12">
+          <ejs-textbox
+            id="email-address"
+            placeholder="email address"
+            formControlName="emailAddress"
+            floatLabelType="Always"
+            [value]="vm.email.emailAddress"
+          ></ejs-textbox>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-md-6"></div>
+        <div class="col-md-6">
+          <div id="formButtons">
+            <button ejs-button (click)="onCancelClick()" style="float: right">
+              Cancelar
+            </button>
+            <button
+              ejs-button
+              (click)="onSaveClick()"
+              cssClass="e-primary"
+              style="float: right"
+            >
+              Aceptar
+            </button>
+          </div>
+        </div>
+      </div>
+    </form>
+  </div>
+</ng-container>

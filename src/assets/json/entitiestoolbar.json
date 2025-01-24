@@ -1,0 +1,14 @@
+[
+  {
+    "tooltipText": "Add",
+    "prefixIcon": "e-plus",
+    "id": "add"
+  },
+ 
+  {
+    "template": "<label class='grid-label' id='title-grid'>{{gridtitle}}</label>",  
+    "align": "Right", 
+    "id": "title" 
+    
+  }
+]

@@ -1,0 +1,22 @@
+<div id="phone-grid">
+  <ejs-grid
+    #phonegrid
+    [dataSource]="phones$ | async"
+    [height]="gridHeight"
+    [toolbar]="toolbar"
+    [allowTextWrap]="enabled$ | async"
+    (toolbarClick)="onToolbarClick($event)"
+    (recordDoubleClick)="onRecordDoubleClick($event)"
+  >
+    <e-columns>
+      <e-column width=50 [commands]='commands'></e-column>
+      <e-column field="phoneNumber"></e-column>
+      <e-column field="phoneType"></e-column>
+      <e-column
+        field="phoneId"
+        [isPrimaryKey]="true"
+        [visible]="false"
+      ></e-column>
+    </e-columns>
+  </ejs-grid>
+</div>

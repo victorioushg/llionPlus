@@ -1,0 +1,69 @@
+<ng-container class="wrapper-container" *ngIf="vm$ | async as vm">
+  <div [hidden]="!phoneVisible">
+    <form
+      id="phone-detail-form"
+      class="phone-detail-form"
+      [formGroup]="phoneForm"
+    >
+      <div class="row">
+        <div class="col-md-12">
+          <h5>phone</h5>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-md-6">
+          <ejs-dropdownlist
+            id="phone-type-ddl"
+            [dataSource]="phoneTypes$ | async"
+            placeholder="tipo de teléfono"
+            [fields]="phoneTypeFields"
+            formControlName="phonetypeddl"
+            [value]="vm.phone.phoneType"
+          ></ejs-dropdownlist>
+        </div>
+        <div class="col-md-6">
+          <ejs-dropdownlist
+            id="country-code"
+            [dataSource]="phoneCodes"
+            [fields]="phoneCountryFields"
+            placeholder="código internacional"
+            formControlName="countrycode"
+            [value]="vm.phone.countryCode"
+            [allowFiltering]='true'
+            [filterType]="filterType"
+          ></ejs-dropdownlist>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-md-12">
+          <ejs-maskedtextbox
+            id="phone-number"
+            placeholder="número de teléfono"
+            floatLabelType="Always"
+            formControlName="phonenumber"
+            [value]="vm.phone.phoneNumber"
+            [mask]='phoneMask'
+          ></ejs-maskedtextbox>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-md-6"></div>
+        <div class="col-md-6">
+          <div id="formButtons">
+            <button ejs-button (click)="onCancelClick()" style="float: right">
+              Cancelar
+            </button>
+            <button
+              ejs-button
+              (click)="onSaveClick()"
+              cssClass="e-primary"
+              style="float: right"
+            >
+              Aceptar
+            </button>
+          </div>
+        </div>
+      </div>
+    </form>
+  </div>
+</ng-container>
