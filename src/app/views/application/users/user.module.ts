@@ -7,9 +7,18 @@ import { UserComponent } from '@views/application/users/user-grid';
 
 // Syncfusion
 import { GridAllModule } from '@syncfusion/ej2-angular-grids';
-import { ToolbarModule } from '@syncfusion/ej2-angular-navigations';
+import {
+  ToolbarModule,
+  TabModule,
+  TabComponent,
+  TabItemsDirective,
+  TabItemDirective,
+} from '@syncfusion/ej2-angular-navigations';
 import { TextBoxModule } from '@syncfusion/ej2-angular-inputs';
-import { DropDownListModule } from '@syncfusion/ej2-angular-dropdowns';
+import {
+  DropDownListModule,
+  MultiSelectModule,
+} from '@syncfusion/ej2-angular-dropdowns';
 import { ButtonModule, SwitchModule } from '@syncfusion/ej2-angular-buttons';
 
 import { DatePickerModule } from '@syncfusion/ej2-angular-calendars';
@@ -46,9 +55,11 @@ enableRipple(true);
     RouterModule.forChild(ROUTES),
     FontAwesomeModule,
     ToolbarModule,
+    TabModule,
     GridAllModule,
     TextBoxModule,
     DropDownListModule,
+    MultiSelectModule, 
     SwitchModule,
     DatePickerModule,
     ButtonModule,
@@ -57,6 +68,6 @@ enableRipple(true);
   ],
 
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
-  providers: [provideHttpClient(withInterceptorsFromDi()),],
+  providers: [provideHttpClient(withInterceptorsFromDi())],
 })
 export class UserModule {}

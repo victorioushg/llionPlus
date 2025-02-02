@@ -4,7 +4,9 @@
       <div class="col-lg-4">
         <div class="row">
           <div class="col-lg-12">
-            <h5>usuarios</h5>
+            <div id="module-title" class="module-title">
+             <h5>usuarios</h5>
+          </div>
           </div>
         </div>
         <div id="users-grid">
@@ -42,13 +44,38 @@
           </ejs-grid>
         </div>
       </div>
-      <div class="col-lg-4">
-        <llion-user-detail></llion-user-detail>
-      </div>
-      <div class="col-lg-4">
-        <llion-user-detail-input></llion-user-detail-input>
-      </div>
+      <div class="col-lg-8">
+      <ejs-tab id="tabs" #tabs>
+        <e-tabitems>
+          <e-tabitem [header]="headerText[0]">
+            <div class="row">
+              <div class="col-lg-12">
+                <ng-template #content>
+                  <div class="row">
+                    <div class="col-lg-6">
+                      <llion-user-detail></llion-user-detail>
+                    </div>
+                    <div class="col-lg-6">
+                      <llion-user-detail-input></llion-user-detail-input>
+                    </div>
+                  </div>
+                </ng-template>
+              </div>
+            </div>
+          </e-tabitem>
+          <!-- <e-tabitem [header]="headerText[1]">
+            <ng-template #content></ng-template>
+          </e-tabitem>
+          <e-tabitem [header]="headerText[2]">
+            <ng-template #content></ng-template>
+          </e-tabitem>
+          <e-tabitem [header]="headerText[3]">
+            <ng-template #content></ng-template>
+          </e-tabitem> -->
+        </e-tabitems>
+      </ejs-tab>
     </div>
-    <div id="ej2Toast" #toast></div>
+  </div>
+  <div id="ej2Toast" #toast></div>
   </div>
 </div>

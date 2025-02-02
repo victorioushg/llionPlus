@@ -9,3 +9,8 @@ export interface IUser {
   displayName: string  
 
 }
+
+export interface IRole {
+  roleName: string;
+  rank: number;  
+}

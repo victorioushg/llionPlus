@@ -1,14 +1,5 @@
 <div class="wrapper-detail" *ngIf="user$ | async as user">
-  <div class="row">
-    <div class="col-md-12">
-      <h5>Usuario</h5>
-    </div>
-  </div>
-  <form
-    id="user-detail-form"
-    class="user-detail-form"
-    [formGroup]="userForm" 
-  >
+  <form id="user-detail-form" class="user-detail-form" [formGroup]="userForm">
     <div class="row">
       <div class="col-md-6">
         <ejs-textbox
@@ -17,7 +8,7 @@
           floatLabelType="Always"
           formControlName="firstname"
           [enabled]="enabled$ | async"
-          [value]="user.firstname"
+          [value]="user.firstName"
         ></ejs-textbox>
       </div>
       <div class="col-md-6">
@@ -27,44 +18,49 @@
           floatLabelType="Always"
           formControlName="lastname"
           [enabled]="enabled$ | async"
-          [value]="user.lastname"
+          [value]="user.lastName"
         ></ejs-textbox>
       </div>
     </div>
     <div class="row">
       <div class="col-md-12">
-        <llion-grid-address></llion-grid-address>
+        <ejs-multiselect
+          id="orgs"
+          [dataSource]="organizations$ | async"
+          [fields]="ofields"
+          floatLabelType="Always"
+          placeholder="organizaciones"
+        ></ejs-multiselect>
       </div>
     </div>
     <div class="row">
       <div class="col-md-12">
-        <llion-grid-phone></llion-grid-phone>
+        <ejs-dropdownlist
+          id="defaultddl"
+          placeholder="organización por defecto"
+          floatLabelType="Always"
+        ></ejs-dropdownlist>
       </div>
     </div>
     <div class="row">
       <div class="col-md-12">
-        <llion-grid-email></llion-grid-email>
+        <ejs-multiselect
+          id="roles"
+          [dataSource]="roles$ | async"
+          [fields]="rfields"
+          floatLabelType="Always"
+          placeholder="roles"
+        ></ejs-multiselect>
       </div>
     </div>
-    <br />
-    <div class="row">
-    </div>
+    <div class="row"></div>
     <br />
     <div class="row">
       <div class="col-md-6"></div>
       <div class="col-md-6">
-        <div id="form-buttons" >
-          <button 
-            ejs-button
-            style="float: right"
-          >
-            Cancelar
-          </button>
-          <button 
-            ejs-button
-            cssClass="e-primary"
-            style="float: right"
-          >
+        <div id="form-buttons">
+          <button ejs-button style="float: right">Cancelar</button>
+          <button ejs-button cssClass="e-primary" style="float: right">
             Aceptar
           </button>
         </div>

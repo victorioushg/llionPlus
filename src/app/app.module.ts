@@ -21,6 +21,7 @@ import { ROUTES } from './_routes';
 import { LoginComponent } from '@auth/login/login.component';
 import { AppComponent } from './app.component';
 import { BrowserModule } from '@angular/platform-browser';
+import { ErrorHandlerService } from '@shared/services/errorHandlerService';
 
 export function tokenGetter() {
   return localStorage.getItem('jwt');
@@ -56,6 +57,12 @@ export function tokenGetter() {
   providers: [
     ToastService,
     { provide: HTTP_INTERCEPTORS, useClass: HttpErrorInterceptor, multi: true },
+    ErrorHandlerService,
+    {
+      provide: HTTP_INTERCEPTORS,
+      useClass: HttpErrorInterceptor,
+      multi: true
+    }
   ],
   bootstrap: [AppComponent], 
 })

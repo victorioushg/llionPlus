@@ -1,5 +1,5 @@
 import { Injectable, NgZone } from '@angular/core';
-import { IUser } from './user';
+import { IRole, IUser } from './user';
 import { environment } from '@environments/environment';
 import {
   HttpClient,
@@ -19,8 +19,8 @@ import {
   Subject,
   throwError,
   switchMap,
-  shareReplay, 
-  concatMap, 
+  shareReplay,
+  concatMap,
   scan,
 } from 'rxjs';
 import { IApiResponse } from '@shared/models/api-response';
@@ -28,12 +28,16 @@ import { ToastService } from '@shared/services/toastService';
 import { toastType } from '@shared/enums/enums';
 import { Action } from '@shared/models/edit-action';
 import { ApplicationService } from '@shared/services/applicattionService';
+import { IOrganization } from '../organization/organization';
+import { ErrorHandlerService } from '@shared/services/errorHandlerService';
 
 @Injectable({
   providedIn: 'root',
 })
 export class UserService {
-  private apiUrl = environment.API_URL + 'application';
+  private apiUrl = environment.API_URL + 'user';
+  private apiAppUrl = environment.API_URL + 'organization';
+
   userWithCRUD$!: Observable<IUser[]>;
   private emptyUser: Observable<IUser> = of({
     userId: 0,
@@ -53,9 +57,11 @@ export class UserService {
 
   userSelected$: Observable<IUser> | undefined;
 
+  organizations$!: Observable<IOrganization[]>;
+  roles$!: Observable<IRole[]>;
+
   private userModifiedSubject = new Subject<Action<IUser>>();
   userModifiedAction$ = this.userModifiedSubject.asObservable();
-  
 
   headers = new HttpHeaders({ 'Content-Type': 'application/json' });
 
@@ -63,17 +69,31 @@ export class UserService {
     private http: HttpClient,
     private applicationService: ApplicationService,
     private toastService: ToastService,
-    private ngZone: NgZone
+    private errorhandlerService: ErrorHandlerService
   ) {
     this.initializeObservables();
   }
 
   private initializeObservables(): void {
+    this.organizations$ = this.http
+      .get<IApiResponse<IOrganization[]>>(this.apiAppUrl + '/all')
+      .pipe(
+        map((data) => data.result),
+        catchError(this.errorhandlerService.handleError)
+      );
+
+    this.roles$ = this.http
+      .get<IApiResponse<IRole[]>>(this.apiUrl + '/roles')
+      .pipe(
+        map((data) => data.result),
+        catchError(this.errorhandlerService.handleError)
+      );
+
     this.users$ = this.http
       .get<IApiResponse<IUser[]>>(this.apiUrl + '/users')
       .pipe(
         map((data) => data.result),
-        catchError(this.handleError)
+        catchError(this.errorhandlerService.handleError)
       );
 
     this.userSelected$ = combineLatest([
@@ -201,19 +221,6 @@ export class UserService {
   getUser(id: number): Observable<IUser> {
     return this.http
       .get<IApiResponse<IUser>>(`${this.apiUrl}/user/${id}`)
-      .pipe(map((data) => data.result));
-  }
-
-  private handleError(err: HttpErrorResponse) {
-    let errorMessage = '';
-    if (err.error instanceof ErrorEvent) {
-      errorMessage = `An Error occurred: ${err.error.message}`;
-    } else {
-      errorMessage = `Server returned code ${err.status}, error message is: ${err.message}`;
-    }
-    this.ngZone.run(() => {
-      this.toastService.showMyToast(errorMessage, toastType.error);
-    });
-    return throwError(() => new Error(errorMessage));
+      .pipe(map((data) =>  data.result ));
   }
 }

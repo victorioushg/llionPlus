@@ -33,6 +33,7 @@ import { ApplicationService } from '@shared/services/applicattionService';
 import { ToastService } from '@shared/services/toastService';
 import { toastType } from '@shared/enums/enums';
 import { Action } from '@shared/models/edit-action';
+import { ErrorHandlerService } from '@shared/services/errorHandlerService';
 
 @Injectable({
   providedIn: 'root',
@@ -63,13 +64,11 @@ export class OrganizationService {
   organizations$!: Observable<IOrganization[]>;
 
   organizationTypes$!: Observable<IOrganizationType[]>;
-
   assosiationTypes$!: Observable<IAssosiationType[]>;
 
   private organizationSelectedSubject = new BehaviorSubject<number>(0);
   organizationSelectedAction$ = this.organizationSelectedSubject.asObservable();
   organizationSelected$!: Observable<IOrganization>;
-
 
   // To Delete
   // private enabledFormSource = new BehaviorSubject<boolean>(false);
@@ -114,20 +113,19 @@ export class OrganizationService {
     private http: HttpClient,
     private applicationService: ApplicationService,
     private toastService: ToastService,
-    private ngZone: NgZone
+    private errorHandlerService: ErrorHandlerService
   ) {
     this.initializeObservables();
   }
 
   private initializeObservables(): void {
-
-    // this.emptyOrganization = of({} as IOrganization); 
+    // this.emptyOrganization = of({} as IOrganization);
 
     this.organizations$ = this.http
       .get<IApiResponse<IOrganization[]>>(this.organizationUrl + '/all')
       .pipe(
         map((data) => data.result),
-        catchError(this.handleError)
+        catchError(this.errorHandlerService.handleError)
       );
 
     this.organizationTypes$ = this.http
@@ -136,7 +134,7 @@ export class OrganizationService {
       )
       .pipe(
         map((data) => data.result),
-        catchError(this.handleError)
+        catchError(this.errorHandlerService.handleError)
       );
 
     this.assosiationTypes$ = this.http
@@ -145,7 +143,7 @@ export class OrganizationService {
       )
       .pipe(
         map((data) => data.result),
-        catchError(this.handleError)
+        catchError(this.errorHandlerService.handleError)
       );
 
     this.organizationSelected$ = combineLatest([
@@ -157,7 +155,7 @@ export class OrganizationService {
           this.applicationService.entitySelected(selectedOrganizationId);
           return this.getOrganization(selectedOrganizationId);
         } else {
-          return this.emptyOrganization; 
+          return this.emptyOrganization;
         }
       }),
       shareReplay(1)
@@ -221,7 +219,7 @@ export class OrganizationService {
           }),
 
           map(() => ({ item: organization, action: operation.action })),
-          catchError((error: HttpErrorResponse) => this.handleError(error))
+          catchError((error: HttpErrorResponse) => this.errorHandlerService.handleError(error))
         );
     }
 
@@ -245,7 +243,7 @@ export class OrganizationService {
           }),
           // Return the original organization so it can replace the organization in the array
           map(() => ({ item: organization, action: operation.action })),
-          catchError(this.handleError)
+          catchError(this.errorHandlerService.handleError)
         );
     }
 
@@ -262,20 +260,8 @@ export class OrganizationService {
       .get<IApiResponse<IOrganization>>(this.organizationUrl + '/' + id)
       .pipe(
         map((data) => data.result),
-        catchError(this.handleError)
+        catchError(this.errorHandlerService.handleError)
       );
   }
-
-  private handleError(err: HttpErrorResponse) {
-    let errorMessage = '';
-    if (err.error instanceof ErrorEvent) {
-      errorMessage = `An Error ocurred: ${err.error.message}`;
-    } else {
-      errorMessage = `Server returned cod ${err.status}, error message is : ${err.message}`;
-    }
-    this.ngZone.run(() => {
-      this.toastService.showMyToast(errorMessage, toastType.error);
-    });
-    return throwError(() => errorMessage);
-  }
+ 
 }

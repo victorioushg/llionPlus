@@ -27,7 +27,7 @@ import { ChangeDetectionStrategy } from '@angular/core';
 import { IUser } from './user';
 import { ToastService } from '@shared/services/toastService';
 import { toastType } from '@shared/enums/enums';
-import { ClickEventArgs } from '@syncfusion/ej2-angular-navigations';
+import { ClickEventArgs, TabComponent } from '@syncfusion/ej2-angular-navigations';
 import { ApplicationService } from '@shared/services/applicattionService';
 
 @Component({
@@ -51,11 +51,19 @@ export class UserComponent implements OnInit {
   searchSettings?: SearchSettingsModel;
 
   @ViewChild('grid') public grid: GridComponent | undefined;
+  @ViewChild('tabs') public tabObj?: TabComponent;
   @ViewChild('toast') toast: ElementRef | undefined;
 
   selectedUser: IUser | undefined;
 
   enabled$: Observable<boolean> | undefined;
+
+  headerText: Object[] = [
+    { text: 'usuario' },
+    // { text: 'parámetros y contadores' },
+    // { text: 'impuestos y retenciones' },
+    // { text: 'créditos y débitos' },
+  ];
 
   /////
   constructor(
@@ -64,7 +72,14 @@ export class UserComponent implements OnInit {
     private toastService: ToastService
   ) {}
 
+  ngAfterViewInit(): void {
+    if (this.tabObj) {
+      (this.tabObj as TabComponent).element.classList.add('e-fill');
+    }
+  }
+
   ngOnInit(): void {
+    
     this.commands = [
       {
         type: 'Delete',

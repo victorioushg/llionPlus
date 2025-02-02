@@ -5,14 +5,14 @@ import {
   ViewChild,
 } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-// import { OrganizationService } from '../organization.service';
 
 import { DropDownListComponent } from '@syncfusion/ej2-angular-dropdowns';
-// import { IOrganization } from '../organization';
-import { catchError, EMPTY, Observable, Subject, tap } from 'rxjs';
+
+import { catchError, EMPTY, Observable, of, Subject, tap } from 'rxjs';
 import { ApplicationService } from '@shared/services/applicattionService';
 import { UserService } from '@views/application/users/user.service';
-import { IUser } from '../user';
+import { IRole, IUser } from '../user';
+import { IOrganization } from '@views/application/organization/organization';
 
 @Component({
   selector: 'llion-user-detail',
@@ -26,8 +26,16 @@ export class UsersDetailComponent implements OnInit {
 
   userForm!: FormGroup;
 
-  user$: Observable<any> | undefined;
-  
+  user$!: Observable<IUser>;
+
+  organizations$!: Observable<IOrganization[]>;
+  ofields: Object = { text: 'name', value: 'id' };
+  ovalue: number | undefined;
+
+  roles$!: Observable<IRole[]>;
+  rfields: Object = { text: 'roleName', value: 'roleName' };
+  rvalue: string | undefined;
+
   user: any;
 
   enabled$: Observable<boolean> | undefined;
@@ -43,10 +51,11 @@ export class UsersDetailComponent implements OnInit {
       lastname: ['', Validators.required],
     });
 
-    this.user$ = this.userService.userSelected$?.pipe(
-      tap((data: any) => (
-        this.user = data ?? {} 
-      )),
+    this.organizations$ = this.userService.organizations$;
+    this.roles$ = this.userService.roles$;
+
+    this.user$ = (this.userService.userSelected$ || of({} as IUser)).pipe(
+      tap((data: any) => (this.user = data ?? {})),
       catchError((err) => {
         this.errorMessageSubject.next(err);
         return EMPTY;

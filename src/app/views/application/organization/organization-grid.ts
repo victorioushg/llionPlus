@@ -91,7 +91,6 @@ export class OrganizationComponent implements OnInit, AfterViewInit {
   }
 
   ngOnInit(): void {
-
     this.commands = [
       {
         type: 'Delete',
