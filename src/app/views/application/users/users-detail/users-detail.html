@@ -29,7 +29,9 @@
           [dataSource]="organizations$ | async"
           [fields]="ofields"
           floatLabelType="Always"
+          formControlName="orgs"
           placeholder="organizaciones"
+          [value]="orgs"
         ></ejs-multiselect>
       </div>
     </div>
@@ -37,8 +39,12 @@
       <div class="col-md-12">
         <ejs-dropdownlist
           id="defaultddl"
+          [dataSource]="organizations$ | async"
+          [fields]="dfields"
           placeholder="organización por defecto"
+          formControlName="default"
           floatLabelType="Always"
+          [value]="dvalue"
         ></ejs-dropdownlist>
       </div>
     </div>
@@ -50,6 +56,8 @@
           [fields]="rfields"
           floatLabelType="Always"
           placeholder="roles"
+          formControlName="rols"
+          [value]="rols"
         ></ejs-multiselect>
       </div>
     </div>
@@ -59,8 +67,17 @@
       <div class="col-md-6"></div>
       <div class="col-md-6">
         <div id="form-buttons">
-          <button ejs-button style="float: right">Cancelar</button>
-          <button ejs-button cssClass="e-primary" style="float: right">
+          <button ejs-button 
+            (click)="onCancelClick()"
+            [disabled]="!(enabled$ | async)" 
+            style="float: right">
+            Cancelar
+          </button>
+          <button ejs-button 
+            (click)="onSaveClick()"
+            cssClass="e-primary"
+            [disabled]="!(enabled$ | async)"
+            style="float: right">
             Aceptar
           </button>
         </div>

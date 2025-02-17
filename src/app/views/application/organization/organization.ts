@@ -18,6 +18,7 @@ export interface IOrganization {
   addresses: IAddress[];
   phones: IPhone[];
   emails: IEmail[];
+  default: boolean;
 
   logoData: string;
   logoName: string

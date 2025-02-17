@@ -48,10 +48,20 @@ export class UserService {
     firstName: '',
     lastName: '',
     displayName: '',
+    orgs: [],
+    rols: [],
   }).pipe(take(1));
 
   users$: Observable<IUser[]> | undefined;
 
+  // Organization
+  private enabledUserGridSource = new BehaviorSubject<boolean>(false);
+  enableUserGridAction$: Observable<boolean> =
+    this.enabledUserGridSource.asObservable();
+  enableUsernGrid(enabled: boolean) {
+    this.enabledUserGridSource.next(enabled);
+  }
+  
   private userSelectedSubject = new BehaviorSubject<number>(0);
   userSelectedAction$ = this.userSelectedSubject.asObservable();
 
@@ -220,7 +230,7 @@ export class UserService {
 
   getUser(id: number): Observable<IUser> {
     return this.http
-      .get<IApiResponse<IUser>>(`${this.apiUrl}/user/${id}`)
-      .pipe(map((data) =>  data.result ));
+      .get<IApiResponse<IUser>>(`${this.apiUrl}/${id}`)
+      .pipe(map((data) => data.result));
   }
 }

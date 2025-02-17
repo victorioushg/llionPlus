@@ -118,6 +118,7 @@ export class OrganizationDetailComponent implements OnInit {
       addedOn: new Date(this.organizationForm.value.addedOn),
       lastUpdatedBy: 0,
       lastUpdatedOn: new Date(),
+      default: false, 
       addresses: [],
       phones: [],
       emails: [],

@@ -157,8 +157,7 @@ export class UserComponent implements OnInit {
   enableParentForm(enable: boolean) {
     this.applicationService.enableUserGrid(enable);
     this.applicationService.enableUserForm(enable);
-    // this.applicationService.enableChildGrid(enable);
-    // this.applicationService.enableEmailChildGrid(enable);
+   
   }
 
   actionBegin(args: SearchEventArgs): void {

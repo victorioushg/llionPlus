@@ -6,8 +6,9 @@ export interface IUser {
   deactivated?: number;
   firstName: string;
   lastName: string
-  displayName: string  
-
+  displayName: string; 
+  orgs: string[]; 
+  rols: string[]; 
 }
 
 export interface IRole {

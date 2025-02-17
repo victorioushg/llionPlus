@@ -59,6 +59,7 @@ export class OrganizationService {
     parentId: 0,
     logoData: '',
     logoName: '',
+    default: false, 
   }).pipe(take(1));
 
   organizations$!: Observable<IOrganization[]>;
