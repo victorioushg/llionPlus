@@ -116,7 +116,7 @@ export class OrganizationComponent implements OnInit, AfterViewInit {
       })
     );
 
-    this.enabled$ = this.applicationService.enableOrganizationGridAction$.pipe(
+    this.enabled$ = this.organizationService.enableOrganizationGridAction$.pipe(
       tap((enabled) => {
         if (this.grid) {
           if (enabled) {
@@ -172,8 +172,8 @@ export class OrganizationComponent implements OnInit, AfterViewInit {
   }
 
   enableParentForm(enable: boolean) {
-    this.applicationService.enableOrganizationGrid(enable);
-    this.applicationService.enableOrganizationForm(enable);
+    this.organizationService.enableOrganizationGrid(enable);
+    this.organizationService.enableOrganizationForm(enable);
     this.applicationService.enableAddressChildGrid(enable);
     this.applicationService.enableEmailChildGrid(enable);
     this.applicationService.enablePhoneChildGrid(enable);

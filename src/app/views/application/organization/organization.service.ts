@@ -59,7 +59,7 @@ export class OrganizationService {
     parentId: 0,
     logoData: '',
     logoName: '',
-    default: false, 
+    default: false,
   }).pipe(take(1));
 
   organizations$!: Observable<IOrganization[]>;
@@ -82,6 +82,20 @@ export class OrganizationService {
   // Save the organization via http
   // And then create and buffer a new array of products with scan.
   organizationWithCRUD$!: Observable<IOrganization[]>;
+
+  // Enabling 
+  private enabledOrganizationGridSource = new BehaviorSubject<boolean>(false);
+  enableOrganizationGridAction$: Observable<boolean> =
+    this.enabledOrganizationGridSource.asObservable();
+  enableOrganizationGrid(enabled: boolean) {
+    this.enabledOrganizationGridSource.next(enabled);
+  }
+  private enabledOrganizationFormSource = new BehaviorSubject<boolean>(false);
+  enableOrganizationFormAction$ =
+    this.enabledOrganizationFormSource.asObservable();
+  enableOrganizationForm(enabled: boolean) {
+    this.enabledOrganizationFormSource.next(enabled);
+  }
 
   // Support methods
   // Save the organization to the backend server
@@ -220,7 +234,9 @@ export class OrganizationService {
           }),
 
           map(() => ({ item: organization, action: operation.action })),
-          catchError((error: HttpErrorResponse) => this.errorHandlerService.handleError(error))
+          catchError((error: HttpErrorResponse) =>
+            this.errorHandlerService.handleError(error)
+          )
         );
     }
 
@@ -264,5 +280,4 @@ export class OrganizationService {
         catchError(this.errorHandlerService.handleError)
       );
   }
- 
 }

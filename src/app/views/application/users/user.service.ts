@@ -54,15 +54,20 @@ export class UserService {
 
   users$: Observable<IUser[]> | undefined;
 
-  // Organization
+  // Users
   private enabledUserGridSource = new BehaviorSubject<boolean>(false);
   enableUserGridAction$: Observable<boolean> =
     this.enabledUserGridSource.asObservable();
-  enableUsernGrid(enabled: boolean) {
+  enableUserGrid(enabled: boolean) {
     this.enabledUserGridSource.next(enabled);
   }
-  
-  private userSelectedSubject = new BehaviorSubject<number>(0);
+  private enabledUserFormSource = new BehaviorSubject<boolean>(false);
+  enableUserFormAction$ = this.enabledUserFormSource.asObservable();
+  enableUserForm(enabled: boolean) {
+    this.enabledUserFormSource.next(enabled);
+  }
+
+   private userSelectedSubject = new BehaviorSubject<number>(0);
   userSelectedAction$ = this.userSelectedSubject.asObservable();
 
   userSelected$: Observable<IUser> | undefined;

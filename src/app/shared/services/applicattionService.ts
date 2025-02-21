@@ -14,6 +14,7 @@ import { IApiResponse } from '../models/api-response';
 import '@lib/string';
 import { ToastService } from './toastService';
 import { childgrid } from '../enums/enums';
+import { OrganizationService } from '@views/application/organization/organization.service';
 
 @Injectable({
   providedIn: 'root',
@@ -51,18 +52,18 @@ export class ApplicationService {
   );
 
   // Organization
-  private enabledOrganizationGridSource = new BehaviorSubject<boolean>(false);
-  enableOrganizationGridAction$: Observable<boolean> =
-    this.enabledOrganizationGridSource.asObservable();
-  enableOrganizationGrid(enabled: boolean) {
-    this.enabledOrganizationGridSource.next(enabled);
-  }
-  private enabledOrganizationFormSource = new BehaviorSubject<boolean>(false);
-  enableOrganizationFormAction$ =
-    this.enabledOrganizationFormSource.asObservable();
-  enableOrganizationForm(enabled: boolean) {
-    this.enabledOrganizationFormSource.next(enabled);
-  }
+  // private enabledOrganizationGridSource = new BehaviorSubject<boolean>(false);
+  // enableOrganizationGridAction$: Observable<boolean> =
+  //   this.enabledOrganizationGridSource.asObservable();
+  // enableOrganizationGrid(enabled: boolean) {
+  //   this.enabledOrganizationGridSource.next(enabled);
+  // }
+  // private enabledOrganizationFormSource = new BehaviorSubject<boolean>(false);
+  // enableOrganizationFormAction$ =
+  //   this.enabledOrganizationFormSource.asObservable();
+  // enableOrganizationForm(enabled: boolean) {
+  //   this.enabledOrganizationFormSource.next(enabled);
+  // }
 
   // Address
   private enabledAddressChildGridSource = new BehaviorSubject<boolean>(false);
@@ -102,23 +103,25 @@ export class ApplicationService {
     this.enabledPhoneChildFormSource.next(enabled);
   }
 
-  // Users
-  private enabledUserGridSource = new BehaviorSubject<boolean>(false);
-  enableUserGridAction$: Observable<boolean> =
-    this.enabledUserGridSource.asObservable();
-  enableUserGrid(enabled: boolean) {
-    this.enabledUserGridSource.next(enabled);
-  }
-  private enabledUserFormSource = new BehaviorSubject<boolean>(false);
-  enableUserFormAction$ = this.enabledUserFormSource.asObservable();
-  enableUserForm(enabled: boolean) {
-    this.enabledUserFormSource.next(enabled);
-  }
+  // // Users
+  // private enabledUserGridSource = new BehaviorSubject<boolean>(false);
+  // enableUserGridAction$: Observable<boolean> =
+  //   this.enabledUserGridSource.asObservable();
+  // enableUserGrid(enabled: boolean) {
+  //   this.enabledUserGridSource.next(enabled);
+  // }
+  // private enabledUserFormSource = new BehaviorSubject<boolean>(false);
+  // enableUserFormAction$ = this.enabledUserFormSource.asObservable();
+  // enableUserForm(enabled: boolean) {
+  //   this.enabledUserFormSource.next(enabled);
+  // }
 
-  constructor(private http: HttpClient, private toastService: ToastService) {}
+  constructor(
+    private http: HttpClient, 
+    private toastService: ToastService 
+  ) {}
 
   enableDetailForm(grid: childgrid, enable: boolean) {
-    this.enableOrganizationForm(!enable);
     this.enablePhoneChildGrid(!enable);
     this.enableAddressChildGrid(!enable);
     this.enableEmailChildGrid(!enable);

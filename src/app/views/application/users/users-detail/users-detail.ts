@@ -66,15 +66,11 @@ export class UsersDetailComponent implements OnInit {
     this.roles$ = this.userService.roles$;
 
     this.user$ = (this.userService.userSelected$ || of({})).pipe(
-      // tap((data: any) => {
-      //   (this.user = data ?? {} );
-      // }),
       tap((data: any) => {
         this.orgs = (data.orgs ?? []).map((item: any) => item['id']);
         this.rols = (data.roles ?? []).map((item: any) => item['roleName']);
         this.defaultOrg = (data.orgs ?? []).filter((item: any) => item.default);
         this.dvalue = this.defaultOrg.length > 0 ? this.defaultOrg[0].id : null;
-        console.log(this.dvalue);
       }),
       catchError((err) => {
         this.errorMessageSubject.next(err);
@@ -84,7 +80,7 @@ export class UsersDetailComponent implements OnInit {
 
     //  this.orgs = (this.user.orgs ?? []).map((item: any) => item['id']);
 
-    this.enabled$ = this.applicationService.enableUserFormAction$.pipe(
+    this.enabled$ = this.userService.enableUserFormAction$.pipe(
       tap((enabled) => {
         if (enabled) {
           this.userForm.enable();
@@ -131,7 +127,7 @@ export class UsersDetailComponent implements OnInit {
   }
 
   disableForm() {
-    this.applicationService.enableUserForm(false);
-    this.applicationService.enableUserGrid(false);
+    this.userService.enableUserForm(false);
+    this.userService.enableUserGrid(false);
   }
 }

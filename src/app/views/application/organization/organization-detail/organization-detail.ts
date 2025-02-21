@@ -79,7 +79,7 @@ export class OrganizationDetailComponent implements OnInit {
       })
     );
 
-    this.enabled$ = this.applicationService.enableOrganizationFormAction$.pipe(
+    this.enabled$ = this.organizationService.enableOrganizationFormAction$.pipe(
       tap((enabled) => {
         if (enabled) {
           this.organizationForm.enable();
@@ -136,8 +136,8 @@ export class OrganizationDetailComponent implements OnInit {
   }
 
   disableForm() {
-    this.applicationService.enableOrganizationForm(false);
-    this.applicationService.enableOrganizationGrid(false);
+    this.organizationService.enableOrganizationForm(false);
+    this.organizationService.enableOrganizationGrid(false);
     this.applicationService.enableAddressChildGrid(false);
     this.applicationService.enableEmailChildGrid(false);
     this.applicationService.enablePhoneChildGrid(false);

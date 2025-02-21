@@ -27,7 +27,10 @@ import { ChangeDetectionStrategy } from '@angular/core';
 import { IUser } from './user';
 import { ToastService } from '@shared/services/toastService';
 import { toastType } from '@shared/enums/enums';
-import { ClickEventArgs, TabComponent } from '@syncfusion/ej2-angular-navigations';
+import {
+  ClickEventArgs,
+  TabComponent,
+} from '@syncfusion/ej2-angular-navigations';
 import { ApplicationService } from '@shared/services/applicattionService';
 
 @Component({
@@ -50,13 +53,13 @@ export class UserComponent implements OnInit {
   toolbar: ToolbarItems[] | object = MiniToolbar;
   searchSettings?: SearchSettingsModel;
 
-  @ViewChild('grid') public grid: GridComponent | undefined;
+  @ViewChild('grid') public grid!: GridComponent;
   @ViewChild('tabs') public tabObj?: TabComponent;
-  @ViewChild('toast') toast: ElementRef | undefined;
+  @ViewChild('toast') toast!: ElementRef;
 
-  selectedUser: IUser | undefined;
+  selectedUser!: IUser;
 
-  enabled$: Observable<boolean> | undefined;
+  enabled$!: Observable<boolean>;
 
   headerText: Object[] = [
     { text: 'usuario' },
@@ -79,7 +82,6 @@ export class UserComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    
     this.commands = [
       {
         type: 'Delete',
@@ -107,8 +109,9 @@ export class UserComponent implements OnInit {
       })
     );
 
-    this.enabled$ = this.applicationService.enableUserGridAction$.pipe(
+    this.enabled$ = this.userService.enableUserGridAction$.pipe(
       tap((enabled) => {
+        
         if (this.grid) {
           if (enabled) {
             this.grid.element.classList.add('disablegrid');
@@ -155,9 +158,8 @@ export class UserComponent implements OnInit {
   }
 
   enableParentForm(enable: boolean) {
-    this.applicationService.enableUserGrid(enable);
-    this.applicationService.enableUserForm(enable);
-   
+    this.userService.enableUserGrid(enable);
+    this.userService.enableUserForm(enable);
   }
 
   actionBegin(args: SearchEventArgs): void {
