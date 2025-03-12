@@ -1,0 +1,39 @@
+@use "../../../../assets/scss/variables" as *;
+
+.e-grid td:first-child.e-selectionbackground {
+  border-left: 7px solid $llion-color-primary;
+}
+
+.e-grid td:first-child:not(.e-selectionbackground) {
+  border-left: 7px solid $llion-color-white;
+}
+
+#organization-grid .e-toolbar {
+  background-color: $llion-color-primary-container;
+}
+
+.e-toolbar .e-toolbar-items .e-tbar-btn {
+  background: $llion-color-white;
+  border: 1px solid #5a70cc;
+}
+
+::ng-deep #organization-grid .e-toolbar-item.e-search-wrapper {
+  padding-top: 7px;
+}
+
+::ng-deep #organization-grid .e-grid .e-toolbar-items .e-toolbar-item.e-search-wrapper .e-search {
+  background-color: $llion-color-primary-container;
+}
+
+.e-grid .e-gridheader {
+  display: none;
+}
+
+.disablegrid {
+  pointer-events: none;
+  opacity: 0.4;
+}
+
+.wrapper {
+  cursor: not-allowed;
+}
