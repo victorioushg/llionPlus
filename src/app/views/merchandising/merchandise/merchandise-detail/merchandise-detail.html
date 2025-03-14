@@ -1,13 +1,13 @@
-<div class="wrapper-detail" *ngIf="organization$ | async as org">
+<div class="wrapper-detail" *ngIf="merchandise$ | async as org">
   <form
-    id="organization-detail-form"
-    class="organization-detail-form"
-    [formGroup]="organizationForm"
+    id="merchandise-detail-form"
+    class="merchandise-detail-form"
+    [formGroup]="merchandiseForm"
   >
     <div class="row">
       <div class="col-md-12">
-        <ejs-textbox
-          id="organization-txt"
+        <!-- <ejs-textbox
+          id="merchandise-txt"
           placeholder="organización"
           floatLabelType="Always"
           formControlName="name"
@@ -21,30 +21,30 @@
           formControlName="activity"
           [enabled]="enabled$ | async"
           [value]="org.activity"
-        ></ejs-textbox>
+        ></ejs-textbox> -->
       </div>
     </div>
     <div class="row">
       <div class="col-md-6">
-        <ejs-textbox
+        <!-- <ejs-textbox
           id="tax-registrastion-id"
           placeholder="Regisdtro de Informacón Fiscal (RIF)"
           floatLabelType="Always"
           formControlName="taxRegistrationID"
           [enabled]="enabled$ | async"
           [value]="org.taxRegistrationID"
-        ></ejs-textbox>
+        ></ejs-textbox> -->
       </div>
       <div class="col-md-6"></div>
     </div>
     <div class="row">
       <div class="col-md-6">
-        <ejs-dropdownlist
-          id="organization-type-ddl"
-          formControlName="organizationType"
+        <!-- <ejs-dropdownlist
+          id="merchandise-type-ddl"
+          formControlName="merchandiseType"
           #otypes
-          [dataSource]="organizationTypes$ | async"
-          [value]="org.organizationType"
+          [dataSource]="merchandiseTypes$ | async"
+          [value]="org.merchandiseType"
           [fields]="ofields"
           [enabled]="enabled$ | async"
           floatLabelType="Always"
@@ -62,28 +62,28 @@
           [enabled]="enabled$ | async"
           floatLabelType="Always"
           placeholder="tipo de asociación"
-        ></ejs-dropdownlist>
+        ></ejs-dropdownlist> -->
       </div>
     </div>
     <div class="row">
       <div class="col-md-12">
-        <llion-grid-address></llion-grid-address>
+        <!-- <llion-grid-address></llion-grid-address> -->
       </div>
     </div>
     <div class="row">
       <div class="col-md-12">
-        <llion-grid-phone></llion-grid-phone>
+        <!-- <llion-grid-phone></llion-grid-phone> -->
       </div>
     </div>
     <div class="row">
       <div class="col-md-12">
-        <llion-grid-email></llion-grid-email>
+        <!-- <llion-grid-email></llion-grid-email> -->
       </div>
     </div>
     <br />
     <div class="row">
       <div class="col-md-6">
-        <ejs-datepicker
+        <!-- <ejs-datepicker
           [value]="org.addedOn"
           format="dd/MM/yyyy"
           placeholder="Fecha Ingreso"
@@ -91,10 +91,10 @@
           formControlName="addedOn"
           [enabled]="enabled$ | async"
         >
-        </ejs-datepicker>
+        </ejs-datepicker> -->
       </div>
       <div class="col-md-6" style="margin-top: auto">
-        <table style="width: 100%">
+        <!-- <table style="width: 100%">
           <tr>
             <td style="width: 50%">Organización Activa</td>
             <td style="width: 50%">
@@ -103,10 +103,10 @@
                 [checked]="!org.deactivated"
                 [disabled]="!(enabled$ | async)"
               >
-              </ejs-switch>
+              </ejs-switch> 
             </td>
           </tr>
-        </table>
+        </table>-->
       </div>
     </div>
     <br />

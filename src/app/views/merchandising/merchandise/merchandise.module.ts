@@ -3,7 +3,7 @@ import { NgModule, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { routes } from './_routes';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
-import { OrganizationComponent } from '@views/application/organization/organization-grid';
+import { MerchandiseComponent } from '@views/merchandising/merchandise/merchandise-grid';
 
 // Syncfusion
 import { GridAllModule } from '@syncfusion/ej2-angular-grids';
@@ -23,8 +23,8 @@ import { DatePickerModule } from '@syncfusion/ej2-angular-calendars';
 import { enableRipple } from '@syncfusion/ej2-base';
 
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { OrganizationDetailComponent } from './organization-detail/organization-detail';
-import { OrganizationDetailInputComponent } from './organization-detail-input/organization-detail-input';
+import { MerchandiseDetailComponent } from './merchandise-detail/merchandise-detail';
+import { MerchandiseDetailInputComponent } from './merchandise-detail-input/merchandise-detail-input';
 import { AddressComponent } from '@shared/components/address/address-detail';
 import { AddressGridComponent } from '@shared/components/address/address-grid';
 import { EmailComponent } from '@shared/components/email/email-detail';
@@ -36,9 +36,9 @@ enableRipple(true);
 
 @NgModule({
   declarations: [
-    OrganizationComponent,
-    OrganizationDetailComponent,
-    OrganizationDetailInputComponent,
+    MerchandiseComponent,
+    MerchandiseDetailComponent,
+    MerchandiseDetailInputComponent,
     AddressComponent, 
     AddressGridComponent,
     EmailComponent,
@@ -66,4 +66,4 @@ enableRipple(true);
   schemas: [CUSTOM_ELEMENTS_SCHEMA], 
   providers: [],
 })
-export class OrganizationModule {}
+export class MerchandiseModule {}

@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { OrganizationComponent } from '@views/merchandising/merchandise/organization/organization-grid';
+import { MerchandiseComponent } from '@views/merchandising/merchandise/merchandise-grid';
 
 export const routes: Routes = [
   {

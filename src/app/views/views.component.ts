@@ -96,6 +96,9 @@ export class ViewsComponent {
       case '02-02':
         this.router.navigate(['/accounting/classes']);
         break;
+      case '08-01':
+        this.router.navigate(['/merchandising/merchandise']);
+        break;
       case '09-01':
         this.router.navigate(['/control/parameters']);
         break;

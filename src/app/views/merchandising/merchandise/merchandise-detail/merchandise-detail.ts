@@ -5,26 +5,26 @@ import {
   ViewChild,
 } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { OrganizationService } from '../organization.service';
+import { MerchandiseService } from '../merchandise.service';
 
 import { DropDownListComponent } from '@syncfusion/ej2-angular-dropdowns';
 import {
-  IAssosiationType,
-  IOrganization,
-  IOrganizationType,
-} from '../organization';
+  // IAssosiationType,
+  IMerchandise,
+  // IMerchandiseType,
+} from '../merchandise';
 import { catchError, EMPTY, Observable, Subject, tap } from 'rxjs';
 import { ApplicationService } from '@shared/services/applicattionService';
 
 @Component({
-  selector: 'llion-organization-detail',
-  templateUrl: './organization-detail.html',
+  selector: 'llion-merchandise-detail',
+  templateUrl: './merchandise-detail.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: false,
 })
-export class OrganizationDetailComponent implements OnInit {
+export class MerchandiseDetailComponent implements OnInit {
   private errorMessageSubject = new Subject<string>();
-  organizationForm!: FormGroup;
+  merchandiseForm!: FormGroup;
 
   errorMessage$ = this.errorMessageSubject.asObservable();
 
@@ -34,11 +34,11 @@ export class OrganizationDetailComponent implements OnInit {
   @ViewChild('atypes')
   listATypes: DropDownListComponent | undefined;
 
-  organizationTypes$!: Observable<IOrganizationType[]>;
+  // merchandiseTypes$!: Observable<IMerchandiseType[]>;
 
-  assosiationTypes$!: Observable<IAssosiationType[]>;
+  // assosiationTypes$!: Observable<IAssosiationType[]>;
 
-  ofields: Object = { text: 'organizationType', value: 'organizationType' };
+  ofields: Object = { text: 'merchandiseType', value: 'merchandiseType' };
   ovalue: string | undefined;
 
   afields: Object = { text: 'assosiationType', value: 'assosiationType' };
@@ -46,45 +46,45 @@ export class OrganizationDetailComponent implements OnInit {
 
   org: any;
 
-  organization$!: Observable<IOrganization>;
+  merchandise$!: Observable<IMerchandise>;
 
   enabled$!: Observable<boolean>;
 
   constructor(
     private applicationService: ApplicationService,
     private formBuilder: FormBuilder,
-    private organizationService: OrganizationService
+    private merchandiseService: MerchandiseService
   ) {}
 
   ngOnInit() {
-    this.organizationForm = this.formBuilder.group({
+    this.merchandiseForm = this.formBuilder.group({
       name: ['', Validators.required],
       taxRegistrationID: ['', Validators.required],
       activity: [],
-      organizationType: [],
+      merchandiseType: [],
       associationType: [],
       deactivated: [true],
       addedOn: [new Date()],
     });
 
-    this.organizationTypes$ = this.organizationService.organizationTypes$;
+    // this.merchandiseTypes$ = this.merchandiseService.merchandiseTypes$;
 
-    this.assosiationTypes$ = this.organizationService.assosiationTypes$;
+    // this.assosiationTypes$ = this.merchandiseService.assosiationTypes$;
 
-    this.organization$ = this.organizationService.organizationSelected$.pipe(
-      tap((data: IOrganization) => (this.org = data)),
+    this.merchandise$ = this.merchandiseService.merchandiseSelected$.pipe(
+      tap((data: IMerchandise) => (this.org = data)),
       catchError((err) => {
         this.errorMessageSubject.next(err);
         return EMPTY;
       })
     );
 
-    this.enabled$ = this.organizationService.enableOrganizationFormAction$.pipe(
+    this.enabled$ = this.merchandiseService.enableMerchandiseFormAction$.pipe(
       tap((enabled) => {
         if (enabled) {
-          this.organizationForm.enable();
+          this.merchandiseForm.enable();
         } else {
-          this.organizationForm.disable();
+          this.merchandiseForm.disable();
         }
 
         let formbuttons = document.getElementById('form-buttons');
@@ -94,7 +94,7 @@ export class OrganizationDetailComponent implements OnInit {
   }
 
   clearForm() {
-    this.organizationForm.reset();
+    this.merchandiseForm.reset();
   }
 
   onCancelClick() {
@@ -105,39 +105,43 @@ export class OrganizationDetailComponent implements OnInit {
   }
 
   onSaveClick() {
-    const newOrg: IOrganization = {
-      id: this.org ? this.org.id : 0,
-      name: this.organizationForm.value.name,
-      activity: this.organizationForm.value.activity,
-      taxRegistrationID: this.organizationForm.value.taxRegistrationID,
-      taxRegistrationDescription: 'Regisdtro de Informacón Fiscal (RIF)',
-      organizationType: this.organizationForm.value.organizationType,
-      assosiationType: this.organizationForm.value.associationType,
-      deactivated: this.organizationForm.value.deactivated ? 0 : 1,
-      addedBy: 0,
-      addedOn: new Date(this.organizationForm.value.addedOn),
-      lastUpdatedBy: 0,
-      lastUpdatedOn: new Date(),
-      default: false, 
-      addresses: [],
-      phones: [],
-      emails: [],
-      parentId: 0,
-      logoData: '',
-      logoName: '',
+    const newOrg: IMerchandise = {
+      merchandiseEntityId: 0,
+      description: '',
+      brand: '',
+      groupId: 0,
+      hierarchyId: 0,
+      presentation: '',
+      deactivated: false,
+      merchandiseType: '',
+      discuount: 0,
+      salesQuota: 0,
+      refund: 0,
+      refundRate: 0,
+      mix: 0,
+      accountCode: 0,
+      accountName: '',
+      classCode: 0,
+      className: '',
+      addedOn: new Date(),
+      addedBy: '',
+      lastModifiedOn: new Date(),
+      lastModifiedBy: '',
+      organizationId: 0,
+      parentId: 0
     };
 
     if (this.org) {
-      this.organizationService.updateOrganization(newOrg);
+      this.merchandiseService.updateMerchandise(newOrg);
     } else {
-      this.organizationService.addOrganization(newOrg);
+      this.merchandiseService.addMerchandise(newOrg);
     }
     this.disableForm();
   }
 
   disableForm() {
-    this.organizationService.enableOrganizationForm(false);
-    this.organizationService.enableOrganizationGrid(false);
+    this.merchandiseService.enableMerchandiseForm(false);
+    this.merchandiseService.enableMerchandiseGrid(false);
     this.applicationService.enableAddressChildGrid(false);
     this.applicationService.enableEmailChildGrid(false);
     this.applicationService.enablePhoneChildGrid(false);

@@ -25,12 +25,12 @@ export interface IMerchandise {
   parentId: number;
 }
 
-export interface IOrganizationType {
-  organizationType: string;
-  typeDescription: string,  
-}
+// export interface IOrganizationType {
+//   organizationType: string;
+//   typeDescription: string,  
+// }
 
-export interface IAssosiationType {
-  assosiationType: string;
-  typeDescription: string;
-}
+// export interface IAssosiationType {
+//   assosiationType: string;
+//   typeDescription: string;
+// }

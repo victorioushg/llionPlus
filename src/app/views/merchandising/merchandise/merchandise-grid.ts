@@ -17,7 +17,7 @@ import {
   SearchSettingsModel,
 } from '@syncfusion/ej2-angular-grids';
 
-import { OrganizationService } from './organization.service';
+import { MerchandiseService } from './merchandise.service';
 import MiniToolbar from '@assets/json/minitoolbar.json';
 import {
   BehaviorSubject,
@@ -30,7 +30,7 @@ import {
   tap,
 } from 'rxjs';
 import { ChangeDetectionStrategy } from '@angular/core';
-import {  } from './organization';
+import { IMerchandise } from './merchandise';
 import { ToastService } from '@shared/services/toastService';
 import { toastType } from '@shared/enums/enums';
 import {
@@ -44,18 +44,18 @@ import { TabHeader } from '@shared/models/syncfusion-interfaces';
 
 @Component({
   selector: 'llion-content',
-  templateUrl: './organization-grid.html',
-  styleUrls: ['./organization-grid.scss'],
+  templateUrl: './merchandise-grid.html',
+  styleUrls: ['./merchandise-grid.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: false,
 })
-export class OrganizationComponent implements OnInit, AfterViewInit {
+export class MerchandiseComponent implements OnInit, AfterViewInit {
   public commands!: CommandModel[];
 
   private searchStringSubject = new BehaviorSubject<string>('');
   searchStringAction$ = this.searchStringSubject.asObservable();
 
-  organizations$!: Observable<IOrganization[]>;
+  merchandises$!: Observable<IMerchandise[]>;
   parentRefEntityI!: number;
 
   toolbar: ToolbarItems[] | object = MiniToolbar;
@@ -65,7 +65,7 @@ export class OrganizationComponent implements OnInit, AfterViewInit {
   @ViewChild('tabs') public tabObj?: TabComponent;
   @ViewChild('toast') toast!: ElementRef;
 
-  selectedOrganization: IOrganization | undefined;
+  selectedMerchandise: IMerchandise | undefined;
 
   enabled$!: Observable<boolean>;
 
@@ -80,7 +80,7 @@ export class OrganizationComponent implements OnInit, AfterViewInit {
   /////
   constructor(
     private applicationService: ApplicationService,
-    private organizationService: OrganizationService,
+    private merchandiseService: MerchandiseService,
     private toastService: ToastService
   ) {}
 
@@ -99,13 +99,13 @@ export class OrganizationComponent implements OnInit, AfterViewInit {
     ];
     this.searchSettings = { operator: 'contains' };
 
-    this.organizations$ = combineLatest([
-      this.organizationService.organizationWithCRUD$,
+    this.merchandises$ = combineLatest([
+      this.merchandiseService.merchandiseWithCRUD$,
       this.searchStringAction$.pipe(startWith('')),
     ]).pipe(
-      map(([organizations, searchStr]) =>
-        organizations.filter((organization) =>
-          organization.name
+      map(([merchandises, searchStr]) =>
+        merchandises.filter((merchandise) =>
+          merchandise.description
             .toLocaleLowerCase()
             .includes(searchStr.toLocaleLowerCase())
         )
@@ -116,7 +116,7 @@ export class OrganizationComponent implements OnInit, AfterViewInit {
       })
     );
 
-    this.enabled$ = this.organizationService.enableOrganizationGridAction$.pipe(
+    this.enabled$ = this.merchandiseService.enableMerchandiseGridAction$.pipe(
       tap((enabled) => {
         if (this.grid) {
           if (enabled) {
@@ -132,7 +132,7 @@ export class OrganizationComponent implements OnInit, AfterViewInit {
 
     // ParentRefEntityId Reactive
     this.applicationService
-      .getParentRefEntityId('Organization')
+      .getParentRefEntityId('Merchandise')
       .subscribe((id) => {
         console.log(' Parent Entity Active - ' + id);
         this.applicationService.parentRefEntityIdSelected(id);
@@ -148,7 +148,7 @@ export class OrganizationComponent implements OnInit, AfterViewInit {
         : target.id.split('_').pop();
 
     if (targetId === 'add') {
-      this.organizationService.selectedOrganizationChanged(0);
+      this.merchandiseService.selectedMerchandiseChanged(0);
       args.cancel = true;
     } else if (targetId === 'searchbutton') {
       this.search();
@@ -160,8 +160,8 @@ export class OrganizationComponent implements OnInit, AfterViewInit {
   }
 
   onRecordDoubleClick(args: RecordDoubleClickEventArgs): void {
-    if (this.selectedOrganization !== undefined) {
-      this.applicationService.entitySelected(this.selectedOrganization.id);
+    if (this.selectedMerchandise !== undefined) {
+      this.applicationService.entitySelected(this.selectedMerchandise.merchandiseEntityId);
       this.enableParentForm(true);
     } else {
       this.toastService.showMyToast(
@@ -172,8 +172,8 @@ export class OrganizationComponent implements OnInit, AfterViewInit {
   }
 
   enableParentForm(enable: boolean) {
-    this.organizationService.enableOrganizationGrid(enable);
-    this.organizationService.enableOrganizationForm(enable);
+    this.merchandiseService.enableMerchandiseGrid(enable);
+    this.merchandiseService.enableMerchandiseForm(enable);
     this.applicationService.enableAddressChildGrid(enable);
     this.applicationService.enableEmailChildGrid(enable);
     this.applicationService.enablePhoneChildGrid(enable);
@@ -187,23 +187,23 @@ export class OrganizationComponent implements OnInit, AfterViewInit {
   }
 
   commandClick(args: CommandClickEventArgs): void {
-    if (args.target?.title == 'Delete' && this.selectedOrganization) {
-      this.organizationService.deleteOrganization(this.selectedOrganization);
+    if (args.target?.title == 'Delete' && this.selectedMerchandise) {
+      this.merchandiseService.deleteMerchandise(this.selectedMerchandise);
     }
   }
 
   onRowSelected(args: RowSelectEventArgs): void {
-    this.selectedOrganization = (args.data ? args.data : []) as IOrganization;
-    this.organizationService.selectedOrganizationChanged(
-      this.selectedOrganization.id
+    this.selectedMerchandise = (args.data ? args.data : []) as IMerchandise;
+    this.merchandiseService.selectedMerchandiseChanged(
+      this.selectedMerchandise.merchandiseEntityId
     );
-    this.applicationService.entitySelected(this.selectedOrganization.id);
+    this.applicationService.entitySelected(this.selectedMerchandise.merchandiseEntityId);
   }
 
   onRowDeselected(args: RowDeselectEventArgs): void {
     // NOT Uncomment
-    //  this.selectedOrganization = undefined;
-    //  this.organizationService.selectedOrganizationChanged(0);
+    //  this.selectedMerchandise = undefined;
+    //  this.merchandiseService.selectedMerchandiseChanged(0);
   }
 
   private search(clear: boolean = false) {
