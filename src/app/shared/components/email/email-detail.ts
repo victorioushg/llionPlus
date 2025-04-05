@@ -26,7 +26,7 @@ enableRipple(true);
 })
 export class EmailComponent implements OnInit {
   entityId!: number;
-  parentRefEntityId!: number;
+  organizationId!: number;
   invalidEmail!: boolean;
   emailForm!: FormGroup;
   email: any;
@@ -71,11 +71,11 @@ export class EmailComponent implements OnInit {
       map(([enabled, email]) => ({ enabled, email }))
     );
 
-    this.applicationService.parentRefEntityId$.subscribe((result) => {
-        this.parentRefEntityId = result;
+    this.applicationService.organizationSelected$.subscribe((result) => {
+        this.organizationId = result;
       });
 
-    this.applicationService.entityId$.subscribe((entity) => {
+    this.applicationService.entitySelected$.subscribe((entity) => {
       this.entityId = entity;
     });
 
@@ -93,8 +93,8 @@ export class EmailComponent implements OnInit {
     const newEmail: IEmail = {
       emailId: this.email.emailId,
       emailAddress: this.emailForm.value.emailAddress,
-      entityId: this.parentRefEntityId,
-      organizationId: this.entityId,
+      entityId: this.entityId,
+      organizationId: this.organizationId,
     };
 
     if (this.email.emailId !== 0) {

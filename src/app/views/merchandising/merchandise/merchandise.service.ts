@@ -1,5 +1,5 @@
 import { Injectable, NgZone } from '@angular/core';
-import { IMerchandise } from './merchandise';
+import { IMerchandise, IMerchandiseBrand, IMerchandiseCategory } from './merchandise';
 import { environment } from '@environments/environment';
 import {
   HttpClient,
@@ -40,7 +40,7 @@ export class MerchandiseService {
     merchandiseEntityId: 0,
     description: '',
     brand: '',
-    groupId: 0,
+    category: '',
     hierarchyId: 0,
     presentation: '',
     deactivated: false,
@@ -62,10 +62,13 @@ export class MerchandiseService {
     parentId: 0,
   }).pipe(take(1));
 
+  private entityId!: number;  
+  private organizationId: number = 1; 
+
   merchandises$!: Observable<IMerchandise[]>;
 
-  // merchandiseTypes$!: Observable<IMerchandiseType[]>;
-  // assosiationTypes$!: Observable<IAssosiationType[]>;
+  merchandiseBrands$!: Observable<IMerchandiseBrand[]>;
+  merchandiseCategories$!: Observable<IMerchandiseCategory[]>;
 
   private merchandiseSelectedSubject = new BehaviorSubject<number>(0);
   merchandiseSelectedAction$ = this.merchandiseSelectedSubject.asObservable();
@@ -139,6 +142,12 @@ export class MerchandiseService {
   private initializeObservables(): void {
     // this.emptyMerchandise = of({} as IMerchandise);
 
+    this.applicationService.entitySelected$.pipe(
+        tap((data: number) => {
+          this.entityId =  data;
+        })
+      );
+
     this.merchandises$ = this.http
       .get<IApiResponse<IMerchandise[]>>(this.merchandiseUrl + '/all')
       .pipe(
@@ -146,23 +155,23 @@ export class MerchandiseService {
         catchError(this.errorHandlerService.handleError)
       );
 
-    // this.merchandiseTypes$ = this.http
-    //   .get<IApiResponse<IMerchandiseType[]>>(
-    //     this.merchandiseUrl + '/merchandisetypes'
-    //   )
-    //   .pipe(
-    //     map((data) => data.result),
-    //     catchError(this.errorHandlerService.handleError)
-    //   );
+    this.merchandiseBrands$ = this.http
+      .get<IApiResponse<IMerchandiseBrand[]>>(
+        this.merchandiseUrl + `/brands/${this.entityId}/${this.organizationId}`
+      )
+      .pipe(
+        map((data) => data.result),
+        catchError(this.errorHandlerService.handleError)
+      );
 
-    // this.assosiationTypes$ = this.http
-    //   .get<IApiResponse<IAssosiationType[]>>(
-    //     this.merchandiseUrl + '/assosiationtypes'
-    //   )
-    //   .pipe(
-    //     map((data) => data.result),
-    //     catchError(this.errorHandlerService.handleError)
-    //   );
+    this.merchandiseCategories$ = this.http
+      .get<IApiResponse<IMerchandiseCategory[]>>(
+        this.merchandiseUrl + `/categories/${this.entityId}/${this.organizationId}`
+      )
+      .pipe(
+        map((data) => data.result),
+        catchError(this.errorHandlerService.handleError)
+      );
 
     this.merchandiseSelected$ = combineLatest([
       this.merchandises$,

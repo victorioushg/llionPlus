@@ -28,7 +28,7 @@ export class EmailGridComponent implements OnInit {
   @ViewChild('emailgrid') public emailgrid!: GridComponent;
 
   public commands!: CommandModel[];
-  parentRef_EntityId: number = 0;
+  organizationId!: number;
   entityId: number = 0;
   errorMessage = '';
   gridtitle: string = 'correos electrónicos';
@@ -100,9 +100,9 @@ export class EmailGridComponent implements OnInit {
       })
     );
 
-    this.parentRef_EntityId = this.emailService.parentRefEntityId;
+    this.organizationId = this.emailService.organizationId;
 
-    this.applicationService.entityId$.subscribe((entity) => {
+    this.applicationService.entitySelected$.subscribe((entity) => {
       this.entityId = entity;
     });
   }
@@ -123,8 +123,8 @@ export class EmailGridComponent implements OnInit {
     const address: IEmail = {
       emailId: 0,
       emailAddress: '',
-      entityId: this.parentRef_EntityId,
-      organizationId: this.entityId,
+      entityId: this.entityId,
+      organizationId: this.organizationId,
     };
     const target: HTMLElement = args.originalEvent.target as HTMLElement;
     if (target.parentElement?.id === 'add') {

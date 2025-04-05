@@ -104,9 +104,9 @@ export class PhoneGridComponent implements OnInit {
       })
     );
 
-    this.parentRef_EntityId = this.phoneService.parentRefEntityId;
+    this.parentRef_EntityId = this.phoneService.entityId;
 
-    this.applicationService.entityId$.subscribe((entity) => {
+    this.applicationService.entitySelected$.subscribe((entity) => {
       this.entityId = entity;
     });
   }

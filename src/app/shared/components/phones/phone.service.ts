@@ -36,15 +36,14 @@ import { Action } from '@shared/models/edit-action';
 export class PhoneService {
   private apiUrl = `${environment.API_URL}application/`;
 
-  entityId: number = 0;
-  parentRefEntityId!: number;
+  entityId!: number;
 
   phone: IPhone = {
     phoneId: 0,
     countryCode: '',
     phoneNumber: '',
     phoneType: '',
-    entityId: this.parentRefEntityId,
+    entityId: this.entityId,
     organizationId: this.entityId,
   };
 
@@ -85,15 +84,15 @@ export class PhoneService {
 
   private initializeObservables(): void {
     
-    this.applicationService.parentRefEntityId$.subscribe((result) => {
-      this.parentRefEntityId = result;
+    this.applicationService.entitySelected$.subscribe((result) => {
+      this.entityId = result;
     });
 
     this.phonesByEntityId$ = this.applicationService.entitySelectedAction$.pipe(
       switchMap((selectedEntity) => {
         return this.http
           .get<IApiResponse<IPhone[]>>(
-            `${this.apiUrl}phones/${this.parentRefEntityId}/${selectedEntity}`
+            `${this.apiUrl}phones/${this.entityId}/${selectedEntity}`
           )
           .pipe(
             map((data: IApiResponse) => {

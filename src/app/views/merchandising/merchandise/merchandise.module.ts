@@ -4,7 +4,8 @@ import { RouterModule } from '@angular/router';
 import { routes } from './_routes';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { MerchandiseComponent } from '@views/merchandising/merchandise/merchandise-grid';
-
+import { MerchandiseDetailComponent } from './merchandise-detail/merchandise-detail';
+import { MerchandiseDetailInputComponent } from './merchandise-detail-input/merchandise-detail-input';
 // Syncfusion
 import { GridAllModule } from '@syncfusion/ej2-angular-grids';
 import {
@@ -17,20 +18,9 @@ import {
 import { TextBoxModule,  MaskedTextBoxModule } from '@syncfusion/ej2-angular-inputs';
 import { DropDownListModule } from '@syncfusion/ej2-angular-dropdowns';
 import { ButtonModule, SwitchModule } from '@syncfusion/ej2-angular-buttons';
-
 import { DatePickerModule } from '@syncfusion/ej2-angular-calendars';
-
 import { enableRipple } from '@syncfusion/ej2-base';
-
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { MerchandiseDetailComponent } from './merchandise-detail/merchandise-detail';
-import { MerchandiseDetailInputComponent } from './merchandise-detail-input/merchandise-detail-input';
-import { AddressComponent } from '@shared/components/address/address-detail';
-import { AddressGridComponent } from '@shared/components/address/address-grid';
-import { EmailComponent } from '@shared/components/email/email-detail';
-import { EmailGridComponent } from '@shared/components/email/email-grid';
-import { PhoneComponent } from '@shared/components/phones/phone-detail';
-import { PhoneGridComponent } from '@shared/components/phones/phone-grid';
 
 enableRipple(true);
 
@@ -39,12 +29,7 @@ enableRipple(true);
     MerchandiseComponent,
     MerchandiseDetailComponent,
     MerchandiseDetailInputComponent,
-    AddressComponent, 
-    AddressGridComponent,
-    EmailComponent,
-    EmailGridComponent, 
-    PhoneComponent,
-    PhoneGridComponent
+  
   ],
   imports: [
     CommonModule,

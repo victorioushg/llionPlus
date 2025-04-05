@@ -32,8 +32,8 @@ import { Action } from '@shared/models/edit-action';
 export class AddressService {
   private apiUrl = `${environment.API_URL}application/`;
 
-  entityId: number = 0;
-  parentRefEntityId!: number;
+  entityId!: number;
+  organizationId!: number;
 
   address: IAddress = {
     addressId: 0,
@@ -47,8 +47,8 @@ export class AddressService {
     country: '',
     postalCode: '',
     displayAddress: '',
-    entityId: this.parentRefEntityId,
-    organizationId: this.entityId
+    entityId: this.entityId,
+    organizationId: this.organizationId
   };
 
   addressesByEntityId$!: Observable<IAddress[]>;
@@ -96,9 +96,9 @@ export class AddressService {
 
   private initializeObservables(): void {
 
-    this.applicationService.parentRefEntityId$.subscribe(
+    this.applicationService.organizationSelected$.subscribe(
       (result) => {
-        this.parentRefEntityId = result;
+        this.organizationId = result;
       },
     );
 
@@ -107,7 +107,7 @@ export class AddressService {
         switchMap((selectedEntity) => {
           return this.http
             .get<IApiResponse<IAddress[]>>(
-              `${this.apiUrl}addresses/${this.parentRefEntityId}/${selectedEntity}`
+              `${this.apiUrl}addresses/${this.organizationId}/${selectedEntity}`
             )
             .pipe(
               map((data: IApiResponse) => {

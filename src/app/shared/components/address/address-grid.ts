@@ -35,8 +35,8 @@ export class AddressGridComponent implements OnInit {
 
   public commands!: CommandModel[];
 
-  parentRef_EntityId: number = 0; 
-  entityId: number = 0;
+  organizationId!: number; 
+  entityId!: number;
   errorMessage = '';
   gridtitle: string = 'direcciones';
   gridHeight = sharedSetting.formGridHeight;
@@ -106,7 +106,9 @@ export class AddressGridComponent implements OnInit {
       })
     );
 
-     this.parentRef_EntityId = this.addressService.parentRefEntityId;
+       this.applicationService.organizationSelected$.subscribe((org) => {
+         this.organizationId = org;
+       });
 
      this.applicationService.entityId$.subscribe((entity) => {
        this.entityId = entity; 

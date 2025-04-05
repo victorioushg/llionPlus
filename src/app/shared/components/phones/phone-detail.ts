@@ -17,7 +17,7 @@ import {
 } from 'rxjs';
 import { ToastService } from '@shared/services/toastService';
 import { IPhone, IPhoneType } from './phone';
-import Countries from '@assets/json/countries.json'
+import Countries from '@assets/json/countries.json';
 
 enableRipple(true);
 
@@ -29,7 +29,7 @@ enableRipple(true);
 })
 export class PhoneComponent implements OnInit {
   entityId!: number;
-  parentRefEntityId!: number;
+  organizationId!: number;
   invalidPhone!: boolean;
   phoneForm!: FormGroup;
   phone: any;
@@ -100,11 +100,11 @@ export class PhoneComponent implements OnInit {
       map(([enabled, phone]) => ({ enabled, phone }))
     );
 
-    this.applicationService.parentRefEntityId$.subscribe((result) => {
-      this.parentRefEntityId = result;
+    this.applicationService.organizationSelected$.subscribe((result) => {
+      this.organizationId = result;
     });
 
-    this.applicationService.entityId$.subscribe((entity) => {
+    this.applicationService.entitySelected$.subscribe((entity) => {
       this.entityId = entity;
     });
   }
@@ -123,8 +123,8 @@ export class PhoneComponent implements OnInit {
       countryCode: this.phoneForm.value.countrycode,
       phoneNumber: this.phoneForm.value.phonenumber,
       phoneType: this.phoneForm.value.phonetypeddl,
-      entityId: this.parentRefEntityId,
-      organizationId: this.entityId,
+      entityId: this.entityId,
+      organizationId: this.organizationId,
     };
 
     if (this.phone.addressId !== 0) {

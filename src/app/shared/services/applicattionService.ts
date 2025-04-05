@@ -25,45 +25,31 @@ export class ApplicationService {
   private errorMessageSubject = new Subject<string>();
   errorMessage$ = this.errorMessageSubject.asObservable();
 
+  // Organization Selected
+  private organizationSelectedSource = new BehaviorSubject<number>(0);
+  organizationSelectedAction$ = this.organizationSelectedSource.asObservable();
+  organizationSelected(entityId: number) {
+    this.entitySelectedSource.next(entityId);
+  }
+
+  organizationSelected$ = this.organizationSelectedAction$.pipe(
+    tap((data: number) => {
+      console.log('appser org  - ' + data);
+    })
+  );
+
+  // Entity Selected 
   private entitySelectedSource = new BehaviorSubject<number>(0);
   entitySelectedAction$ = this.entitySelectedSource.asObservable();
   entitySelected(entityId: number) {
     this.entitySelectedSource.next(entityId);
   }
 
-  entityId$ = this.entitySelectedAction$.pipe(
+  entitySelected$ = this.entitySelectedAction$.pipe(
     tap((data: number) => {
       console.log('appser entity - ' + data);
     })
   );
-
-  // ParentRefEntityId
-  private parentRefEntityIdSelectedSource = new BehaviorSubject<number>(0);
-  parentRefEntityIdAction$ =
-    this.parentRefEntityIdSelectedSource.asObservable();
-  parentRefEntityIdSelected(parentRefEntityId: number) {
-    this.parentRefEntityIdSelectedSource.next(parentRefEntityId);
-  }
-
-  parentRefEntityId$ = this.parentRefEntityIdAction$.pipe(
-    tap((data: number) => {
-      console.log('appser parentRefEntityId - ' + data);
-    })
-  );
-
-  // Organization
-  // private enabledOrganizationGridSource = new BehaviorSubject<boolean>(false);
-  // enableOrganizationGridAction$: Observable<boolean> =
-  //   this.enabledOrganizationGridSource.asObservable();
-  // enableOrganizationGrid(enabled: boolean) {
-  //   this.enabledOrganizationGridSource.next(enabled);
-  // }
-  // private enabledOrganizationFormSource = new BehaviorSubject<boolean>(false);
-  // enableOrganizationFormAction$ =
-  //   this.enabledOrganizationFormSource.asObservable();
-  // enableOrganizationForm(enabled: boolean) {
-  //   this.enabledOrganizationFormSource.next(enabled);
-  // }
 
   // Address
   private enabledAddressChildGridSource = new BehaviorSubject<boolean>(false);
@@ -116,10 +102,7 @@ export class ApplicationService {
   //   this.enabledUserFormSource.next(enabled);
   // }
 
-  constructor(
-    private http: HttpClient, 
-    private toastService: ToastService 
-  ) {}
+  constructor(private http: HttpClient, private toastService: ToastService) {}
 
   enableDetailForm(grid: childgrid, enable: boolean) {
     this.enablePhoneChildGrid(!enable);
@@ -139,7 +122,7 @@ export class ApplicationService {
     }
   }
 
-  getParentRefEntityId(entityName: string): Observable<number> {
+  getEntityId(entityName: string): Observable<number> {
     return this.http
       .get<IApiResponse<number>>(`${this.apiUrl}entity/${entityName}`)
       .pipe(

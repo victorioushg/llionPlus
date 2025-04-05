@@ -132,10 +132,10 @@ export class OrganizationComponent implements OnInit, AfterViewInit {
 
     // ParentRefEntityId Reactive
     this.applicationService
-      .getParentRefEntityId('Organization')
+      .getEntityId('Organization')
       .subscribe((id) => {
         console.log(' Parent Entity Active - ' + id);
-        this.applicationService.parentRefEntityIdSelected(id);
+        this.applicationService.entitySelected(id);
       });
   }
 

@@ -9,9 +9,9 @@ import { MerchandiseService } from '../merchandise.service';
 
 import { DropDownListComponent } from '@syncfusion/ej2-angular-dropdowns';
 import {
-  // IAssosiationType,
   IMerchandise,
-  // IMerchandiseType,
+  IMerchandiseBrand,
+  IMerchandiseCategory,
 } from '../merchandise';
 import { catchError, EMPTY, Observable, Subject, tap } from 'rxjs';
 import { ApplicationService } from '@shared/services/applicattionService';
@@ -34,15 +34,14 @@ export class MerchandiseDetailComponent implements OnInit {
   @ViewChild('atypes')
   listATypes: DropDownListComponent | undefined;
 
-  // merchandiseTypes$!: Observable<IMerchandiseType[]>;
+  merchandiseBrands$!: Observable<IMerchandiseBrand[]>;
+  merchandiseCategories$!: Observable<IMerchandiseCategory[]>;
 
-  // assosiationTypes$!: Observable<IAssosiationType[]>;
+  brandfields: Object = { text: 'description', value: 'groupCode' };
+  brandvalue: string | undefined;
 
-  ofields: Object = { text: 'merchandiseType', value: 'merchandiseType' };
-  ovalue: string | undefined;
-
-  afields: Object = { text: 'assosiationType', value: 'assosiationType' };
-  avalue: string | undefined;
+  categoryfields: Object = { text: 'description', value: 'groupCode' };
+  categoryvalue: string | undefined;
 
   org: any;
 
@@ -67,9 +66,9 @@ export class MerchandiseDetailComponent implements OnInit {
       addedOn: [new Date()],
     });
 
-    // this.merchandiseTypes$ = this.merchandiseService.merchandiseTypes$;
+    this.merchandiseBrands$ = this.merchandiseService.merchandiseBrands$;
 
-    // this.assosiationTypes$ = this.merchandiseService.assosiationTypes$;
+    this.merchandiseCategories$ = this.merchandiseService.merchandiseCategories$;
 
     this.merchandise$ = this.merchandiseService.merchandiseSelected$.pipe(
       tap((data: IMerchandise) => (this.org = data)),
@@ -109,7 +108,7 @@ export class MerchandiseDetailComponent implements OnInit {
       merchandiseEntityId: 0,
       description: '',
       brand: '',
-      groupId: 0,
+      category: '',
       hierarchyId: 0,
       presentation: '',
       deactivated: false,

@@ -16,13 +16,13 @@ import { toastType } from '@shared/enums/enums';
 export class EmailService {
   private apiUrl = `${environment.API_URL}application/`;
 
-  entityId: number = 0;
-  parentRefEntityId!: number;
+  entityId!: number;
+  organizationId!: number;
   email: IEmail = {
     emailId: 0,
     emailAddress: '',
-    entityId: this.parentRefEntityId,
-    organizationId: this.entityId,
+    entityId: this.entityId,
+    organizationId: this.organizationId,
   };
 
   emailsByEntityId$!: Observable<IEmail[]>;
@@ -61,9 +61,9 @@ export class EmailService {
 
   private initializeObservables(): void {
     
-    this.applicationService.parentRefEntityId$.subscribe(
+    this.applicationService.organizationSelected$.subscribe(
       (result) => {
-        this.parentRefEntityId = result;
+        this.organizationId = result;
       }
     );
 
@@ -71,7 +71,7 @@ export class EmailService {
       switchMap((selectedEntity) => {
         return this.http
           .get<IApiResponse<IEmail[]>>(
-            `${this.apiUrl}emails/${this.parentRefEntityId}/${selectedEntity}`
+            `${this.apiUrl}emails/${this.organizationId}/${selectedEntity}`
           )
           .pipe(
             map((data: IApiResponse) => {

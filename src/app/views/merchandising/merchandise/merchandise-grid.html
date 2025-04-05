@@ -14,7 +14,9 @@
           [dataSource]="merchandises$ | async"
           [allowFiltering]="enabled$ | async"
           [toolbar]="toolbar"
+          [height]="screenHeight"
           [searchSettings]="searchSettings"
+          (created)='onCreated()'
           (actionBegin)="actionBegin($event)"
           (toolbarClick)="onToolbarClick($event)"
           (rowSelected)="onRowSelected($event)"
@@ -25,7 +27,7 @@
           <e-columns>
             <e-column width="50" [commands]="commands"></e-column>
             <e-column
-              field="name"
+              field="description"
               headerText="organización"
               width="230"
             ></e-column>
@@ -35,7 +37,7 @@
               width="100"
             ></e-column>
             <e-column
-              field="id"
+              field="merchandiseEntityId"
               [isPrimaryKey]="true"
               [visible]="false"
             ></e-column>

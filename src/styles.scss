@@ -213,14 +213,36 @@ h6 {
   box-shadow: 0 0 0 0px rgba(var(--color-sf-primary)) inset;
 }
 
+.e-grid .e-toolbar {
+  height: 40px !important;
+  min-height: 20px;
+  background-color: var(--color-sf-primary);
+}
+
 .e-toolbar .e-toolbar-item .e-tbar-btn {
   background: transparent;
   box-shadow: 0 1px 3px 1px rgba(0, 0, 0, 0.15),
- 0 1px 2px 0 rgba(0, 0, 0, 0.3);
-
+  0 1px 2px 0 rgba(0, 0, 0, 0.3);
+  min-height: 20px;
+  min-width: 20px;
   color: rgba(var(--color-sf-on-surface-variant));
   border: none;                                                  
 }
+
+.e-toolbar .e-toolbar-items.e-tbar-pos {
+  display: block;
+  background-color: var(--color-sf-on-surface-variant);
+}
+
+// /* Add this CSS to your component's stylesheet */
+// .e-grid .e-row:nth-child(odd) {
+//   background-color: var(--color-sf-on-surface-variant) !important;
+ 
+// }
+// .e-grid .e-row:nth-child(even) {
+//   background-color: #ffffff;
+//   /* White for even rows */
+// }
 
 .disablegrid {
   pointer-events: none;
@@ -244,3 +266,63 @@ h6 {
   text-transform: lowercase !important;
 }
 
+/// Inputs 
+/// 
+/// 
+.e-input:not(:valid),
+.e-input:valid,
+.e-float-input.e-control-wrapper input:not(:valid),
+.e-float-input.e-control-wrapper input:valid,
+.e-float-input input:not(:valid),
+.e-float-input input:valid,
+.e-input-group input:not(:valid),
+.e-input-group input:valid,
+.e-input-group.e-control-wrapper input:not(:valid),
+.e-input-group.e-control-wrapper input:valid,
+.e-float-input.e-control-wrapper textarea:not(:valid),
+.e-float-input.e-control-wrapper textarea:valid,
+.e-float-input textarea:not(:valid),
+.e-float-input textarea:valid,
+.e-input-group.e-control-wrapper textarea:not(:valid),
+.e-input-group.e-control-wrapper textarea:valid,
+.e-input-group textarea:not(:valid),
+.e-input-group textarea:valid {
+  // font-size: 30px;
+  height: 16px !important;
+}
+
+.e-input-group input.e-input,
+.e-float-input.e-input-group input,
+.e-input-group.e-control-wrapper input.e-input,
+.e-float-input.e-input-group.e-control-wrapper input,
+.e-float-input input,
+.e-float-input.e-control-wrapper input {
+  min-height: 10px !important;
+}
+
+/// DropDownlist
+.e-input-group .e-input-group-icon,
+.e-input-group.e-control-wrapper .e-input-group-icon {
+  min-height: 20px !important;
+  min-width: 20px !important;
+}
+
+/// Switch
+.e-switch-wrapper .e-switch-handle.e-switch-active,
+.e-css.e-switch-wrapper .e-switch-handle.e-switch-active {
+  left: 100%;
+  margin-left: -22px;
+  height: 12px;
+  width: 12px;
+}
+
+.e-switch-wrapper,
+.e-css.e-switch-wrapper {
+  cursor: pointer;
+  display: inline-block;
+  height: 20px;
+  position: relative;
+  -webkit-user-select: none;
+  user-select: none;
+  width: 40px;
+}

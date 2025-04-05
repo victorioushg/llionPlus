@@ -4,7 +4,8 @@ import { RouterModule } from '@angular/router';
 import { routes } from './_routes';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { OrganizationComponent } from '@views/application/organization/organization-grid';
-
+import { OrganizationDetailComponent } from './organization-detail/organization-detail';
+import { OrganizationDetailInputComponent } from './organization-detail-input/organization-detail-input';
 // Syncfusion
 import { GridAllModule } from '@syncfusion/ej2-angular-grids';
 import {
@@ -23,8 +24,7 @@ import { DatePickerModule } from '@syncfusion/ej2-angular-calendars';
 import { enableRipple } from '@syncfusion/ej2-base';
 
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { OrganizationDetailComponent } from './organization-detail/organization-detail';
-import { OrganizationDetailInputComponent } from './organization-detail-input/organization-detail-input';
+
 import { AddressComponent } from '@shared/components/address/address-detail';
 import { AddressGridComponent } from '@shared/components/address/address-grid';
 import { EmailComponent } from '@shared/components/email/email-detail';

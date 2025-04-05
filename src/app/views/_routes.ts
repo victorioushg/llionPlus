@@ -33,11 +33,18 @@ export const ROUTES: Routes = [
       //     ).then((m) => m.ParametersModule),
       // },
       {
-         path: 'application/organization',
-         loadChildren: () =>
-           import(
-             '@views/application/organization/organization.module'
-           ).then((m) => m.OrganizationModule),
+        path: 'merchandising/merchandise',
+        loadChildren: () =>
+          import('@views/merchandising/merchandise/merchandise.module').then(
+            (m) => m.MerchandiseModule
+          ),
+      },
+      {
+        path: 'application/organization',
+        loadChildren: () =>
+          import('@views/application/organization/organization.module').then(
+            (m) => m.OrganizationModule
+          ),
       },
       {
         path: 'users',

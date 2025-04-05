@@ -51,6 +51,7 @@ import { TabHeader } from '@shared/models/syncfusion-interfaces';
 })
 export class MerchandiseComponent implements OnInit, AfterViewInit {
   public commands!: CommandModel[];
+  public screenHeight!: number;
 
   private searchStringSubject = new BehaviorSubject<string>('');
   searchStringAction$ = this.searchStringSubject.asObservable();
@@ -82,7 +83,9 @@ export class MerchandiseComponent implements OnInit, AfterViewInit {
     private applicationService: ApplicationService,
     private merchandiseService: MerchandiseService,
     private toastService: ToastService
-  ) {}
+  ) {
+    console.log('merchandise');
+  }
 
   ngAfterViewInit(): void {
     if (this.tabObj) {
@@ -91,6 +94,7 @@ export class MerchandiseComponent implements OnInit, AfterViewInit {
   }
 
   ngOnInit(): void {
+    this.screenHeight = window.innerHeight - 250;
     this.commands = [
       {
         type: 'Delete',
@@ -132,11 +136,23 @@ export class MerchandiseComponent implements OnInit, AfterViewInit {
 
     // ParentRefEntityId Reactive
     this.applicationService
-      .getParentRefEntityId('Merchandise')
+      .getEntityId('Merchandise')
       .subscribe((id) => {
         console.log(' Parent Entity Active - ' + id);
-        this.applicationService.parentRefEntityIdSelected(id);
+        this.applicationService.entitySelected(id);
       });
+  }
+
+  onCreated(): void {
+    (
+      document.getElementById(
+        (this.grid as GridComponent).element.id + '_searchbar'
+      ) as Element
+    ).addEventListener('keyup', () => {
+      (this.grid as GridComponent).search(
+        ((event as MouseEvent).target as HTMLInputElement).value
+      );
+    });
   }
 
   onToolbarClick(args: ClickEventArgs): void {
@@ -161,7 +177,9 @@ export class MerchandiseComponent implements OnInit, AfterViewInit {
 
   onRecordDoubleClick(args: RecordDoubleClickEventArgs): void {
     if (this.selectedMerchandise !== undefined) {
-      this.applicationService.entitySelected(this.selectedMerchandise.merchandiseEntityId);
+      this.applicationService.entitySelected(
+        this.selectedMerchandise.merchandiseEntityId
+      );
       this.enableParentForm(true);
     } else {
       this.toastService.showMyToast(
@@ -174,9 +192,9 @@ export class MerchandiseComponent implements OnInit, AfterViewInit {
   enableParentForm(enable: boolean) {
     this.merchandiseService.enableMerchandiseGrid(enable);
     this.merchandiseService.enableMerchandiseForm(enable);
-    this.applicationService.enableAddressChildGrid(enable);
-    this.applicationService.enableEmailChildGrid(enable);
-    this.applicationService.enablePhoneChildGrid(enable);
+    // this.applicationService.enableAddressChildGrid(enable);
+    // this.applicationService.enableEmailChildGrid(enable);
+    // this.applicationService.enablePhoneChildGrid(enable);
   }
 
   actionBegin(args: SearchEventArgs): void {
@@ -197,7 +215,9 @@ export class MerchandiseComponent implements OnInit, AfterViewInit {
     this.merchandiseService.selectedMerchandiseChanged(
       this.selectedMerchandise.merchandiseEntityId
     );
-    this.applicationService.entitySelected(this.selectedMerchandise.merchandiseEntityId);
+    this.applicationService.entitySelected(
+      this.selectedMerchandise.merchandiseEntityId
+    );
   }
 
   onRowDeselected(args: RowDeselectEventArgs): void {

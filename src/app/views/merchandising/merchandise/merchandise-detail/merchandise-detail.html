@@ -1,4 +1,4 @@
-<div class="wrapper-detail" *ngIf="merchandise$ | async as org">
+<div class="wrapper-detail" *ngIf="merchandise$ | async as mer">
   <form
     id="merchandise-detail-form"
     class="merchandise-detail-form"
@@ -6,49 +6,28 @@
   >
     <div class="row">
       <div class="col-md-12">
-        <!-- <ejs-textbox
+        <ejs-textbox
           id="merchandise-txt"
-          placeholder="organización"
+          placeholder="descripción"
           floatLabelType="Always"
           formControlName="name"
           [enabled]="enabled$ | async"
-          [value]="org.name"
+          [value]="mer.description"
         ></ejs-textbox>
-        <ejs-textbox
-          id="activity-txt"
-          placeholder="actividad comercial"
-          floatLabelType="Always"
-          formControlName="activity"
-          [enabled]="enabled$ | async"
-          [value]="org.activity"
-        ></ejs-textbox> -->
       </div>
     </div>
     <div class="row">
       <div class="col-md-6">
-        <!-- <ejs-textbox
-          id="tax-registrastion-id"
-          placeholder="Regisdtro de Informacón Fiscal (RIF)"
-          floatLabelType="Always"
-          formControlName="taxRegistrationID"
-          [enabled]="enabled$ | async"
-          [value]="org.taxRegistrationID"
-        ></ejs-textbox> -->
-      </div>
-      <div class="col-md-6"></div>
-    </div>
-    <div class="row">
-      <div class="col-md-6">
-        <!-- <ejs-dropdownlist
+        <ejs-dropdownlist
           id="merchandise-type-ddl"
           formControlName="merchandiseType"
           #otypes
-          [dataSource]="merchandiseTypes$ | async"
-          [value]="org.merchandiseType"
-          [fields]="ofields"
+          [dataSource]="merchandiseBrands$ | async"
+          [value]="mer.brand"
+          [fields]="brandfields"
           [enabled]="enabled$ | async"
           floatLabelType="Always"
-          placeholder="tipo de organización"
+          placeholder="marca de mercancías"
         ></ejs-dropdownlist>
       </div>
       <div class="col-md-6">
@@ -56,28 +35,28 @@
           id="association-type-ddl"
           formControlName="associationType"
           #atypes
-          [dataSource]="assosiationTypes$ | async"
-          [value]="org.assosiationType"
-          [fields]="afields"
+          [dataSource]="merchandiseCategories$ | async"
+          [value]="mer.category"
+          [fields]="categoryfields"
           [enabled]="enabled$ | async"
           floatLabelType="Always"
-          placeholder="tipo de asociación"
-        ></ejs-dropdownlist> -->
+          placeholder="Grupo de mercancías" 
+        ></ejs-dropdownlist> 
       </div>
     </div>
     <div class="row">
       <div class="col-md-12">
-        <!-- <llion-grid-address></llion-grid-address> -->
+        <!-- <llion-grid-address></llion-grid-address>  -->
       </div>
     </div>
     <div class="row">
       <div class="col-md-12">
-        <!-- <llion-grid-phone></llion-grid-phone> -->
+        <!-- <llion-grid-phone></llion-grid-phone>  -->
       </div>
     </div>
     <div class="row">
       <div class="col-md-12">
-        <!-- <llion-grid-email></llion-grid-email> -->
+        <!-- <llion-grid-email></llion-grid-email>  -->
       </div>
     </div>
     <br />
