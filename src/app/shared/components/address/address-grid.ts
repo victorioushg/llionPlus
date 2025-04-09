@@ -106,13 +106,13 @@ export class AddressGridComponent implements OnInit {
       })
     );
 
-       this.applicationService.organizationSelected$.subscribe((org) => {
-         this.organizationId = org;
-       });
+    this.applicationService.organizationSelected$.subscribe((org) => {
+      this.organizationId = org;
+    });
 
-     this.applicationService.entityId$.subscribe((entity) => {
-       this.entityId = entity; 
-     });
+    this.applicationService.entitySelected$.subscribe((entity) => {
+      this.entityId = entity; 
+    });
 
 
   }
@@ -142,8 +142,8 @@ export class AddressGridComponent implements OnInit {
       country: '',
       postalCode: '',
       displayAddress: '',
-      entityId: this.parentRef_EntityId, 
-      organizationId: this.entityId,
+      entityId: this.entityId, 
+      organizationId: this.organizationId,
     };
     const target: HTMLElement = args.originalEvent.target as HTMLElement;
     if (target.parentElement?.id === 'add') {

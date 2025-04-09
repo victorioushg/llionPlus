@@ -26,7 +26,7 @@ enableRipple(true);
 })
 export class AddressComponent implements OnInit {
   entityId!: number;
-  parentRefEntityId!: number;
+  organizationId!: number;
   invalidAddress!: boolean;
   addressForm!: FormGroup;
   address: any;
@@ -84,13 +84,13 @@ export class AddressComponent implements OnInit {
       map(([enabled, address]) => ({ enabled, address }))
     );
 
-    this.applicationService.getParentRefEntityId('Organization').subscribe(
+    this.applicationService.getEntityId('Organization').subscribe(
       (result) => {
-        this.parentRefEntityId = result;
+        this.entityId = result;
       });
 
-    this.applicationService.entityId$.subscribe((entity) => {
-      this.entityId = entity;
+    this.applicationService.organizationSelected$.subscribe((org) => {
+      this.organizationId = org;
     });
 
   }
@@ -117,8 +117,8 @@ export class AddressComponent implements OnInit {
       country: this.addressForm.value.country,
       postalCode: this.addressForm.value.postalcodeddl,
       displayAddress: this.address.displayAddress,
-      entityId: this.parentRefEntityId,
-      organizationId: this.entityId,
+      entityId: this.entityId,
+      organizationId: this.organizationId,
     };
 
     if (this.address.addressId !== 0) {
