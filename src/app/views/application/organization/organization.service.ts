@@ -1,4 +1,4 @@
-import { Injectable, NgZone } from '@angular/core';
+import { Injectable, NgZone, OnInit } from '@angular/core';
 import {
   IAssosiationType,
   IOrganization,
@@ -40,8 +40,8 @@ import { ErrorHandlerService } from '@shared/services/errorHandlerService';
 })
 export class OrganizationService {
   private organizationUrl = environment.API_URL + 'organization';
-  private emptyOrganization: Observable<IOrganization> = of({
-    id: 0,
+  private emptyOrganization: IOrganization = {
+    organizationId: 0,
     name: '',
     activity: '',
     taxRegistrationID: '',
@@ -60,16 +60,29 @@ export class OrganizationService {
     logoData: '',
     logoName: '',
     default: false,
-  }).pipe(take(1));
+  };
 
+  entityId!: number;
   organizations$!: Observable<IOrganization[]>;
+
+    // // Organization Selected
+    // private organizationSelectedSource = new BehaviorSubject<IOrganization>(this.emptyOrganization);
+    // organizationSelectedAction$ = this.organizationSelectedSource.asObservable();
+    // organizationSelected(organization: IOrganization) {
+    //    this.organizationSelectedSource.next(organization);
+    // }
+
+    organizationSelected$!: Observable<IOrganization>;
+  
+    // organizationSelected$ = this.organizationSelectedAction$.pipe(
+    //   tap((data: number) => {
+    //     console.log('Organization Service - ' + data);
+    //   })
+    // );
+  
 
   organizationTypes$!: Observable<IOrganizationType[]>;
   assosiationTypes$!: Observable<IAssosiationType[]>;
-
-  private organizationSelectedSubject = new BehaviorSubject<number>(0);
-  organizationSelectedAction$ = this.organizationSelectedSubject.asObservable();
-  organizationSelected$!: Observable<IOrganization>;
 
   // To Delete
   // private enabledFormSource = new BehaviorSubject<boolean>(false);
@@ -83,7 +96,7 @@ export class OrganizationService {
   // And then create and buffer a new array of products with scan.
   organizationWithCRUD$!: Observable<IOrganization[]>;
 
-  // Enabling 
+  // Enabling
   private enabledOrganizationGridSource = new BehaviorSubject<boolean>(false);
   enableOrganizationGridAction$: Observable<boolean> =
     this.enabledOrganizationGridSource.asObservable();
@@ -113,12 +126,12 @@ export class OrganizationService {
     } else if (operation.action === 'update') {
       // Return a new array with the updated organization replaced
       return organizations.map((organization) =>
-        organization.id === operation.item.id ? operation.item : organization
+        organization.organizationId === operation.item.organizationId ? operation.item : organization
       );
     } else if (operation.action === 'delete') {
       // Filter out the deleted organization
       return organizations.filter(
-        (organization) => organization.id !== operation.item.id
+        (organization) => organization.organizationId !== operation.item.organizationId
       );
     }
     return [...organizations];
@@ -134,7 +147,9 @@ export class OrganizationService {
   }
 
   private initializeObservables(): void {
-    // this.emptyOrganization = of({} as IOrganization);
+    this.applicationService.entitySelected$.subscribe((entityId) => {
+      this.entityId = entityId;
+    });
 
     this.organizations$ = this.http
       .get<IApiResponse<IOrganization[]>>(this.organizationUrl + '/all')
@@ -143,34 +158,39 @@ export class OrganizationService {
         catchError(this.errorHandlerService.handleError)
       );
 
-    this.organizationTypes$ = this.http
-      .get<IApiResponse<IOrganizationType[]>>(
-        this.organizationUrl + '/organizationtypes'
-      )
-      .pipe(
-        map((data) => data.result),
-        catchError(this.errorHandlerService.handleError)
-      );
+    this.organizationTypes$ = this.applicationService.entitySelected$.pipe(
+      switchMap((entityId) => {
+        this.entityId = entityId;
+        return this.http.get<IApiResponse<IOrganizationType[]>>(
+          `${this.organizationUrl}/organizationtypes/${this.entityId}`
+        );
+      }),
+      map((data) => data.result),
+      catchError(this.errorHandlerService.handleError)
+    );
 
-    this.assosiationTypes$ = this.http
-      .get<IApiResponse<IAssosiationType[]>>(
-        this.organizationUrl + '/assosiationtypes'
-      )
-      .pipe(
-        map((data) => data.result),
-        catchError(this.errorHandlerService.handleError)
-      );
-
+    this.assosiationTypes$ = this.applicationService.entitySelected$.pipe(
+      switchMap((entityId) => {
+        this.entityId = entityId;
+        console.log('WWWWWW ' + entityId)
+        return this.http.get<IApiResponse<IAssosiationType[]>>(
+          `${this.organizationUrl}/assosiationtypes/${entityId}`
+        );
+      }),
+      map((data) => data.result),
+      catchError(this.errorHandlerService.handleError)
+    );
+    
     this.organizationSelected$ = combineLatest([
       this.organizations$,
-      this.organizationSelectedAction$,
+      this.applicationService.organizationIdSelectedAction$,
     ]).pipe(
       switchMap(([organizations, selectedOrganizationId]) => {
-        if (selectedOrganizationId > 0) {
-          this.applicationService.entitySelected(selectedOrganizationId);
+        if (selectedOrganizationId > 0 ) {
+          // this.applicationService.organizationSelected(selectedOrganizationId);
           return this.getOrganization(selectedOrganizationId);
         } else {
-          return this.emptyOrganization;
+          return of(this.emptyOrganization);
         }
       }),
       shareReplay(1)
@@ -221,7 +241,7 @@ export class OrganizationService {
     const organization: IOrganization = operation.item;
 
     if (operation.action === 'delete') {
-      const url = `${this.organizationUrl}/${organization.id}`;
+      const url = `${this.organizationUrl}/${organization.organizationId}`;
       return this.http
         .delete<IApiResponse<number>>(url, { headers: this.headers })
         .pipe(
@@ -268,13 +288,9 @@ export class OrganizationService {
     return of(operation);
   }
 
-  selectedOrganizationChanged(selectedOrganizationId: number): void {
-    this.organizationSelectedSubject.next(selectedOrganizationId);
-  }
-
   getOrganization(id: number): Observable<IOrganization> {
     return this.http
-      .get<IApiResponse<IOrganization>>(this.organizationUrl + '/' + id)
+      .get<IApiResponse<IOrganization>>(`${this.organizationUrl}/${this.entityId}/${id}`)
       .pipe(
         map((data) => data.result),
         catchError(this.errorHandlerService.handleError)

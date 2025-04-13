@@ -70,7 +70,7 @@ export class UsersDetailComponent implements OnInit {
         this.orgs = (data.orgs ?? []).map((item: any) => item['id']);
         this.rols = (data.roles ?? []).map((item: any) => item['roleName']);
         this.defaultOrg = (data.orgs ?? []).filter((item: any) => item.default);
-        this.dvalue = this.defaultOrg.length > 0 ? this.defaultOrg[0].id : null;
+        this.dvalue = this.defaultOrg.length > 0 ? this.defaultOrg[0].organizationId : null;
       }),
       catchError((err) => {
         this.errorMessageSubject.next(err);

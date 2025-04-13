@@ -14,7 +14,7 @@ import { IApiResponse } from '../models/api-response';
 import '@lib/string';
 import { ToastService } from './toastService';
 import { childgrid } from '../enums/enums';
-import { OrganizationService } from '@views/application/organization/organization.service';
+
 
 @Injectable({
   providedIn: 'root',
@@ -23,18 +23,21 @@ export class ApplicationService {
   private apiUrl = environment.API_URL + 'application/';
 
   private errorMessageSubject = new Subject<string>();
+
+  entityId!: number; 
+
   errorMessage$ = this.errorMessageSubject.asObservable();
 
   // Organization Selected
-  private organizationSelectedSource = new BehaviorSubject<number>(0);
-  organizationSelectedAction$ = this.organizationSelectedSource.asObservable();
-  organizationSelected(entityId: number) {
-    this.entitySelectedSource.next(entityId);
+  private organizationIdSelectedSource = new BehaviorSubject<number>(0);
+  organizationIdSelectedAction$ = this.organizationIdSelectedSource.asObservable();
+  organizationIdSelected(organizationId: number) {
+    this.organizationIdSelectedSource.next(organizationId);
   }
 
-  organizationSelected$ = this.organizationSelectedAction$.pipe(
+  organizationIdSelected$ = this.organizationIdSelectedAction$.pipe(
     tap((data: number) => {
-      console.log('appser org  - ' + data);
+      console.log('appser organization - ' + data);
     })
   );
 
@@ -48,6 +51,7 @@ export class ApplicationService {
   entitySelected$ = this.entitySelectedAction$.pipe(
     tap((data: number) => {
       console.log('appser entity - ' + data);
+
     })
   );
 
@@ -129,8 +133,6 @@ export class ApplicationService {
         map((data: IApiResponse<number>) => data.result),
         catchError((err) => {
           this.errorMessageSubject.next(err);
-          // console.error('Error fetching entity ID:', err);
-          //throw err; // Or return a default value like 0 if needed
           return EMPTY;
         })
       );

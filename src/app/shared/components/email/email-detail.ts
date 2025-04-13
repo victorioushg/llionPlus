@@ -71,7 +71,7 @@ export class EmailComponent implements OnInit {
       map(([enabled, email]) => ({ enabled, email }))
     );
 
-    this.applicationService.organizationSelected$.subscribe((result) => {
+    this.applicationService.organizationIdSelected$.subscribe((result) => {
         this.organizationId = result;
       });
 

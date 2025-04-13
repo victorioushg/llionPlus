@@ -3,7 +3,7 @@ import { IPhone } from "@shared/components/phones/phone";
 import { IEmail } from "@shared/components/email/email";
 
 export interface IOrganization {
-  id: number;
+  organizationId: number;
   name: string;
   activity: string;
   taxRegistrationID: string;

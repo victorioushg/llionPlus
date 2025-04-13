@@ -106,7 +106,7 @@ export class AddressGridComponent implements OnInit {
       })
     );
 
-    this.applicationService.organizationSelected$.subscribe((org) => {
+    this.applicationService.organizationIdSelected$.subscribe((org) => {
       this.organizationId = org;
     });
 

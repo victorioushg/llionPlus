@@ -89,7 +89,7 @@ export class AddressComponent implements OnInit {
         this.entityId = result;
       });
 
-    this.applicationService.organizationSelected$.subscribe((org) => {
+    this.applicationService.organizationIdSelected$.subscribe((org) => {
       this.organizationId = org;
     });
 

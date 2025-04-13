@@ -29,23 +29,21 @@ export class OrganizationDetailComponent implements OnInit {
   errorMessage$ = this.errorMessageSubject.asObservable();
 
   @ViewChild('otypes')
-  listOTypes: DropDownListComponent | undefined;
+  listOTypes!: DropDownListComponent;
 
   @ViewChild('atypes')
-  listATypes: DropDownListComponent | undefined;
+  listATypes!: DropDownListComponent;
 
   organizationTypes$!: Observable<IOrganizationType[]>;
-
   assosiationTypes$!: Observable<IAssosiationType[]>;
 
-  ofields: Object = { text: 'organizationType', value: 'organizationType' };
-  ovalue: string | undefined;
+  ofields: Object = { text: 'typeDescription', value: 'organizationType' };
+  ovalue!: number;
 
-  afields: Object = { text: 'assosiationType', value: 'assosiationType' };
-  avalue: string | undefined;
+  afields: Object = { text: 'typeDescription', value: 'assosiationType' };
+  avalue!: number;
 
-  org: any;
-
+  org!: IOrganization;
   organization$!: Observable<IOrganization>;
 
   enabled$!: Observable<boolean>;
@@ -68,10 +66,10 @@ export class OrganizationDetailComponent implements OnInit {
     });
 
     this.organizationTypes$ = this.organizationService.organizationTypes$;
-
     this.assosiationTypes$ = this.organizationService.assosiationTypes$;
 
-    this.organization$ = this.organizationService.organizationSelected$.pipe(
+    this.organization$ = this.organizationService.organizationSelected$
+    .pipe(
       tap((data: IOrganization) => (this.org = data)),
       catchError((err) => {
         this.errorMessageSubject.next(err);
@@ -99,14 +97,14 @@ export class OrganizationDetailComponent implements OnInit {
 
   onCancelClick() {
     this.disableForm();
-    if (this.org.id === 0) {
+    if (this.org.organizationId === 0) {
       this.clearForm();
     }
   }
 
   onSaveClick() {
     const newOrg: IOrganization = {
-      id: this.org ? this.org.id : 0,
+      organizationId: this.org ? this.org.organizationId : 0,
       name: this.organizationForm.value.name,
       activity: this.organizationForm.value.activity,
       taxRegistrationID: this.organizationForm.value.taxRegistrationID,

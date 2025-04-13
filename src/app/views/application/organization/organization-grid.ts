@@ -130,12 +130,11 @@ export class OrganizationComponent implements OnInit, AfterViewInit {
       })
     );
 
-    // ParentRefEntityId Reactive
+    // EntityId Reactive
     this.applicationService
       .getEntityId('Organization')
       .subscribe((id) => {
-        console.log(' Parent Entity Active - ' + id);
-        this.applicationService.entitySelected(id);
+         this.applicationService.entitySelected(id);
       });
   }
 
@@ -148,7 +147,7 @@ export class OrganizationComponent implements OnInit, AfterViewInit {
         : target.id.split('_').pop();
 
     if (targetId === 'add') {
-      this.organizationService.selectedOrganizationChanged(0);
+      this.applicationService.organizationIdSelected(0);
       args.cancel = true;
     } else if (targetId === 'searchbutton') {
       this.search();
@@ -161,7 +160,7 @@ export class OrganizationComponent implements OnInit, AfterViewInit {
 
   onRecordDoubleClick(args: RecordDoubleClickEventArgs): void {
     if (this.selectedOrganization !== undefined) {
-      this.applicationService.entitySelected(this.selectedOrganization.id);
+      this.applicationService.organizationIdSelected(this.selectedOrganization.organizationId);
       this.enableParentForm(true);
     } else {
       this.toastService.showMyToast(
@@ -194,10 +193,7 @@ export class OrganizationComponent implements OnInit, AfterViewInit {
 
   onRowSelected(args: RowSelectEventArgs): void {
     this.selectedOrganization = (args.data ? args.data : []) as IOrganization;
-    this.organizationService.selectedOrganizationChanged(
-      this.selectedOrganization.id
-    );
-    this.applicationService.entitySelected(this.selectedOrganization.id);
+    this.applicationService.organizationIdSelected(this.selectedOrganization.organizationId);
   }
 
   onRowDeselected(args: RowDeselectEventArgs): void {

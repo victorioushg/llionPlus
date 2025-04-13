@@ -96,7 +96,7 @@ export class AddressService {
 
   private initializeObservables(): void {
 
-    this.applicationService.organizationSelected$.subscribe(
+    this.applicationService.organizationIdSelected$.subscribe(
       (result) => {
         this.organizationId = result;
       },

@@ -100,7 +100,7 @@ export class PhoneComponent implements OnInit {
       map(([enabled, phone]) => ({ enabled, phone }))
     );
 
-    this.applicationService.organizationSelected$.subscribe((result) => {
+    this.applicationService.organizationIdSelected$.subscribe((result) => {
       this.organizationId = result;
     });
 

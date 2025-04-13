@@ -70,7 +70,7 @@ export class UserService {
    private userSelectedSubject = new BehaviorSubject<number>(0);
   userSelectedAction$ = this.userSelectedSubject.asObservable();
 
-  userSelected$: Observable<IUser> | undefined;
+  userSelected$!: Observable<IUser>;
 
   organizations$!: Observable<IOrganization[]>;
   roles$!: Observable<IRole[]>;
