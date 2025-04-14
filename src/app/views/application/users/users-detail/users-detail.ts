@@ -30,22 +30,22 @@ export class UsersDetailComponent implements OnInit {
   userOrganizations$!: Observable<IOrganization>;
 
   organizations$!: Observable<IOrganization[]>;
-  ofields: Object = { text: 'name', value: 'id' };
-  ovalue: number | undefined;
+  ofields: Object = { text: 'name', value: 'organizationId' };
+  ovalue!: number;
 
-  dfields: Object = { text: 'name', value: 'id' };
-  dvalue: number | null = null;
+  dfields: Object = { text: 'name', value: 'organizationId' };
+  dvalue!: number;
 
   roles$!: Observable<IRole[]>;
   rfields: Object = { text: 'roleName', value: 'roleName' };
-  rvalue: string | undefined;
+  rvalue!: string;
 
-  user: any;
+  user!: IUser;
   orgs: string[] = [];
   rols: string[] = [];
   defaultOrg:  IOrganization[] = [];
 
-  enabled$: Observable<boolean> | undefined;
+  enabled$!: Observable<boolean>;
 
   constructor(
     private applicationService: ApplicationService,
@@ -65,18 +65,26 @@ export class UsersDetailComponent implements OnInit {
     this.organizations$ = this.userService.organizations$;
     this.roles$ = this.userService.roles$;
 
-    this.user$ = (this.userService.userSelected$ || of({})).pipe(
-      tap((data: any) => {
-        this.orgs = (data.orgs ?? []).map((item: any) => item['id']);
-        this.rols = (data.roles ?? []).map((item: any) => item['roleName']);
-        this.defaultOrg = (data.orgs ?? []).filter((item: any) => item.default);
-        this.dvalue = this.defaultOrg.length > 0 ? this.defaultOrg[0].organizationId : null;
-      }),
+    this.user$ = this.userService.userSelected$.pipe(
+      tap((data: IUser) => (this.user = data)),
       catchError((err) => {
         this.errorMessageSubject.next(err);
         return EMPTY;
       })
     );
+      
+    //   || of({})).pipe(
+    //   tap((data: any) => {
+    //     this.orgs = (data.orgs ?? []).map((item: any) => item['id']);
+    //     this.rols = (data.roles ?? []).map((item: any) => item['roleName']);
+    //     this.defaultOrg = (data.orgs ?? []).filter((item: any) => item.default);
+    //     this.dvalue = this.defaultOrg.length > 0 ? this.defaultOrg[0].organizationId : 0;
+    //   }),
+    //   catchError((err) => {
+    //     this.errorMessageSubject.next(err);
+    //     return EMPTY;
+    //   })
+    // );
 
     //  this.orgs = (this.user.orgs ?? []).map((item: any) => item['id']);
 

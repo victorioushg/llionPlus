@@ -65,21 +65,8 @@ export class OrganizationService {
   entityId!: number;
   organizations$!: Observable<IOrganization[]>;
 
-    // // Organization Selected
-    // private organizationSelectedSource = new BehaviorSubject<IOrganization>(this.emptyOrganization);
-    // organizationSelectedAction$ = this.organizationSelectedSource.asObservable();
-    // organizationSelected(organization: IOrganization) {
-    //    this.organizationSelectedSource.next(organization);
-    // }
+  organizationSelected$!: Observable<IOrganization>;
 
-    organizationSelected$!: Observable<IOrganization>;
-  
-    // organizationSelected$ = this.organizationSelectedAction$.pipe(
-    //   tap((data: number) => {
-    //     console.log('Organization Service - ' + data);
-    //   })
-    // );
-  
 
   organizationTypes$!: Observable<IOrganizationType[]>;
   assosiationTypes$!: Observable<IAssosiationType[]>;
@@ -126,12 +113,15 @@ export class OrganizationService {
     } else if (operation.action === 'update') {
       // Return a new array with the updated organization replaced
       return organizations.map((organization) =>
-        organization.organizationId === operation.item.organizationId ? operation.item : organization
+        organization.organizationId === operation.item.organizationId
+          ? operation.item
+          : organization
       );
     } else if (operation.action === 'delete') {
       // Filter out the deleted organization
       return organizations.filter(
-        (organization) => organization.organizationId !== operation.item.organizationId
+        (organization) =>
+          organization.organizationId !== operation.item.organizationId
       );
     }
     return [...organizations];
@@ -172,7 +162,7 @@ export class OrganizationService {
     this.assosiationTypes$ = this.applicationService.entitySelected$.pipe(
       switchMap((entityId) => {
         this.entityId = entityId;
-        console.log('WWWWWW ' + entityId)
+      
         return this.http.get<IApiResponse<IAssosiationType[]>>(
           `${this.organizationUrl}/assosiationtypes/${entityId}`
         );
@@ -180,14 +170,13 @@ export class OrganizationService {
       map((data) => data.result),
       catchError(this.errorHandlerService.handleError)
     );
-    
+
     this.organizationSelected$ = combineLatest([
       this.organizations$,
       this.applicationService.organizationIdSelectedAction$,
     ]).pipe(
       switchMap(([organizations, selectedOrganizationId]) => {
-        if (selectedOrganizationId > 0 ) {
-          // this.applicationService.organizationSelected(selectedOrganizationId);
+        if (selectedOrganizationId > 0) {
           return this.getOrganization(selectedOrganizationId);
         } else {
           return of(this.emptyOrganization);
@@ -290,7 +279,9 @@ export class OrganizationService {
 
   getOrganization(id: number): Observable<IOrganization> {
     return this.http
-      .get<IApiResponse<IOrganization>>(`${this.organizationUrl}/${this.entityId}/${id}`)
+      .get<IApiResponse<IOrganization>>(
+        `${this.organizationUrl}/${this.entityId}/${id}`
+      )
       .pipe(
         map((data) => data.result),
         catchError(this.errorHandlerService.handleError)

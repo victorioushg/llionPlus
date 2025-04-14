@@ -123,6 +123,13 @@ export class UserComponent implements OnInit {
         }
       })
     );
+
+    this.applicationService
+      .getEntityId('User')
+      .subscribe((id) => {
+         this.applicationService.entitySelected(id);
+      });
+
   }
 
   onToolbarClick(args: ClickEventArgs): void {
