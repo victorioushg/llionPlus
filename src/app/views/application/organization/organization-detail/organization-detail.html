@@ -35,7 +35,19 @@
           [value]="org.taxRegistrationID"
         ></ejs-textbox>
       </div>
-      <div class="col-md-6"></div>
+      <div class="col-md-6">
+         <ejs-dropdownlist
+            id="currency-ddl"
+            formControlName="currency"
+            #ctypes
+            [dataSource]="currencies$ | async"
+            [value]="org.currency"
+            [fields]="cfields"
+            [enabled]="enabled$ | async"
+            floatLabelType="Always"
+            placeholder="Moneda para Transacciones"
+          ></ejs-dropdownlist>
+      </div>
     </div>
     <div class="row">
       <div class="col-md-6">

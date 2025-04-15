@@ -10,6 +10,7 @@ import { OrganizationService } from '../organization.service';
 import { DropDownListComponent } from '@syncfusion/ej2-angular-dropdowns';
 import {
   IAssosiationType,
+  ICurrency,
   IOrganization,
   IOrganizationType,
 } from '../organization';
@@ -34,14 +35,21 @@ export class OrganizationDetailComponent implements OnInit {
   @ViewChild('atypes')
   listATypes!: DropDownListComponent;
 
+  @ViewChild('ctypes')
+  cCurrencies!: DropDownListComponent;
+
   organizationTypes$!: Observable<IOrganizationType[]>;
   assosiationTypes$!: Observable<IAssosiationType[]>;
+  currencies$!: Observable<ICurrency[]>;
 
   ofields: Object = { text: 'typeDescription', value: 'organizationType' };
   ovalue!: number;
 
   afields: Object = { text: 'typeDescription', value: 'assosiationType' };
   avalue!: number;
+
+  cfields: Object = { text: 'currency', value: 'alphabeticCode' };
+  cvalue!: string;
 
   org!: IOrganization;
   organization$!: Observable<IOrganization>;
@@ -62,6 +70,7 @@ export class OrganizationDetailComponent implements OnInit {
       organizationType: [],
       associationType: [],
       deactivated: [true],
+      currency: ['', Validators.required], 
       addedOn: [new Date()],
     });
 
@@ -120,6 +129,7 @@ export class OrganizationDetailComponent implements OnInit {
       addresses: [],
       phones: [],
       emails: [],
+      currency: this.organizationForm.value.currency, 
       parentId: 0,
       logoData: '',
       logoName: '',

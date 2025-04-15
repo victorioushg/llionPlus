@@ -56,6 +56,7 @@ export class OrganizationService {
     addresses: [],
     phones: [],
     emails: [],
+    currency: '', 
     parentId: 0,
     logoData: '',
     logoName: '',

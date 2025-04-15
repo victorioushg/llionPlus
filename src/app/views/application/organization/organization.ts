@@ -19,7 +19,7 @@ export interface IOrganization {
   phones: IPhone[];
   emails: IEmail[];
   default: boolean;
-
+  currency: string;
   logoData: string;
   logoName: string
   parentId: number
@@ -33,4 +33,9 @@ export interface IOrganizationType {
 export interface IAssosiationType {
   assosiationType: string;
   typeDescription: string;
+}
+
+export interface ICurrency {
+  currency: string;
+  alphabeticCode: string;
 }
