@@ -76,6 +76,7 @@ export class OrganizationDetailComponent implements OnInit {
 
     this.organizationTypes$ = this.organizationService.organizationTypes$;
     this.assosiationTypes$ = this.organizationService.assosiationTypes$;
+    this.currencies$ = this.organizationService.currencies$; 
 
     this.organization$ = this.organizationService.organizationSelected$
     .pipe(

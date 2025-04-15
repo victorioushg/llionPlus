@@ -1,6 +1,7 @@
 import { Injectable, NgZone, OnInit } from '@angular/core';
 import {
   IAssosiationType,
+  ICurrency,
   IOrganization,
   IOrganizationType,
 } from './organization';
@@ -56,7 +57,7 @@ export class OrganizationService {
     addresses: [],
     phones: [],
     emails: [],
-    currency: '', 
+    currency: '',
     parentId: 0,
     logoData: '',
     logoName: '',
@@ -68,9 +69,9 @@ export class OrganizationService {
 
   organizationSelected$!: Observable<IOrganization>;
 
-
   organizationTypes$!: Observable<IOrganizationType[]>;
   assosiationTypes$!: Observable<IAssosiationType[]>;
+  currencies$!: Observable<ICurrency[]>;
 
   // To Delete
   // private enabledFormSource = new BehaviorSubject<boolean>(false);
@@ -163,7 +164,7 @@ export class OrganizationService {
     this.assosiationTypes$ = this.applicationService.entitySelected$.pipe(
       switchMap((entityId) => {
         this.entityId = entityId;
-      
+
         return this.http.get<IApiResponse<IAssosiationType[]>>(
           `${this.organizationUrl}/assosiationtypes/${entityId}`
         );
@@ -171,6 +172,13 @@ export class OrganizationService {
       map((data) => data.result),
       catchError(this.errorHandlerService.handleError)
     );
+
+    this.currencies$ = this.http
+      .get<IApiResponse<ICurrency[]>>(`${this.organizationUrl}/currencies`)
+      .pipe(
+        map((data) => data.result),
+        catchError(this.errorHandlerService.handleError)
+      );
 
     this.organizationSelected$ = combineLatest([
       this.organizations$,
