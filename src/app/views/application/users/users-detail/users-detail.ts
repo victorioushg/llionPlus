@@ -41,9 +41,9 @@ export class UsersDetailComponent implements OnInit {
   rvalue!: string;
 
   user!: IUser;
-  orgs: string[] = [];
-  rols: string[] = [];
-  defaultOrg:  IOrganization[] = [];
+  selectedOrgs!: number[];
+  selectedRoles!: string[];
+  defaultOrg!: number;
 
   enabled$!: Observable<boolean>;
 
@@ -67,6 +67,11 @@ export class UsersDetailComponent implements OnInit {
 
     this.user$ = this.userService.userSelected$.pipe(
       tap((data: IUser) => (this.user = data)),
+      tap((data: IUser) => (this.selectedRoles =  this.user.roles.map(r => r.roleName))),
+      tap((data: IUser) => (this.selectedOrgs =  this.user.orgs.map(o => o.organizationId))),
+      tap((data: IUser) => (this.defaultOrg = this.user.orgs
+        .filter(o => o.defaultOrganization === true)
+        .map( o => o.organizationId)[0] )),
       catchError((err) => {
         this.errorMessageSubject.next(err);
         return EMPTY;
@@ -123,7 +128,7 @@ export class UsersDetailComponent implements OnInit {
       deactivated: 0,
       displayName: '',
       orgs: [],
-      rols: [],
+      roles: [],
     };
 
     if (this.user) {

@@ -99,6 +99,7 @@ export class AddressService {
     this.applicationService.organizationIdSelected$.subscribe(
       (result) => {
         this.organizationId = result;
+        console.log('address :' + this.organizationId )
       },
     );
 
@@ -107,7 +108,7 @@ export class AddressService {
         switchMap((selectedEntity) => {
           return this.http
             .get<IApiResponse<IAddress[]>>(
-              `${this.apiUrl}addresses/${this.organizationId}/${selectedEntity}`
+              `${this.apiUrl}addresses/${selectedEntity}/${this.organizationId}`
             )
             .pipe(
               map((data: IApiResponse) => {

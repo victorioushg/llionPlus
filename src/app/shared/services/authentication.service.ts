@@ -7,7 +7,7 @@ import {
 } from '@angular/common/http';
 import { BehaviorSubject, Observable, throwError } from 'rxjs';
 import { catchError, map, tap } from 'rxjs/operators';
-import jwt_decode  from 'jwt-decode';
+import { jwtDecode }  from 'jwt-decode';
 
 import { User } from '@shared/models/User';
 import { ErrorHandlerService } from './errorHandlerService';
@@ -32,7 +32,7 @@ export class AuthenticationService {
   }
 
   getTokenExpirationDate(token: string): Date {
-    const decoded: any = jwt_decode(token);
+    const decoded: any = jwtDecode(token);
 
     if (decoded.exp === undefined) {
       return new Date();
@@ -50,6 +50,7 @@ export class AuthenticationService {
     if (!token) {
       return true;
     }
+    
 
     const date = this.getTokenExpirationDate(token);
     if (date === undefined) {

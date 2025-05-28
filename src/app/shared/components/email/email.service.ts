@@ -64,6 +64,7 @@ export class EmailService {
     this.applicationService.organizationIdSelected$.subscribe(
       (result) => {
         this.organizationId = result;
+        console.log('email :' + this.organizationId )
       }
     );
 
@@ -71,7 +72,7 @@ export class EmailService {
       switchMap((selectedEntity) => {
         return this.http
           .get<IApiResponse<IEmail[]>>(
-            `${this.apiUrl}emails/${this.organizationId}/${selectedEntity}`
+            `${this.apiUrl}emails/${selectedEntity}/${this.organizationId}`
           )
           .pipe(
             map((data: IApiResponse) => {

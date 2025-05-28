@@ -48,7 +48,7 @@ export class UserComponent implements OnInit {
   private searchStringSubject = new BehaviorSubject<string>('');
   searchStringAction$ = this.searchStringSubject.asObservable();
 
-  users$: Observable<IUser[]> = new Observable<IUser[]>();
+  users$!: Observable<IUser[]>;
 
   toolbar: ToolbarItems[] | object = MiniToolbar;
   searchSettings?: SearchSettingsModel;
@@ -154,7 +154,8 @@ export class UserComponent implements OnInit {
 
   onRecordDoubleClick(args: RecordDoubleClickEventArgs): void {
     if (this.selectedUser !== undefined) {
-      this.applicationService.entitySelected(this.selectedUser.userId);
+      // this.applicationService.entitySelected(this.selectedUser.userId);
+      this.userService.selectedUserChanged(this.selectedUser.userId);
       this.enableParentForm(true);
     } else {
       this.toastService.showMyToast(

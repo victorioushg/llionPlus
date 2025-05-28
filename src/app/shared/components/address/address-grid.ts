@@ -120,7 +120,7 @@ export class AddressGridComponent implements OnInit {
   onRowSelected(args: RowSelectEventArgs): void {
     this.selectedAddress = (args.data ? args.data : []) as IAddress;
     this.addressService.addressSelected(this.selectedAddress);
-    this.applicationService.entitySelected(this.selectedAddress.addressId);
+    this.applicationService.entitySelected(this.selectedAddress.entityId);
   }
 
   onRecordDoubleClick(args: RecordDoubleClickEventArgs): void {

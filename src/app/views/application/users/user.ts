@@ -7,11 +7,16 @@ export interface IUser {
   firstName: string;
   lastName: string
   displayName: string; 
-  orgs: string[]; 
-  rols: string[]; 
+  orgs: IUserOrganization[]; 
+  roles: IRole[]; 
 }
 
 export interface IRole {
   roleName: string;
   rank: number;  
+}
+
+export interface IUserOrganization {
+  organizationId: number;
+  defaultOrganization: boolean;  
 }

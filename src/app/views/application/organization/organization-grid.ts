@@ -56,7 +56,7 @@ export class OrganizationComponent implements OnInit, AfterViewInit {
   searchStringAction$ = this.searchStringSubject.asObservable();
 
   organizations$!: Observable<IOrganization[]>;
-  parentRefEntityI!: number;
+  entityId!: number;
 
   toolbar: ToolbarItems[] | object = MiniToolbar;
   searchSettings?: SearchSettingsModel;
@@ -134,6 +134,7 @@ export class OrganizationComponent implements OnInit, AfterViewInit {
     this.applicationService
       .getEntityId('Organization')
       .subscribe((id) => {
+        this.entityId = id; 
          this.applicationService.entitySelected(id);
       });
   }
@@ -194,6 +195,7 @@ export class OrganizationComponent implements OnInit, AfterViewInit {
   onRowSelected(args: RowSelectEventArgs): void {
     this.selectedOrganization = (args.data ? args.data : []) as IOrganization;
     this.applicationService.organizationIdSelected(this.selectedOrganization.organizationId);
+    this.applicationService.entitySelected(this.entityId)
   }
 
   onRowDeselected(args: RowDeselectEventArgs): void {

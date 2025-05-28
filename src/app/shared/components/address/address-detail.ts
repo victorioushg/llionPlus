@@ -45,7 +45,7 @@ export class AddressComponent implements OnInit {
   }>;
 
   addressTypes$!: Observable<IAddressType[]>;
-  addressFields: Object = { text: 'addressTypeId', value: 'typeDescription' };
+  addressFields: Object = { text: 'typeDescription', value: 'addressTypeId' };
   addressValue!: string;
 
   constructor(

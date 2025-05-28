@@ -37,7 +37,7 @@ export class ApplicationService {
 
   organizationIdSelected$ = this.organizationIdSelectedAction$.pipe(
     tap((data: number) => {
-      console.log('appser organization - ' + data);
+      //  console.log('appser organization - ' + data);
     })
   );
 
@@ -50,8 +50,7 @@ export class ApplicationService {
 
   entitySelected$ = this.entitySelectedAction$.pipe(
     tap((data: number) => {
-      console.log('appser entity - ' + data);
-
+      // console.log('appser entity - ' + data);
     })
   );
 

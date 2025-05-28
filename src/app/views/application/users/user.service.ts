@@ -49,7 +49,7 @@ export class UserService {
     lastName: '',
     displayName: '',
     orgs: [],
-    rols: [],
+    roles: [],
   }).pipe(take(1));
 
   users$: Observable<IUser[]> | undefined;
@@ -117,7 +117,8 @@ export class UserService {
     ]).pipe(
       switchMap(([users, selectedUserId]) => {
         if (selectedUserId > 0) {
-          return this.getUser(selectedUserId);
+          let usr = this.getUser(selectedUserId);
+          return usr;
         } else {
           return this.emptyUser;
         }
