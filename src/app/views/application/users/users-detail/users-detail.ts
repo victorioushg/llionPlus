@@ -4,7 +4,7 @@ import {
   OnInit,
   ViewChild,
 } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators  } from '@angular/forms';
 
 import { DropDownListComponent } from '@syncfusion/ej2-angular-dropdowns';
 

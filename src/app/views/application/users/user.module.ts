@@ -27,13 +27,7 @@ import { enableRipple } from '@syncfusion/ej2-base';
 
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { UsersDetailComponent } from './users-detail/users-detail';
-// import { OrganizationDetailInputComponent } from './organization-detail-input/organization-detail-input';
-// import { AddressComponent } from '@app/shared/components/address/address-detail';
-// import { AddressGridComponent } from '@app/shared/components/address/address-grid';
-// import { EmailComponent } from '@app/shared/components/email/email-detail';
-// import { EmailGridComponent } from '@app/shared/components/email/email-grid';
-// import { PhoneComponent } from '@app/shared/components/phones/phone-detail';
-// import { PhoneGridComponent } from '@app/shared/components/phones/phone-grid';
+
 import { HttpClientJsonpModule, HttpClientModule, provideHttpClient, withInterceptors, withInterceptorsFromDi } from '@angular/common/http';
 
 enableRipple(true);
@@ -42,13 +36,7 @@ enableRipple(true);
   declarations: [
     UserComponent,
     UsersDetailComponent,
-    // OrganizationDetailInputComponent,
-    // AddressComponent,
-    // AddressGridComponent,
-    // EmailComponent,
-    // EmailGridComponent,
-    // PhoneComponent,
-    // PhoneGridComponent,
+    
   ],
   imports: [
     CommonModule,
