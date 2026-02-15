@@ -16,7 +16,6 @@
           [toolbar]="toolbar"
           [height]="screenHeight"
           [searchSettings]="searchSettings"
-          (created)='onCreated()'
           (actionBegin)="actionBegin($event)"
           (toolbarClick)="onToolbarClick($event)"
           (rowSelected)="onRowSelected($event)"
@@ -27,17 +26,17 @@
           <e-columns>
             <e-column width="50" [commands]="commands"></e-column>
             <e-column
-              field="description"
-              headerText="organización"
+              field="name"
+              headerText="descripción"
               width="230"
             ></e-column>
             <e-column
-              field="taxRegistrationID"
-              headerText=""
+              field="description"
+              headerText="presentación"
               width="100"
             ></e-column>
             <e-column
-              field="merchandiseEntityId"
+              field="merchandiseId"
               [isPrimaryKey]="true"
               [visible]="false"
             ></e-column>

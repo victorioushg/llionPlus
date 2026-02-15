@@ -37,29 +37,31 @@ import { ErrorHandlerService } from '@shared/services/errorHandlerService';
 export class MerchandiseService {
   private merchandiseUrl = environment.API_URL + 'merchandise';
   private emptyMerchandise: Observable<IMerchandise> = of({
-    merchandiseEntityId: 0,
-    description: '',
-    brand: '',
-    category: '',
-    hierarchyId: 0,
-    presentation: '',
+    merchandiseId: 0,
+    alternCode: '',  
+    name: '', 
+    description: '', 
+    groupId: 0,
+    brandId: 0,
     deactivated: false,
-    merchandiseType: '',
-    discuount: 0,
-    salesQuota: 0,
-    refund: 0,
-    refundRate: 0.0,
-    mix: 0,
-    accountCode: 0,
-    accountName: '',
-    classCode: 0,
-    className: '',
-    addedOn: new Date(),
-    addedBy: '',
-    lastModifiedOn: new Date(),
-    lastModifiedBy: '',
-    organizationId: 0,
-    parentId: 0,
+    acceptsReturns: false,  
+    acceptsReturnsRate: 0.0, 
+    currentStock: 0.0,
+    availableStock: 0.0, 
+    marketShare: 0,  
+    regulated: false,  
+    merchandiseType: 0, 
+    AcceptsRebate: false,  
+    height: 0.0,
+    width: 0.0, 
+    depth: 0.0, 
+    createdOn: new Date(),  
+    createddBy: '', 
+    LastModifiedOn: new Date(),   
+    accountId: 0, 
+    classId: 0,    
+    parentId: 0,  
+    organizationId: 0
   }).pipe(take(1));
 
   private entityId!: number;  
@@ -116,7 +118,7 @@ export class MerchandiseService {
     } else if (operation.action === 'update') {
       // Return a new array with the updated merchandise replaced
       return merchandises.map((merchandise) =>
-        merchandise.merchandiseEntityId === operation.item.merchandiseEntityId
+        merchandise.merchandiseId === operation.item.merchandiseId
           ? operation.item
           : merchandise
       );
@@ -124,7 +126,7 @@ export class MerchandiseService {
       // Filter out the deleted merchandise
       return merchandises.filter(
         (merchandise) =>
-          merchandise.merchandiseEntityId !== operation.item.merchandiseEntityId
+          merchandise.merchandiseId !== operation.item.merchandiseId
       );
     }
     return [...merchandises];
@@ -142,14 +144,15 @@ export class MerchandiseService {
   private initializeObservables(): void {
     // this.emptyMerchandise = of({} as IMerchandise);
 
-    this.applicationService.entitySelected$.pipe(
-        tap((data: number) => {
-          this.entityId =  data;
-        })
-      );
+    // this.applicationService.entitySelected$.pipe(
+    //     tap((data: number) => {
+    //       this.entityId =  data;
+    //     })
+    //   );
 
+      console.log(`${this.merchandiseUrl}/${this.organizationId}/0`)
     this.merchandises$ = this.http
-      .get<IApiResponse<IMerchandise[]>>(this.merchandiseUrl + '/all')
+      .get<IApiResponse<IMerchandise[]>>(`${this.merchandiseUrl}/${this.organizationId}/0`)
       .pipe(
         map((data) => data.result),
         catchError(this.errorHandlerService.handleError)
@@ -233,7 +236,7 @@ export class MerchandiseService {
     const merchandise: IMerchandise = operation.item;
 
     if (operation.action === 'delete') {
-      const url = `${this.merchandiseUrl}/${merchandise.merchandiseEntityId}`;
+      const url = `${this.merchandiseUrl}/${merchandise.merchandiseId}`;
       return this.http
         .delete<IApiResponse<number>>(url, { headers: this.headers })
         .pipe(

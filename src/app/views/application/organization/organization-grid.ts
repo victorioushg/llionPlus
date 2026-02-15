@@ -209,6 +209,6 @@ export class OrganizationComponent implements OnInit, AfterViewInit {
       this.grid.element.id + '_searchbar'
     ) as HTMLInputElement;
     if (clear) searchString.value = '';
-    this.searchStringSubject.next(searchString.value ? searchString.value : '');
+    this.searchStringSubject.next(searchString.value || '');
   }
 }

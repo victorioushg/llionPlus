@@ -108,10 +108,8 @@ export class MerchandiseComponent implements OnInit, AfterViewInit {
       this.searchStringAction$.pipe(startWith('')),
     ]).pipe(
       map(([merchandises, searchStr]) =>
-        merchandises.filter((merchandise) =>
-          merchandise.description
-            .toLocaleLowerCase()
-            .includes(searchStr.toLocaleLowerCase())
+        merchandises.filter((m) =>
+          m.name.toLocaleLowerCase().includes(searchStr.toLocaleLowerCase())
         )
       ),
       catchError((err) => {
@@ -143,17 +141,17 @@ export class MerchandiseComponent implements OnInit, AfterViewInit {
       });
   }
 
-  onCreated(): void {
-    (
-      document.getElementById(
-        (this.grid as GridComponent).element.id + '_searchbar'
-      ) as Element
-    ).addEventListener('keyup', () => {
-      (this.grid as GridComponent).search(
-        ((event as MouseEvent).target as HTMLInputElement).value
-      );
-    });
-  }
+  // onCreated(): void {
+  //   (
+  //     document.getElementById(
+  //       (this.grid as GridComponent).element.id + '_searchbar'
+  //     ) as Element
+  //   ).addEventListener('keyup', () => {
+  //     (this.grid as GridComponent).search(
+  //       ((event as MouseEvent).target as HTMLInputElement).value
+  //     );
+  //   });
+  // }
 
   onToolbarClick(args: ClickEventArgs): void {
     const target: HTMLElement = args.originalEvent.target as HTMLElement; //.closest('button'); // find clicked button
@@ -178,12 +176,12 @@ export class MerchandiseComponent implements OnInit, AfterViewInit {
   onRecordDoubleClick(args: RecordDoubleClickEventArgs): void {
     if (this.selectedMerchandise !== undefined) {
       this.applicationService.entitySelected(
-        this.selectedMerchandise.merchandiseEntityId
+        this.selectedMerchandise.merchandiseId
       );
       this.enableParentForm(true);
     } else {
       this.toastService.showMyToast(
-        'Debe seleccionar una empresa...',
+        'Debe seleccionar una mercancía...',
         toastType.error
       );
     }
@@ -213,10 +211,10 @@ export class MerchandiseComponent implements OnInit, AfterViewInit {
   onRowSelected(args: RowSelectEventArgs): void {
     this.selectedMerchandise = (args.data ? args.data : []) as IMerchandise;
     this.merchandiseService.selectedMerchandiseChanged(
-      this.selectedMerchandise.merchandiseEntityId
+      this.selectedMerchandise.merchandiseId
     );
     this.applicationService.entitySelected(
-      this.selectedMerchandise.merchandiseEntityId
+      this.selectedMerchandise.merchandiseId
     );
   }
 
@@ -231,6 +229,6 @@ export class MerchandiseComponent implements OnInit, AfterViewInit {
       this.grid.element.id + '_searchbar'
     ) as HTMLInputElement;
     if (clear) searchString.value = '';
-    this.searchStringSubject.next(searchString.value ? searchString.value : '');
+    this.searchStringSubject.next(searchString.value || '');
   }
 }

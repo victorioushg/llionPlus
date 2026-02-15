@@ -147,10 +147,17 @@ export class ViewsComponent {
   }
 
   public select(args: MenuEventArgs): void {
-    if (args.item.text === 'Log out') {
-      localStorage.removeItem('jwt');
-      localStorage.removeItem('currentLlionUser');
-      this.router.navigate(['/login']);
+    if ((args.item.text ?? '').toLowerCase() === 'log out') {
+      this.logout();
     }
   }
+
+  private logout(): void {
+    localStorage.removeItem('jwt');
+    localStorage.removeItem('currentUser');
+    // Optional but recommended
+    sessionStorage.clear();
+    this.router.navigateByUrl('/login');  
+  }
+
 }

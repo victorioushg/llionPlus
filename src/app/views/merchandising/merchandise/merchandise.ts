@@ -1,27 +1,29 @@
 export interface IMerchandise {
-  merchandiseEntityId: number;
+  merchandiseId: number;
+  alternCode: string; 
+  name: string;
   description: string;
-  brand: string;
-  category: string;
-  hierarchyId: number;
-  presentation: string;
+  groupId: number;
+  brandId: number;
   deactivated: boolean;
-  merchandiseType: string;
-  discuount: number;
-  salesQuota: number;
-  refund: number;
-  refundRate: number;
-  mix: number;
-  accountCode: number;
-  accountName: string;
-  classCode: number;
-  className: string;
-  addedOn: Date;
-  addedBy: string;
-  lastModifiedOn: Date;
-  lastModifiedBy: string;
+  acceptsReturns: boolean; 
+  acceptsReturnsRate: number;
+  currentStock: number;
+  availableStock: number; 
+  marketShare: number; 
+  regulated: boolean; 
+  merchandiseType: number;
+  AcceptsRebate: boolean; 
+  height: number;
+  width: number;
+  depth: number;
+  createdOn: Date; 
+  createddBy: string;
+  LastModifiedOn: Date;
+  accountId: number;
+  classId: number;   
+  parentId: number; 
   organizationId: number;
-  parentId: number;
 }
 
 export interface IMerchandiseBrand {

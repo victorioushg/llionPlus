@@ -23,7 +23,7 @@
           formControlName="merchandiseType"
           #otypes
           [dataSource]="merchandiseBrands$ | async"
-          [value]="mer.brand"
+          [value]="mer.brandId"
           [fields]="brandfields"
           [enabled]="enabled$ | async"
           floatLabelType="Always"
@@ -36,7 +36,7 @@
           formControlName="associationType"
           #atypes
           [dataSource]="merchandiseCategories$ | async"
-          [value]="mer.category"
+          [value]="mer.groupId"
           [fields]="categoryfields"
           [enabled]="enabled$ | async"
           floatLabelType="Always"
