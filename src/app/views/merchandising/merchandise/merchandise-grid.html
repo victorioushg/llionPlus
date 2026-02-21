@@ -22,6 +22,7 @@
           (rowDeselected)="onRowDeselected($event)"
           (recordDoubleClick)="onRecordDoubleClick($event)"
           (commandClick)="commandClick($event)"
+          (created)="onCreated()"
         >
           <e-columns>
             <e-column width="50" [commands]="commands"></e-column>

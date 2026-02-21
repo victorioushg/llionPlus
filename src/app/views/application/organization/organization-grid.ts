@@ -71,6 +71,7 @@ export class OrganizationComponent implements OnInit, AfterViewInit {
 
   // public headerText!: Object[];
   headerText: Object[] = [
+    { text: 'dashboard' },
     { text: 'organización' },
     { text: 'parámetros y contadores' },
     { text: 'impuestos y retenciones' },
@@ -131,12 +132,10 @@ export class OrganizationComponent implements OnInit, AfterViewInit {
     );
 
     // EntityId Reactive
-    this.applicationService
-      .getEntityId('Organization')
-      .subscribe((id) => {
-        this.entityId = id; 
-         this.applicationService.entitySelected(id);
-      });
+    // this.applicationService.getEntityId('Organization').subscribe((entityId) => {
+    //   this.entityId = entityId;
+    //   this.applicationService.entitySelected(entityId);
+    // });
   }
 
   onToolbarClick(args: ClickEventArgs): void {
@@ -195,7 +194,7 @@ export class OrganizationComponent implements OnInit, AfterViewInit {
   onRowSelected(args: RowSelectEventArgs): void {
     this.selectedOrganization = (args.data ? args.data : []) as IOrganization;
     this.applicationService.organizationIdSelected(this.selectedOrganization.organizationId);
-    this.applicationService.entitySelected(this.entityId)
+   
   }
 
   onRowDeselected(args: RowDeselectEventArgs): void {

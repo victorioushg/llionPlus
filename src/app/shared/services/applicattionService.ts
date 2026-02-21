@@ -13,6 +13,7 @@ import {
 import { IApiResponse } from '../models/api-response';
 import '@lib/string';
 import { ToastService } from './toastService';
+import { ErrorHandlerService } from './errorHandlerService';
 import { childgrid } from '../enums/enums';
 
 
@@ -50,7 +51,7 @@ export class ApplicationService {
 
   entitySelected$ = this.entitySelectedAction$.pipe(
     tap((data: number) => {
-      // console.log('appser entity - ' + data);
+      console.log('Entity - ' + data);
     })
   );
 
@@ -105,7 +106,10 @@ export class ApplicationService {
   //   this.enabledUserFormSource.next(enabled);
   // }
 
-  constructor(private http: HttpClient, private toastService: ToastService) {}
+  constructor(
+    private http: HttpClient, 
+    private toastService: ToastService,
+    private errorHandler: ErrorHandlerService) {}
 
   enableDetailForm(grid: childgrid, enable: boolean) {
     this.enablePhoneChildGrid(!enable);
@@ -129,11 +133,9 @@ export class ApplicationService {
     return this.http
       .get<IApiResponse<number>>(`${this.apiUrl}entity/${entityName}`)
       .pipe(
-        map((data: IApiResponse<number>) => data.result),
-        catchError((err) => {
-          this.errorMessageSubject.next(err);
-          return EMPTY;
-        })
+        map(response => response.result),
+        tap(entityId => this.entitySelectedSource.next(entityId)), // 🔥 push here
+        catchError(this.errorHandler.handleError.bind(this.errorHandler))
       );
   }
 
@@ -148,4 +150,8 @@ export class ApplicationService {
     if (test()) work();
     else setTimeout(this.WhenReady.bind(window, test, work));
   }
+
+  
 }
+
+

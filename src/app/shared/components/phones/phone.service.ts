@@ -87,7 +87,6 @@ export class PhoneService {
     
     this.applicationService.organizationIdSelected$.subscribe((result) => {
       this.organizationId = result;
-      console.log('phone :' + this.organizationId )
     });
 
     this.phonesByEntityId$ = this.applicationService.entitySelectedAction$.pipe(
@@ -104,13 +103,13 @@ export class PhoneService {
       })
     );
 
-    this.phoneTypes$ = this.http
-      .get<IApiResponse<IPhoneType[]>>(this.apiUrl + 'phonetypes')
-      .pipe(
-        map((data) => data.result),
-        catchError(this.handleError),
-        shareReplay(1)
-      );
+    // this.phoneTypes$ = this.http
+    //   .get<IApiResponse<IPhoneType[]>>(this.apiUrl + 'phonetypes')
+    //   .pipe(
+    //     map((data) => data.result),
+    //     catchError(this.handleError),
+    //     shareReplay(1)
+    //   );
 
     this.phoneWithCRUD$ = merge(
       this.phonesByEntityId$,

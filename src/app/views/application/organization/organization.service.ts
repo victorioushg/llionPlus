@@ -139,8 +139,10 @@ export class OrganizationService {
   }
 
   private initializeObservables(): void {
-    this.applicationService.entitySelected$.subscribe((entityId) => {
+
+    this.applicationService.getEntityId('Organization').subscribe((entityId) => {
       this.entityId = entityId;
+      this.applicationService.entitySelected(entityId);
     });
 
     this.organizations$ = this.http

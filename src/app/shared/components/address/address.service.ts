@@ -99,7 +99,6 @@ export class AddressService {
     this.applicationService.organizationIdSelected$.subscribe(
       (result) => {
         this.organizationId = result;
-        console.log('address :' + this.organizationId )
       },
     );
 

@@ -71,6 +71,7 @@ export class UserService {
   userSelectedAction$ = this.userSelectedSubject.asObservable();
 
   userSelected$!: Observable<IUser>;
+  entityId!: number;
 
   organizations$!: Observable<IOrganization[]>;
   roles$!: Observable<IRole[]>;
@@ -90,6 +91,12 @@ export class UserService {
   }
 
   private initializeObservables(): void {
+
+   this.applicationService.getEntityId('User').subscribe((entityId) => {
+      this.entityId = entityId;
+      this.applicationService.entitySelected(entityId);
+    });
+
     this.organizations$ = this.http
       .get<IApiResponse<IOrganization[]>>(this.apiAppUrl + '/all')
       .pipe(

@@ -8,50 +8,87 @@
       <div class="col-md-12">
         <ejs-textbox
           id="merchandise-txt"
-          placeholder="descripción"
+          placeholder="nombre or descripción"
           floatLabelType="Always"
-          formControlName="name"
+          formControlName="merchandiseName"
           [enabled]="enabled$ | async"
-          [value]="mer.description"
         ></ejs-textbox>
       </div>
     </div>
     <div class="row">
       <div class="col-md-6">
         <ejs-dropdownlist
-          id="merchandise-type-ddl"
-          formControlName="merchandiseType"
-          #otypes
+          id="merchandise-brands-ddl"
+          formControlName="merchandiseBrands"
+          #brands
           [dataSource]="merchandiseBrands$ | async"
-          [value]="mer.brandId"
           [fields]="brandfields"
           [enabled]="enabled$ | async"
+          [allowFiltering]="true"
           floatLabelType="Always"
           placeholder="marca de mercancías"
         ></ejs-dropdownlist>
       </div>
       <div class="col-md-6">
         <ejs-dropdownlist
-          id="association-type-ddl"
-          formControlName="associationType"
-          #atypes
+          id="merchandise-categories-ddl"
+          formControlName="merchandiseCategories"
+          #categories
           [dataSource]="merchandiseCategories$ | async"
-          [value]="mer.groupId"
           [fields]="categoryfields"
           [enabled]="enabled$ | async"
+          [allowFiltering]="true"
           floatLabelType="Always"
-          placeholder="Grupo de mercancías" 
-        ></ejs-dropdownlist> 
+          placeholder="Grupo de mercancías"
+        ></ejs-dropdownlist>
       </div>
     </div>
     <div class="row">
-      <div class="col-md-12">
-        <!-- <llion-grid-address></llion-grid-address>  -->
+      <div class="col-md-6">
+        <ejs-textbox
+          id="merchandise-presentation-txt"
+          placeholder="presentación"
+          floatLabelType="Always"
+          formControlName="merchandisePresentation"
+          [enabled]="enabled$ | async"
+        ></ejs-textbox>
+      </div>
+      <div class="col-md-6">
+        <ejs-textbox
+          id="merchandise-alterno-txt"
+          placeholder="código alterno"
+          floatLabelType="Always"
+          formControlName="merchandiseAlternCode"
+          [enabled]="enabled$ | async"
+        ></ejs-textbox>
       </div>
     </div>
     <div class="row">
-      <div class="col-md-12">
-        <!-- <llion-grid-phone></llion-grid-phone>  -->
+      <div class="col-md-6">
+        <ejs-dropdownlist
+          id="merchandise-division-ddl"
+          formControlName="merchandiseDivisions"
+          #divisions
+          [dataSource]="merchandiseDivisions$ | async"
+          [fields]="divisionfields"
+          [enabled]="enabled$ | async"
+          [allowFiltering]="true"
+          floatLabelType="Always"
+          placeholder="Divisiones mercancías"
+        ></ejs-dropdownlist>
+      </div>
+      <div class="col-md-6">
+        <ejs-dropdownlist
+          id="merchandise-type-ddl"
+          formControlName="merchandiseTypes"
+          #types
+          [dataSource]="merchandiseTypes$ | async"
+          [fields]="typefields"
+          [enabled]="enabled$ | async"
+          [allowFiltering]="true"
+          floatLabelType="Always"
+          placeholder="Tipos de mercancías"
+        ></ejs-dropdownlist>
       </div>
     </div>
     <div class="row">
@@ -92,8 +129,8 @@
     <div class="row">
       <div class="col-md-6"></div>
       <div class="col-md-6">
-        <div id="form-buttons" >
-          <button 
+        <div id="form-buttons">
+          <button
             ejs-button
             (click)="onCancelClick()"
             [disabled]="!(enabled$ | async)"
@@ -101,7 +138,7 @@
           >
             Cancelar
           </button>
-          <button 
+          <button
             ejs-button
             (click)="onSaveClick()"
             cssClass="e-primary"

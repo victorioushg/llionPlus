@@ -39,7 +39,6 @@ import {
   TabItemsDirective,
   TabItemDirective,
 } from '@syncfusion/ej2-angular-navigations';
-import { ApplicationService } from '@shared/services/applicattionService';
 import { TabHeader } from '@shared/models/syncfusion-interfaces';
 
 @Component({
@@ -57,7 +56,7 @@ export class MerchandiseComponent implements OnInit, AfterViewInit {
   searchStringAction$ = this.searchStringSubject.asObservable();
 
   merchandises$!: Observable<IMerchandise[]>;
-  parentRefEntityI!: number;
+  entityId!: number;
 
   toolbar: ToolbarItems[] | object = MiniToolbar;
   searchSettings?: SearchSettingsModel;
@@ -72,20 +71,16 @@ export class MerchandiseComponent implements OnInit, AfterViewInit {
 
   // public headerText!: Object[];
   headerText: Object[] = [
-    { text: 'organización' },
-    { text: 'parámetros y contadores' },
-    { text: 'impuestos y retenciones' },
-    { text: 'créditos y débitos' },
+    { text: 'dashBoard' },
+    { text: 'mercancía' },
+    { text: 'movimientos' },
   ];
 
   /////
   constructor(
-    private applicationService: ApplicationService,
     private merchandiseService: MerchandiseService,
     private toastService: ToastService
-  ) {
-    console.log('merchandise');
-  }
+  ) {}
 
   ngAfterViewInit(): void {
     if (this.tabObj) {
@@ -132,26 +127,26 @@ export class MerchandiseComponent implements OnInit, AfterViewInit {
       })
     );
 
-    // ParentRefEntityId Reactive
-    this.applicationService
-      .getEntityId('Merchandise')
-      .subscribe((id) => {
-        console.log(' Parent Entity Active - ' + id);
-        this.applicationService.entitySelected(id);
-      });
+      // EntityId Reactive
+    // this.applicationService
+    //   .getEntityId('Merchandise')
+    //   .subscribe((id) => {
+    //     this.entityId = id; 
+    //      this.applicationService.entitySelected(id);
+    //   });
+
   }
 
-  // onCreated(): void {
-  //   (
-  //     document.getElementById(
-  //       (this.grid as GridComponent).element.id + '_searchbar'
-  //     ) as Element
-  //   ).addEventListener('keyup', () => {
-  //     (this.grid as GridComponent).search(
-  //       ((event as MouseEvent).target as HTMLInputElement).value
-  //     );
-  //   });
-  // }
+   onCreated(): void {
+     (
+       document.getElementById(
+         (this.grid as GridComponent).element.id + '_searchbar') as Element
+     ).addEventListener('keyup', () => {
+       (this.grid as GridComponent).search(
+         ((event as MouseEvent).target as HTMLInputElement).value
+       );
+    });
+  }
 
   onToolbarClick(args: ClickEventArgs): void {
     const target: HTMLElement = args.originalEvent.target as HTMLElement; //.closest('button'); // find clicked button
@@ -175,7 +170,7 @@ export class MerchandiseComponent implements OnInit, AfterViewInit {
 
   onRecordDoubleClick(args: RecordDoubleClickEventArgs): void {
     if (this.selectedMerchandise !== undefined) {
-      this.applicationService.entitySelected(
+      this.merchandiseService.merchandiseIdSelected(
         this.selectedMerchandise.merchandiseId
       );
       this.enableParentForm(true);
@@ -190,9 +185,6 @@ export class MerchandiseComponent implements OnInit, AfterViewInit {
   enableParentForm(enable: boolean) {
     this.merchandiseService.enableMerchandiseGrid(enable);
     this.merchandiseService.enableMerchandiseForm(enable);
-    // this.applicationService.enableAddressChildGrid(enable);
-    // this.applicationService.enableEmailChildGrid(enable);
-    // this.applicationService.enablePhoneChildGrid(enable);
   }
 
   actionBegin(args: SearchEventArgs): void {
@@ -210,12 +202,7 @@ export class MerchandiseComponent implements OnInit, AfterViewInit {
 
   onRowSelected(args: RowSelectEventArgs): void {
     this.selectedMerchandise = (args.data ? args.data : []) as IMerchandise;
-    this.merchandiseService.selectedMerchandiseChanged(
-      this.selectedMerchandise.merchandiseId
-    );
-    this.applicationService.entitySelected(
-      this.selectedMerchandise.merchandiseId
-    );
+    this.merchandiseService.selectedMerchandiseChanged(this.selectedMerchandise.merchandiseId);
   }
 
   onRowDeselected(args: RowDeselectEventArgs): void {

@@ -213,6 +213,12 @@ h6 {
   box-shadow: 0 0 0 0px rgba(var(--color-sf-primary)) inset;
 }
 
+.e-grid td.e-selectionbackground {
+    background-color: $llion-color-primary;
+    color: $llion-color-white !important;
+
+}
+
 .e-grid .e-toolbar {
   height: 40px !important;
   min-height: 20px;

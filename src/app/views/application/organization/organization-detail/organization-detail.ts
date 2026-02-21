@@ -53,7 +53,6 @@ export class OrganizationDetailComponent implements OnInit {
 
   org!: IOrganization;
   organization$!: Observable<IOrganization>;
-
   enabled$!: Observable<boolean>;
 
   constructor(

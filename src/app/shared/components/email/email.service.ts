@@ -64,7 +64,6 @@ export class EmailService {
     this.applicationService.organizationIdSelected$.subscribe(
       (result) => {
         this.organizationId = result;
-        console.log('email :' + this.organizationId )
       }
     );
 
