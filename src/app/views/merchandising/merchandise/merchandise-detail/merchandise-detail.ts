@@ -4,6 +4,8 @@ import {
   OnInit,
   ViewChild,
 } from '@angular/core';
+import { of } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MerchandiseService } from '../merchandise.service';
 
@@ -13,7 +15,7 @@ import {
   IMerchandiseBrand,
   IMerchandiseCategory,
   IMerchandiseDivision,
-  IMerchandiseType
+  IMerchandiseType,
 } from '../merchandise';
 import { catchError, EMPTY, Observable, shareReplay, Subject, tap } from 'rxjs';
 import { ApplicationService } from '@shared/services/applicattionService';
@@ -54,7 +56,8 @@ export class MerchandiseDetailComponent implements OnInit {
 
   merchandise!: IMerchandise;
   merchandise$!: Observable<IMerchandise>;
-  enabled$!: Observable<boolean>;
+  enabled$!: Observable<boolean | null>;
+  disabled$!: Observable<boolean | null>;
 
   constructor(
     private applicationService: ApplicationService,
@@ -74,7 +77,8 @@ export class MerchandiseDetailComponent implements OnInit {
     });
 
     this.merchandiseBrands$ = this.merchandiseService.merchandiseBrands$;
-    this.merchandiseCategories$ = this.merchandiseService.merchandiseCategories$;
+    this.merchandiseCategories$ =
+      this.merchandiseService.merchandiseCategories$;
     this.merchandiseDivisions$ = this.merchandiseService.merchandiseDivisions$;
     this.merchandiseTypes$ = this.merchandiseService.merchandiseTypes$;
 
@@ -113,6 +117,9 @@ export class MerchandiseDetailComponent implements OnInit {
         if (formbuttons) formbuttons.style.display = enabled ? 'block' : 'none';
       }),
     );
+
+    this.disabled$ = this.enabled$.pipe(map((value) => !value));
+
   }
 
   clearForm() {

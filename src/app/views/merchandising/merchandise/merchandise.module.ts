@@ -17,7 +17,7 @@ import {
 } from '@syncfusion/ej2-angular-navigations';
 import { TextBoxModule,  MaskedTextBoxModule } from '@syncfusion/ej2-angular-inputs';
 import { DropDownListModule } from '@syncfusion/ej2-angular-dropdowns';
-import { ButtonModule, SwitchModule } from '@syncfusion/ej2-angular-buttons';
+import { ButtonModule, SwitchModule, CheckBoxModule  } from '@syncfusion/ej2-angular-buttons';
 import { DatePickerModule } from '@syncfusion/ej2-angular-calendars';
 import { enableRipple } from '@syncfusion/ej2-base';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
@@ -44,6 +44,7 @@ enableRipple(true);
     SwitchModule,
     DatePickerModule,
     ButtonModule,
+    CheckBoxModule, 
     FormsModule,
     ReactiveFormsModule,
   ],

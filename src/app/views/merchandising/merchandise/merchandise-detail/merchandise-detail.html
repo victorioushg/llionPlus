@@ -92,8 +92,35 @@
       </div>
     </div>
     <div class="row">
-      <div class="col-md-12">
-        <!-- <llion-grid-email></llion-grid-email>  -->
+      <div class="col-md-3">
+        <ejs-checkbox
+          formControlName="merchandise-inactive"
+          label="Activo"
+        >
+        </ejs-checkbox>
+      </div>
+      <div class="col-md-3">
+        <ejs-checkbox
+          formControlName="merchandise-regulated"
+          label="Regulado"
+        >
+        </ejs-checkbox>
+      </div>
+      <div class="col-md-3">
+        <ejs-checkbox
+          formControlName="merchandise-returns"
+          label="Acepta Retornos"
+        >
+        </ejs-checkbox>
+      </div>
+      <div class="col-md-3">
+        <ejs-textbox
+          id="merchandise-return-rate-txt"
+          placeholder="Tasa de Retorno"
+          floatLabelType="Always"
+          formControlName="merchandiseReturnsRate"
+          [enabled]="enabled$ | async"
+        ></ejs-textbox>
       </div>
     </div>
     <br />
