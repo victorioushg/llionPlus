@@ -1,0 +1,24 @@
+<ejs-dialog
+  #dialog
+  [visible]="false"
+  [isModal]="true"
+  [showCloseIcon]="true"
+  [width]="'850px'"
+  [header]="'Items'"
+  [buttons]="dialogButtons"
+>
+  <div>
+    <ejs-grid
+      [dataSource]="rowData"
+      [toolbar]="gridToolbar"
+      [editSettings]="gridEditSettings"
+      height="300"
+    >
+      <e-columns>
+        <e-column field="ItemId" headerText="ID" isPrimaryKey="true" textAlign="Right" width="100"></e-column>
+        <e-column field="Product" headerText="Product" width="220"></e-column>
+        <e-column field="Qty" headerText="Qty" textAlign="Right" width="120"></e-column>
+      </e-columns>
+    </ejs-grid>
+  </div>
+</ejs-dialog>

@@ -6,6 +6,12 @@ import {
   IMerchandiseDivision,
   IMerchandiseType,
 } from './merchandise';
+
+import {
+  IMerchandiseMovement,
+  IMerchandiseWithMovements,
+} from './merchandise-movements/merchandisemovement';
+
 import { environment } from '@environments/environment';
 import {
   HttpClient,
@@ -29,6 +35,7 @@ import {
   Subject,
   throwError,
   EMPTY,
+  forkJoin,
 } from 'rxjs';
 import { IApiResponse } from '@shared/models/api-response';
 import { ApplicationService } from '@shared/services/applicattionService';
@@ -42,37 +49,12 @@ import { ErrorHandlerService } from '@shared/services/errorHandlerService';
 })
 export class MerchandiseService {
   private merchandiseUrl = environment.API_URL + 'merchandise';
-  private emptyMerchandise: Observable<IMerchandise> = of({
-    merchandiseId: 0,
-    alternCode: '',
-    name: '',
-    description: '',
-    groupId: 0,
-    brandId: 0,
-    deactivated: false,
-    acceptsReturns: false,
-    acceptsReturnsRate: 0.0,
-    currentStock: 0.0,
-    availableStock: 0.0,
-    marketShare: 0,
-    regulated: false,
-    typeId: 0,
-    divisionId: 0,
-    AcceptsRebate: false,
-    height: 0.0,
-    width: 0.0,
-    depth: 0.0,
-    createdOn: new Date(),
-    createddBy: '',
-    LastModifiedOn: new Date(),
-    accountId: 0,
-    classId: 0,
-    parentId: 0,
-    organizationId: 0,
-  }).pipe(take(1));
+  // 
+  emptyMerchandise: IMerchandise = {} as IMerchandise;
 
   private entityId!: number;
   private organizationId: number = 1;
+  private merchandiseId: number = 0;
 
   merchandises$!: Observable<IMerchandise[]>;
   merchandiseBrands$!: Observable<IMerchandiseBrand[]>;
@@ -80,9 +62,13 @@ export class MerchandiseService {
   merchandiseDivisions$!: Observable<IMerchandiseDivision[]>;
   merchandiseTypes$!: Observable<IMerchandiseType[]>;
 
+  movements$!: Observable<IMerchandiseMovement[]>;
+
   private merchandiseSelectedSubject = new BehaviorSubject<number>(0);
   merchandiseSelectedAction$ = this.merchandiseSelectedSubject.asObservable();
+  merchandiseWithMovements$!: Observable<IMerchandiseWithMovements>;
   merchandiseSelected$!: Observable<IMerchandise>;
+  merchandiseMovements$!: Observable<IMerchandiseMovement[]>;
 
   private merchandiseIdSelectedSubject = new BehaviorSubject<number>(0);
   merchandiseIdSelectedAction$ =
@@ -105,7 +91,7 @@ export class MerchandiseService {
   // Save the merchandise via http
   // And then create and buffer a new array of products with scan.
   merchandiseWithCRUD$!: Observable<IMerchandise[]>;
-
+  movementWithCRUD$!: Observable<IMerchandiseMovement[]>;
   // Enabling
   private enabledMerchandiseGridSource = new BehaviorSubject<boolean>(false);
   enableMerchandiseGridAction$: Observable<boolean> =
@@ -165,10 +151,9 @@ export class MerchandiseService {
       this.applicationService.entitySelected(entityId);
     });
 
+    // Catalog
     this.merchandises$ = this.http
-      .get<
-        IApiResponse<IMerchandise[]>
-      >(`${this.merchandiseUrl}/${this.organizationId}/0`)
+      .get<IApiResponse<IMerchandise[]>>(`${this.merchandiseUrl}/${this.organizationId}/0`)
       .pipe(
         map((data) => data.result),
         catchError(this.errorHandlerService.handleError),
@@ -233,18 +218,34 @@ export class MerchandiseService {
         shareReplay(1),
       );
 
-    this.merchandiseSelected$ = combineLatest([
-      this.merchandises$,
-      this.merchandiseSelectedAction$,
-    ]).pipe(
-      switchMap(([merchandises, selectedMerchandiseId]) => {
-        if (selectedMerchandiseId > 0) {
-          return this.getMerchandise(selectedMerchandiseId);
-        } else {
-          return this.emptyMerchandise;
+    this.merchandiseWithMovements$ = this.merchandiseSelectedAction$.pipe(
+      switchMap((merchandiseId) => {
+        // nothing selected
+        if (!merchandiseId || merchandiseId <= 0) {
+          return of({
+            merchandise: this.emptyMerchandise,
+            movements: [],
+          });
         }
+
+        // load merchandise + movements in parallel
+        return forkJoin({
+          merchandise: this.getMerchandise(merchandiseId),
+          movements: this.getMerchandiseMovements(merchandiseId),
+        });
       }),
+
+      // cache last value for all subscribers
       shareReplay(1),
+    );
+
+    // optional separated streams for UI binding
+    this.merchandiseSelected$ = this.merchandiseWithMovements$.pipe(
+      map((x) => x.merchandise),
+    );
+
+    this.merchandiseMovements$ = this.merchandiseWithMovements$.pipe(
+      map((x) => x.movements),
     );
 
     this.merchandiseWithCRUD$ = merge(
@@ -262,6 +263,23 @@ export class MerchandiseService {
       ),
       shareReplay(1),
     );
+
+    // Merchandise Movements
+  //  this.movementsWithCRUD$ = merge(
+  //     this.merchandises$,
+  //     this.merchandiseModifiedAction$.pipe(
+  //       concatMap((operation) => this.saveMerchandise(operation)),
+  //     ),
+  //   ).pipe(
+  //     scan(
+  //       (acc, value) =>
+  //         value instanceof Array
+  //           ? [...value]
+  //           : this.modifyMerchandises(acc, value),
+  //       [] as IMerchandise[],
+  //     ),
+  //     shareReplay(1),
+  //   );
   }
 
   addMerchandise(newMerchandise: IMerchandise): void {
@@ -346,6 +364,17 @@ export class MerchandiseService {
       .get<
         IApiResponse<IMerchandise>
       >(`${this.merchandiseUrl}/${this.organizationId}/${id}`)
+      .pipe(
+        map((data) => data.result),
+        catchError(this.errorHandlerService.handleError),
+      );
+  }
+
+  getMerchandiseMovements(id: number): Observable<IMerchandiseMovement[]> {
+    return this.http
+      .get<
+        IApiResponse<IMerchandiseMovement[]>
+      >(`${this.merchandiseUrl}/movements/${id}/${this.organizationId}`)
       .pipe(
         map((data) => data.result),
         catchError(this.errorHandlerService.handleError),

@@ -4,6 +4,8 @@ import { RouterModule } from '@angular/router';
 import { JwtModule } from '@auth0/angular-jwt';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { HTTP_INTERCEPTORS, HttpClientModule } from '@angular/common/http';
+
+import { DialogModule } from '@syncfusion/ej2-angular-popups';
 import { ButtonModule } from '@syncfusion/ej2-angular-buttons';
 import { MaskedTextBoxModule, TextBoxModule } from '@syncfusion/ej2-angular-inputs';
 import {
@@ -14,6 +16,8 @@ import {
   TabItemDirective,
   TabModule,
 } from '@syncfusion/ej2-angular-navigations';
+import { GridModule, EditService, ToolbarService } from '@syncfusion/ej2-angular-grids';
+
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { ToastService } from './shared/services/toastService';
 import { HttpErrorInterceptor } from './http-error.interceptor';
@@ -44,6 +48,7 @@ export function tokenGetter() {
         tokenGetter: tokenGetter,
       },
     }),
+    DialogModule, 
     ButtonModule,
     TextBoxModule,
     MaskedTextBoxModule, 

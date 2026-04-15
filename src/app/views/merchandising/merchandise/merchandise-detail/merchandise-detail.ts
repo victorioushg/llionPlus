@@ -23,6 +23,7 @@ import { ApplicationService } from '@shared/services/applicattionService';
 @Component({
   selector: 'llion-merchandise-detail',
   templateUrl: './merchandise-detail.html',
+  styleUrls: ['./merchandise-detail.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: false,
 })
@@ -74,6 +75,13 @@ export class MerchandiseDetailComponent implements OnInit {
       merchandiseTypes: [],
       merchandiseAlternCode: [],
       merchandisePresentation: [],
+      merchandiseActive: [{ value: false, disabled: true }],
+      merchandiseRegulated: [{ value: false, disabled: true }],
+      merchandiseReturns: [{ value: false, disabled: true }],
+      merchandiseAcceptRebates: [{ value: false, disabled: true }],
+      merchandiseReturnsRate: [0],
+      merchandiseStock: [0],
+      merchandiseAvailableStock: [0], 
     });
 
     this.merchandiseBrands$ = this.merchandiseService.merchandiseBrands$;
@@ -95,6 +103,8 @@ export class MerchandiseDetailComponent implements OnInit {
             merchandisePresentation: merchandise.description,
             merchandiseDivisions: merchandise.divisionId,
             merchandiseTypes: merchandise.typeId,
+            merchandiseStock: merchandise.currentStock,
+            merchandiseAvailableStock: merchandise.availableStock, 
           });
         }
         // this.merchandise = data;
@@ -107,11 +117,22 @@ export class MerchandiseDetailComponent implements OnInit {
 
     this.enabled$ = this.merchandiseService.enableMerchandiseFormAction$.pipe(
       tap((enabled) => {
-        if (enabled) {
-          this.merchandiseForm.enable();
-        } else {
-          this.merchandiseForm.disable();
-        }
+        // Enable / Disable entire form
+        enabled
+          ? this.merchandiseForm.enable()
+          : this.merchandiseForm.disable();
+
+        const activeControl = this.merchandiseForm.get('merchandiseActive');
+        enabled ? activeControl?.enable() : activeControl?.disable(); 
+
+        const regulatedControl = this.merchandiseForm.get('merchandiseRegulated');
+        enabled ? regulatedControl?.enable() : regulatedControl?.disable(); 
+
+        const returnsControl = this.merchandiseForm.get('merchandiseReturns');
+        enabled ? returnsControl?.enable() : returnsControl?.disable(); 
+
+        const rebatesControl = this.merchandiseForm.get('merchandiseAcceptRebates');
+        enabled ? rebatesControl?.enable() : rebatesControl?.disable(); 
 
         let formbuttons = document.getElementById('form-buttons');
         if (formbuttons) formbuttons.style.display = enabled ? 'block' : 'none';
@@ -119,7 +140,6 @@ export class MerchandiseDetailComponent implements OnInit {
     );
 
     this.disabled$ = this.enabled$.pipe(map((value) => !value));
-
   }
 
   clearForm() {
@@ -143,14 +163,14 @@ export class MerchandiseDetailComponent implements OnInit {
       brandId: this.merchandiseForm.value.merchandiseBrands,
       typeId: this.merchandiseForm.value.merchandiseTypes,
       divisionId: this.merchandiseForm.value.merchandise.divisions,
-      deactivated: false,
-      acceptsReturns: false,
-      acceptsReturnsRate: 0.0,
+      deactivated: this.merchandiseForm.value.merchandiseActive,
+      acceptsReturns: this.merchandiseForm.value.merchandiseReturns,
+      acceptsReturnsRate: this.merchandiseForm.value.merchandiseReturnsRate,
       currentStock: 0.0,
       availableStock: 0.0,
       marketShare: 0,
-      regulated: false,
-      AcceptsRebate: false,
+      regulated: this.merchandiseForm.value.merchandiseRegulated,
+      acceptsRebate: this.merchandiseForm.value.merchandiseRe,
       height: 0.0,
       width: 0.0,
       depth: 0.0,
@@ -169,6 +189,10 @@ export class MerchandiseDetailComponent implements OnInit {
       this.merchandiseService.addMerchandise(newOrg);
     }
     this.disableForm();
+  }
+
+  addNewItem(){
+    
   }
 
   disableForm() {

@@ -30,7 +30,7 @@ import {
   tap,
 } from 'rxjs';
 import { ChangeDetectionStrategy } from '@angular/core';
-import { IMerchandise } from './merchandise';
+import { IMerchandise } from '../merchandise/merchandise';
 import { ToastService } from '@shared/services/toastService';
 import { toastType } from '@shared/enums/enums';
 import {
@@ -71,9 +71,13 @@ export class MerchandiseComponent implements OnInit, AfterViewInit {
 
   // public headerText!: Object[];
   headerText: Object[] = [
-    { text: 'dashBoard' },
-    { text: 'mercancía' },
+    { text: 'mercancia' },
     { text: 'movimientos' },
+    { text: 'compras' },
+    { text: 'ventas'},
+    { text: 'existencias'}, 
+    { text: 'cuotas'},
+    { text: 'expediente' }
   ];
 
   /////
@@ -126,15 +130,6 @@ export class MerchandiseComponent implements OnInit, AfterViewInit {
         }
       })
     );
-
-      // EntityId Reactive
-    // this.applicationService
-    //   .getEntityId('Merchandise')
-    //   .subscribe((id) => {
-    //     this.entityId = id; 
-    //      this.applicationService.entitySelected(id);
-    //   });
-
   }
 
    onCreated(): void {

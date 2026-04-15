@@ -8,7 +8,7 @@
   border-left: 7px solid $llion-color-white;
 }
 
-#merchandise-grid .e-toolbar {
+#merchandise-movement-grid .e-toolbar {
   background-color: $llion-color-primary-container;
 }
 
@@ -17,16 +17,16 @@
   border: 1px solid #5a70cc;
 }
 
-::ng-deep #merchandise-grid .e-toolbar-item.e-search-wrapper {
+::ng-deep #merchandise-movement-grid .e-toolbar-item.e-search-wrapper {
   padding-top: 7px;
 }
 
-::ng-deep #merchandise-grid .e-grid .e-toolbar-items .e-toolbar-item.e-search-wrapper .e-search {
+::ng-deep #merchandise-movement-grid .e-grid .e-toolbar-items .e-toolbar-item.e-search-wrapper .e-search {
   background-color: $llion-color-primary-container;
 }
 
 .e-grid .e-gridheader {
-  display: none;
+ // display: none;
 }
 
 .disablegrid {

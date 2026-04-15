@@ -1,0 +1,126 @@
+<div id="movement-container" class="container">
+  <div class="row">
+    <div class="col-lg-12">
+      <div id="merchandise-movement-grid">
+        <ejs-grid
+          id="movement-grid"
+          #grid
+          [dataSource]="(movements$ | async)  || []"
+          [height]="screenMovementsHeight"
+          [toolbar]="toolbar"
+          [searchSettings]="searchSettings"
+          [allowTextWrap]="true"
+        >
+        <e-columns>
+          <e-column
+              field="merchandiseId"
+              [isPrimaryKey]="true"
+              [visible]="false"
+            ></e-column>
+            <e-column
+              field="movementDate"
+              headerText="Fecha"
+              type="date"
+              format="dd/MM/yyyy"
+              width="70"
+            ></e-column>
+            <e-column
+              field="movementType"
+              headerText="Tipo"
+              textAlign="center"
+              width="50"
+            ></e-column>
+            <e-column
+              field="documentNumber"
+              headerText="Documento"
+              width="100"
+            ></e-column>
+            <e-column
+              field="quantity"
+              headerText="Cantidad"
+              textAlign="right"
+              format="#,#0.000"
+              width="70"
+            ></e-column>
+            <e-column
+              field="uom"
+              headerText="Unidad"
+              width="60"
+              textAlign="Center"
+            ></e-column>
+            <e-column
+              field="weight"
+              headerText="Peso"
+              width="50"
+              format="#,##0.000"
+              textAlign="right"
+            ></e-column>
+            <e-column
+              field="totalCost"
+              headerText="Costo Total"
+              textAlign="right"
+              width="100"
+              format="#,#0.00"
+            ></e-column>
+            <e-column
+              field="totalCostWithDiscount"
+              headerText="Costo Total/Descuento"
+              width="100"
+              format="#,#0.00"
+              textAlign="right"
+            ></e-column>
+            <e-column
+              field="totalSale"
+              headerText="Venta Total"
+              width="100"
+              format="#,#0.00"
+              textAlign="right"
+            ></e-column>
+            <e-column
+              field="totalSaleWithDiscount"
+              headerText="Venta total y Descuento"
+              width="100"
+              format="#,#0.00"
+              textAlign="right"
+            ></e-column>
+            <e-column
+              field="origin"
+              headerText="Origen"
+              width="100"
+            ></e-column>
+            <e-column
+              field="documentOrigin"
+              headerText="Documento Origen"
+              width="100"
+            ></e-column>
+            <e-column
+              field="custommer_Provider"
+              headerText="Proveedor/Cliente"
+              width="100"
+            ></e-column>
+            <e-column
+              field="sellerId"
+              headerText="Vendedor"
+              width="100"
+            ></e-column>
+            <e-column
+              field="warehouse"
+              headerText="Almacén"
+              width="100"
+            ></e-column>
+            <e-column
+              field="block_Date"
+              headerText="Fecha Cierre"
+              width="100"
+              type="date"
+              textAlign="center"
+              format="dd/MM/yyyy"
+              [valueAccessor]="dateValueAccessor"
+            ></e-column>
+
+          </e-columns>
+        </ejs-grid>
+      </div>
+    </div>
+  <div id="ej2Toast" #toast></div>
+</div>

@@ -6,6 +6,7 @@ import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { MerchandiseComponent } from '@views/merchandising/merchandise/merchandise-grid';
 import { MerchandiseDetailComponent } from './merchandise-detail/merchandise-detail';
 import { MerchandiseDetailInputComponent } from './merchandise-detail-input/merchandise-detail-input';
+import { MerchandiseMovementComponent } from './merchandise-movements/merchandise-movement-grid';
 // Syncfusion
 import { GridAllModule } from '@syncfusion/ej2-angular-grids';
 import {
@@ -15,7 +16,7 @@ import {
   TabItemsDirective,
   TabItemDirective,
 } from '@syncfusion/ej2-angular-navigations';
-import { TextBoxModule,  MaskedTextBoxModule } from '@syncfusion/ej2-angular-inputs';
+import { TextBoxModule,  MaskedTextBoxModule, NumericTextBoxModule } from '@syncfusion/ej2-angular-inputs';
 import { DropDownListModule } from '@syncfusion/ej2-angular-dropdowns';
 import { ButtonModule, SwitchModule, CheckBoxModule  } from '@syncfusion/ej2-angular-buttons';
 import { DatePickerModule } from '@syncfusion/ej2-angular-calendars';
@@ -29,6 +30,7 @@ enableRipple(true);
     MerchandiseComponent,
     MerchandiseDetailComponent,
     MerchandiseDetailInputComponent,
+    MerchandiseMovementComponent, 
   
   ],
   imports: [
@@ -40,6 +42,7 @@ enableRipple(true);
     GridAllModule,
     TextBoxModule,
     MaskedTextBoxModule, 
+    NumericTextBoxModule, 
     DropDownListModule,
     SwitchModule,
     DatePickerModule,

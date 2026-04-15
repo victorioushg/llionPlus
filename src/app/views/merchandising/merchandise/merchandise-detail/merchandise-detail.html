@@ -27,7 +27,15 @@
           [allowFiltering]="true"
           floatLabelType="Always"
           placeholder="marca de mercancías"
-        ></ejs-dropdownlist>
+        >
+          <ng-template #footerTemplate>
+            <div class="dropdown-footer">
+              <button ejs-button cssClass="e-primary" (click)="addNewItem()">
+                + add new brand
+              </button>
+            </div>
+          </ng-template>
+        </ejs-dropdownlist>
       </div>
       <div class="col-md-6">
         <ejs-dropdownlist
@@ -93,64 +101,67 @@
     </div>
     <div class="row">
       <div class="col-md-3">
+        <ejs-checkbox formControlName="merchandiseActive" label="Activo">
+        </ejs-checkbox>
+      </div>
+      <div class="col-md-3">
+        <ejs-checkbox formControlName="merchandiseRegulated" label="Regulado">
+        </ejs-checkbox>
+      </div>
+      <div class="col-md-3">
         <ejs-checkbox
-          formControlName="merchandise-inactive"
-          label="Activo"
+          formControlName="merchandiseReturns"
+          label="Acepta devoluciones"
         >
         </ejs-checkbox>
       </div>
       <div class="col-md-3">
         <ejs-checkbox
-          formControlName="merchandise-regulated"
-          label="Regulado"
+          formControlName="merchandiseAcceptRebates"
+          label="Acepta ofertas"
         >
         </ejs-checkbox>
-      </div>
-      <div class="col-md-3">
-        <ejs-checkbox
-          formControlName="merchandise-returns"
-          label="Acepta Retornos"
-        >
-        </ejs-checkbox>
-      </div>
-      <div class="col-md-3">
-        <ejs-textbox
-          id="merchandise-return-rate-txt"
-          placeholder="Tasa de Retorno"
-          floatLabelType="Always"
-          formControlName="merchandiseReturnsRate"
-          [enabled]="enabled$ | async"
-        ></ejs-textbox>
       </div>
     </div>
     <br />
     <div class="row">
-      <div class="col-md-6">
-        <!-- <ejs-datepicker
-          [value]="org.addedOn"
-          format="dd/MM/yyyy"
-          placeholder="Fecha Ingreso"
+      <div class="col-md-3">
+        <ejs-numerictextbox
+          formControlName="merchandiseStock"
+          [validateDecimalOnType]="true"
+          [decimals]="3"
+          format="n3"
+          placeholder="Existencia actual"
           floatLabelType="Always"
-          formControlName="addedOn"
+          [showSpinButton]="false"
           [enabled]="enabled$ | async"
-        >
-        </ejs-datepicker> -->
+        ></ejs-numerictextbox>
       </div>
-      <div class="col-md-6" style="margin-top: auto">
-        <!-- <table style="width: 100%">
-          <tr>
-            <td style="width: 50%">Organización Activa</td>
-            <td style="width: 50%">
-              <ejs-switch
-                formControlName="deactivated"
-                [checked]="!org.deactivated"
-                [disabled]="!(enabled$ | async)"
-              >
-              </ejs-switch> 
-            </td>
-          </tr>
-        </table>-->
+      <div class="col-md-3">
+        <ejs-numerictextbox
+          formControlName="merchandiseAvailableStock"
+          [validateDecimalOnType]="true"
+          [decimals]="3"
+          format="n3"
+          placeholder="Existencia disponible"
+          floatLabelType="Always"
+          [showSpinButton]="false"
+          [enabled]="enabled$ | async"
+        ></ejs-numerictextbox>
       </div>
+      <div class="col-md-3">
+        <ejs-numerictextbox
+          placeholder="Tasa de devolución"
+          [validateDecimalOnType]="true"
+          [decimals]="3"
+          format="p2"
+          floatLabelType="Always"
+          formControlName="merchandiseReturnsRate"
+          [showSpinButton]="false"
+          [enabled]="enabled$ | async"
+        ></ejs-numerictextbox>
+      </div>
+      <div class="col-md-3"></div>
     </div>
     <br />
     <div class="row">

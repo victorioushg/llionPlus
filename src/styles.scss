@@ -48,6 +48,7 @@ h6 {
   background-color: $llion-color-primary;
   color: $llion-color-white;
   height: 40px;
+  width: fit-content;
   padding: 10px;
 }
 
@@ -218,6 +219,11 @@ h6 {
     color: $llion-color-white !important;
 
 }
+
+.e-grid .e-row.e-altrow {
+    background-color:  $llion-color-secondary-container;    
+}
+
 
 .e-grid .e-toolbar {
   height: 40px !important;
