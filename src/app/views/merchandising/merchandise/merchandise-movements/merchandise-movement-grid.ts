@@ -8,31 +8,22 @@ import {
 import {
   GridComponent,
   ToolbarItems,
-  SearchEventArgs,
-  RowSelectEventArgs,
-  RowDeselectEventArgs,
-  RecordDoubleClickEventArgs,
+  GridModule, 
+  EditService, 
+  ToolbarService, 
   CommandModel,
-  CommandClickEventArgs,
   SearchSettingsModel,
 } from '@syncfusion/ej2-angular-grids';
 import MiniToolbar from '@assets/json/minitoolbar.json';
 import { ToastService } from '@shared/services/toastService';
 import { toastType } from '@shared/enums/enums';
-import { MerchandiseService } from '../merchandise.service';
-import { IMerchandiseMovement } from '../merchandise-movements/merchandisemovement';
+import { MerchandiseService } from '@views/merchandising/merchandise/merchandise.service';
+import { IMerchandiseMovement } from '@views/merchandising/merchandise/merchandise-movements/merchandisemovement';
 
 import {
   BehaviorSubject,
-  catchError,
-  combineLatest,
-  EMPTY,
-  map,
   Observable,
-  shareReplay,
-  startWith,
   Subject,
-  tap,
 } from 'rxjs';
 import { ApplicationService } from '@shared/services/applicattionService';
 
@@ -41,7 +32,9 @@ import { ApplicationService } from '@shared/services/applicattionService';
   templateUrl: './merchandise-movement-grid.html',
   styleUrls: ['./merchandise-movement-grid.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
+  providers: [EditService, ToolbarService],  
   standalone: false,
+
 })
 export class MerchandiseMovementComponent implements OnInit {
   public commands!: CommandModel[];

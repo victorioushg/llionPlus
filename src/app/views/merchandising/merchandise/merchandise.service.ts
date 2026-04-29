@@ -43,12 +43,15 @@ import { ToastService } from '@shared/services/toastService';
 import { toastType } from '@shared/enums/enums';
 import { Action } from '@shared/models/edit-action';
 import { ErrorHandlerService } from '@shared/services/errorHandlerService';
+import { IGroup } from '@app/shared/models/group';
 
 @Injectable({
   providedIn: 'root',
 })
 export class MerchandiseService {
   private merchandiseUrl = environment.API_URL + 'merchandise';
+
+  // 
   // 
   emptyMerchandise: IMerchandise = {} as IMerchandise;
 
@@ -57,10 +60,10 @@ export class MerchandiseService {
   private merchandiseId: number = 0;
 
   merchandises$!: Observable<IMerchandise[]>;
-  merchandiseBrands$!: Observable<IMerchandiseBrand[]>;
-  merchandiseCategories$!: Observable<IMerchandiseCategory[]>;
-  merchandiseDivisions$!: Observable<IMerchandiseDivision[]>;
-  merchandiseTypes$!: Observable<IMerchandiseType[]>;
+  merchandiseBrands$!: Observable<IGroup[]>;
+  merchandiseCategories$!: Observable<IGroup[]>;
+  merchandiseDivisions$!: Observable<IGroup[]>;
+  merchandiseTypes$!: Observable<IGroup[]>;
 
   movements$!: Observable<IMerchandiseMovement[]>;
 
@@ -167,7 +170,7 @@ export class MerchandiseService {
 
           console.log('EntityId received:', entityId);
 
-          return this.http.get<IApiResponse<IMerchandiseBrand[]>>(
+          return this.http.get<IApiResponse<IGroup[]>>(
             `${this.merchandiseUrl}/brands/${entityId}/${this.organizationId}`,
           );
         }),
@@ -183,7 +186,7 @@ export class MerchandiseService {
       .getEntityId('Merchandise')
       .pipe(
         switchMap((entityId) =>
-          this.http.get<IApiResponse<IMerchandiseCategory[]>>(
+          this.http.get<IApiResponse<IGroup[]>>(
             `${this.merchandiseUrl}/categories/${entityId}/${this.organizationId}`,
           ),
         ),
@@ -196,7 +199,7 @@ export class MerchandiseService {
       .getEntityId('Merchandise')
       .pipe(
         switchMap((entityId) =>
-          this.http.get<IApiResponse<IMerchandiseDivision[]>>(
+          this.http.get<IApiResponse<IGroup[]>>(
             `${this.merchandiseUrl}/divisions/${entityId}/${this.organizationId}`,
           ),
         ),
@@ -209,7 +212,7 @@ export class MerchandiseService {
       .getEntityId('Merchandise')
       .pipe(
         switchMap((entityId) =>
-          this.http.get<IApiResponse<IMerchandiseType[]>>(
+          this.http.get<IApiResponse<IGroup[]>>(
             `${this.merchandiseUrl}/types/${entityId}`,
           ),
         ),

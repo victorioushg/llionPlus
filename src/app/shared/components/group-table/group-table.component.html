@@ -1,23 +1,36 @@
 <ejs-dialog
   #dialog
+  cssClass="brand-dialog"
   [visible]="false"
   [isModal]="true"
   [showCloseIcon]="true"
-  [width]="'850px'"
-  [header]="'Items'"
+  [width]="'550px'"
+  [header]="dialogTitle"
   [buttons]="dialogButtons"
 >
   <div>
     <ejs-grid
-      [dataSource]="rowData"
+      #gridgrouptable
+      [dataSource]="localRowData"
       [toolbar]="gridToolbar"
       [editSettings]="gridEditSettings"
+      [searchSettings]="{ fields: [textField] }"
+      (created)="onGridCreated()"
       height="300"
+      cssClass="icon-only-grid"
     >
       <e-columns>
-        <e-column field="ItemId" headerText="ID" isPrimaryKey="true" textAlign="Right" width="100"></e-column>
-        <e-column field="Product" headerText="Product" width="220"></e-column>
-        <e-column field="Qty" headerText="Qty" textAlign="Right" width="120"></e-column>
+        <e-column 
+          [field]="idField"
+          headerText="ID"
+          [isPrimaryKey]="true"
+          [visible]="false"
+        ></e-column>
+        <e-column 
+          [field]="textField"
+          [headerText]="textHeader"
+          width="220"
+        ></e-column>
       </e-columns>
     </ejs-grid>
   </div>

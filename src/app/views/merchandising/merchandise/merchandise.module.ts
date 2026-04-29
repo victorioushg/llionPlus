@@ -3,10 +3,12 @@ import { NgModule, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { routes } from './_routes';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
+
 import { MerchandiseComponent } from '@views/merchandising/merchandise/merchandise-grid';
-import { MerchandiseDetailComponent } from './merchandise-detail/merchandise-detail';
-import { MerchandiseDetailInputComponent } from './merchandise-detail-input/merchandise-detail-input';
-import { MerchandiseMovementComponent } from './merchandise-movements/merchandise-movement-grid';
+import { MerchandiseDetailComponent } from '@views/merchandising/merchandise/merchandise-detail/merchandise-detail';
+import { MerchandiseDetailInputComponent } from '@views/merchandising/merchandise/merchandise-detail-input/merchandise-detail-input';
+import { MerchandiseMovementComponent } from '@views/merchandising/merchandise/merchandise-movements/merchandise-movement-grid';
+import { GroupTableComponent } from '@shared/components/group-table/group-table.component';
 // Syncfusion
 import { GridAllModule } from '@syncfusion/ej2-angular-grids';
 import {
@@ -29,7 +31,6 @@ enableRipple(true);
   declarations: [
     MerchandiseComponent,
     MerchandiseDetailComponent,
-    MerchandiseDetailInputComponent,
     MerchandiseMovementComponent, 
   
   ],
@@ -49,7 +50,9 @@ enableRipple(true);
     ButtonModule,
     CheckBoxModule, 
     FormsModule,
-    ReactiveFormsModule,
+    ReactiveFormsModule, 
+    MerchandiseDetailInputComponent,
+    GroupTableComponent
   ],
 
   schemas: [CUSTOM_ELEMENTS_SCHEMA], 

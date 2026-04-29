@@ -1,4 +1,4 @@
-<ng-container class="wrapper-container" *ngIf="vm$ | async as vm">
+<ng-container *ngIf="vm$ | async as vm">
   <div [hidden]="!phoneVisible">
     <form
       id="phone-detail-form"
@@ -10,6 +10,7 @@
           <h5>phone</h5>
         </div>
       </div>
+
       <div class="row">
         <div class="col-md-6">
           <ejs-dropdownlist
@@ -18,7 +19,6 @@
             placeholder="tipo de teléfono"
             [fields]="phoneTypeFields"
             formControlName="phonetypeddl"
-            [value]="vm.phone.phoneType"
           ></ejs-dropdownlist>
         </div>
         <div class="col-md-6">
@@ -28,12 +28,12 @@
             [fields]="phoneCountryFields"
             placeholder="código internacional"
             formControlName="countrycode"
-            [value]="vm.phone.countryCode"
-            [allowFiltering]='true'
+            [allowFiltering]="true"
             [filterType]="filterType"
           ></ejs-dropdownlist>
         </div>
       </div>
+
       <div class="row">
         <div class="col-md-12">
           <ejs-maskedtextbox
@@ -41,27 +41,8 @@
             placeholder="número de teléfono"
             floatLabelType="Always"
             formControlName="phonenumber"
-            [value]="vm.phone.phoneNumber"
-            [mask]='phoneMask'
+            [mask]="phoneMask"
           ></ejs-maskedtextbox>
-        </div>
-      </div>
-      <div class="row">
-        <div class="col-md-6"></div>
-        <div class="col-md-6">
-          <div id="formButtons">
-            <button ejs-button (click)="onCancelClick()" style="float: right">
-              Cancelar
-            </button>
-            <button
-              ejs-button
-              (click)="onSaveClick()"
-              cssClass="e-primary"
-              style="float: right"
-            >
-              Aceptar
-            </button>
-          </div>
         </div>
       </div>
     </form>

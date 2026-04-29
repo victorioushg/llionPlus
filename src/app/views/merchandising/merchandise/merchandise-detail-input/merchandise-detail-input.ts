@@ -4,7 +4,7 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
   selector: 'llion-merchandise-detail-input',
   templateUrl: './merchandise-detail-input.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: false, 
+  standalone: true, 
 })
 export class MerchandiseDetailInputComponent {
   visible: boolean = true;

@@ -14,6 +14,7 @@ import {
   map,
   shareReplay,
   tap,
+  filter,
 } from 'rxjs';
 import { ToastService } from '@shared/services/toastService';
 import { IPhone, IPhoneType } from './phone';
@@ -72,7 +73,7 @@ export class PhoneComponent implements OnInit {
   constructor(
     private formBuilder: FormBuilder,
     private phoneService: PhoneService,
-    private applicationService: ApplicationService
+    private applicationService: ApplicationService,
   ) {}
 
   ngOnInit() {
@@ -83,30 +84,36 @@ export class PhoneComponent implements OnInit {
     });
 
     this.enabled$ = this.applicationService.enablePhoneChildFormAction$.pipe(
-      tap((enabled) => (this.phoneVisible = enabled))
+      tap((enabled) => (this.phoneVisible = enabled)),
     );
 
     this.phone$ = this.phoneService.phone$.pipe(
-      tap((data) => (this.phone = data)),
+      tap((data) => {
+        this.phone = data;
+
+        if (data) {
+          this.phoneForm.patchValue({
+            countrycode: data.countryCode,
+            phonenumber: data.phoneNumber,
+            phonetypeddl: data.phoneType,
+          });
+        } else {
+          this.phoneForm.reset();
+        }
+      }),
+      filter((phone): phone is IPhone => !!phone),
       catchError((err) => {
         this.errorMessageSubject.next(err);
         return EMPTY;
-      })
+      }),
     );
 
     this.phoneTypes$ = this.phoneService.phoneTypes$;
 
     this.vm$ = combineLatest([this.enabled$, this.phone$]).pipe(
-      map(([enabled, phone]) => ({ enabled, phone }))
+      map(([enabled, phone]) => ({ enabled, phone })),
+      shareReplay(1),
     );
-
-    this.applicationService.organizationIdSelected$.subscribe((result) => {
-      this.organizationId = result;
-    });
-
-    this.applicationService.entitySelected$.subscribe((entity) => {
-      this.entityId = entity;
-    });
   }
 
   clearForm() {

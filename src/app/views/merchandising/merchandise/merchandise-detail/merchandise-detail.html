@@ -30,12 +30,26 @@
         >
           <ng-template #footerTemplate>
             <div class="dropdown-footer">
-              <button ejs-button cssClass="e-primary" (click)="addNewItem()">
-                + add new brand
+              <button
+                ejs-button
+                type="button"
+                cssClass="e-primary"
+                (click)="openBrandsDialog($event)"
+              >
+                + nueva marca
               </button>
             </div>
           </ng-template>
         </ejs-dropdownlist>
+        <app-group-table
+          #brandTable
+          [dialogTitle]="'Marcas'"
+          [rowData]="(merchandiseBrands$ | async) ?? []"
+          [idField]="'groupId'"
+          [textField]="'description'"
+          [textHeader]="'Marcas de Mercancías'"
+          (dataChange)="onBrandsChanged($event)"
+        ></app-group-table>
       </div>
       <div class="col-md-6">
         <ejs-dropdownlist
@@ -48,7 +62,28 @@
           [allowFiltering]="true"
           floatLabelType="Always"
           placeholder="Grupo de mercancías"
-        ></ejs-dropdownlist>
+        ><ng-template #footerTemplate>
+            <div class="dropdown-footer">
+              <button
+                ejs-button
+                type="button"
+                cssClass="e-primary"
+                (click)="openCategoriesDialog($event)"
+              >
+                + Nuevo Grupo
+              </button>
+            </div>
+          </ng-template>
+        </ejs-dropdownlist>
+        <app-group-table
+          #categoryTable
+          [dialogTitle]="'Grupos'"
+          [rowData]="(merchandiseCategories$ | async) ?? []"
+          [idField]="'groupId'"
+          [textField]="'description'"
+          [textHeader]="'Grupos de Mercancías'"
+          (dataChange)="onCategoriesChanged($event)"
+        ></app-group-table>
       </div>
     </div>
     <div class="row">

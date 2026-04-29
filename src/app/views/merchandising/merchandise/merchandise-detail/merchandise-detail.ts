@@ -18,7 +18,9 @@ import {
   IMerchandiseType,
 } from '../merchandise';
 import { catchError, EMPTY, Observable, shareReplay, Subject, tap } from 'rxjs';
+import { GroupTableComponent } from '@shared/components/group-table/group-table.component';
 import { ApplicationService } from '@shared/services/applicattionService';
+import { IGroup } from '@app/shared/models/group';
 
 @Component({
   selector: 'llion-merchandise-detail',
@@ -28,6 +30,32 @@ import { ApplicationService } from '@shared/services/applicattionService';
   standalone: false,
 })
 export class MerchandiseDetailComponent implements OnInit {
+  // Brands
+  @ViewChild('brandTable') brandTable!: GroupTableComponent;
+  public brandsData: any[] = [];
+  onBrandsChanged(updatedBrands: any[]): void {
+    this.brandsData = [...updatedBrands];
+  }
+  openBrandsDialog(event?: Event): void {
+    event?.preventDefault();
+    event?.stopPropagation();
+
+    this.brandTable.showDialog();
+  }
+
+  // Groups
+  @ViewChild('categoryTable') categoryTable?: GroupTableComponent;
+  public categoriesData: any[] = [];
+  onCategoriesChanged(updatedCategories: any[]): void {
+    this.categoriesData = [...updatedCategories];
+  }
+  openCategoriesDialog(event?: Event): void {
+    event?.preventDefault();
+    event?.stopPropagation();
+
+    this.categoryTable?.showDialog();
+  }
+
   private errorMessageSubject = new Subject<string>();
   merchandiseForm!: FormGroup;
 
@@ -45,15 +73,15 @@ export class MerchandiseDetailComponent implements OnInit {
   @ViewChild('types')
   listTypes: DropDownListComponent | undefined;
 
-  merchandiseBrands$!: Observable<IMerchandiseBrand[]>;
-  merchandiseCategories$!: Observable<IMerchandiseCategory[]>;
-  merchandiseDivisions$!: Observable<IMerchandiseDivision[]>;
-  merchandiseTypes$!: Observable<IMerchandiseType[]>;
+  merchandiseBrands$!: Observable<IGroup[]>;
+  merchandiseCategories$!: Observable<IGroup[]>;
+  merchandiseDivisions$!: Observable<IGroup[]>;
+  merchandiseTypes$!: Observable<IGroup[]>;
 
-  brandfields: Object = { text: 'brandDescription', value: 'brandId' };
-  categoryfields: Object = { text: 'categoryDescription', value: 'categoryId' };
-  divisionfields: Object = { text: 'divisionDescription', value: 'divisionId' };
-  typefields: Object = { text: 'typeDescription', value: 'typeId' };
+  brandfields: Object = { text: 'description', value: 'groupId' };
+  categoryfields: Object = { text: 'description', value: 'groupId' };
+  divisionfields: Object = { text: 'description', value: 'groupId' };
+  typefields: Object = { text: 'description', value: 'groupId' };
 
   merchandise!: IMerchandise;
   merchandise$!: Observable<IMerchandise>;
@@ -81,7 +109,7 @@ export class MerchandiseDetailComponent implements OnInit {
       merchandiseAcceptRebates: [{ value: false, disabled: true }],
       merchandiseReturnsRate: [0],
       merchandiseStock: [0],
-      merchandiseAvailableStock: [0], 
+      merchandiseAvailableStock: [0],
     });
 
     this.merchandiseBrands$ = this.merchandiseService.merchandiseBrands$;
@@ -93,7 +121,8 @@ export class MerchandiseDetailComponent implements OnInit {
     this.merchandise$ = this.merchandiseService.merchandiseSelected$.pipe(
       tap((data: IMerchandise) => {
         const merchandise = Array.isArray(data) ? data[0] : data;
-        console.log('Merchandise received:', merchandise);
+        this.merchandise = merchandise;
+
         if (merchandise) {
           this.merchandiseForm.patchValue({
             merchandiseName: merchandise.name,
@@ -104,10 +133,9 @@ export class MerchandiseDetailComponent implements OnInit {
             merchandiseDivisions: merchandise.divisionId,
             merchandiseTypes: merchandise.typeId,
             merchandiseStock: merchandise.currentStock,
-            merchandiseAvailableStock: merchandise.availableStock, 
+            merchandiseAvailableStock: merchandise.availableStock,
           });
         }
-        // this.merchandise = data;
       }),
       catchError((err) => {
         this.errorMessageSubject.next(err);
@@ -123,16 +151,20 @@ export class MerchandiseDetailComponent implements OnInit {
           : this.merchandiseForm.disable();
 
         const activeControl = this.merchandiseForm.get('merchandiseActive');
-        enabled ? activeControl?.enable() : activeControl?.disable(); 
+        enabled ? activeControl?.enable() : activeControl?.disable();
 
-        const regulatedControl = this.merchandiseForm.get('merchandiseRegulated');
-        enabled ? regulatedControl?.enable() : regulatedControl?.disable(); 
+        const regulatedControl = this.merchandiseForm.get(
+          'merchandiseRegulated',
+        );
+        enabled ? regulatedControl?.enable() : regulatedControl?.disable();
 
         const returnsControl = this.merchandiseForm.get('merchandiseReturns');
-        enabled ? returnsControl?.enable() : returnsControl?.disable(); 
+        enabled ? returnsControl?.enable() : returnsControl?.disable();
 
-        const rebatesControl = this.merchandiseForm.get('merchandiseAcceptRebates');
-        enabled ? rebatesControl?.enable() : rebatesControl?.disable(); 
+        const rebatesControl = this.merchandiseForm.get(
+          'merchandiseAcceptRebates',
+        );
+        enabled ? rebatesControl?.enable() : rebatesControl?.disable();
 
         let formbuttons = document.getElementById('form-buttons');
         if (formbuttons) formbuttons.style.display = enabled ? 'block' : 'none';
@@ -156,24 +188,24 @@ export class MerchandiseDetailComponent implements OnInit {
   onSaveClick() {
     const newOrg: IMerchandise = {
       merchandiseId: this.merchandise ? this.merchandise.merchandiseId : 0,
-      alternCode: this.merchandiseForm.value.alternCode,
+      alternCode: this.merchandiseForm.value.merchandiseAlternCode,
       name: this.merchandiseForm.value.merchandiseName,
-      description: this.merchandiseForm.value.description,
+      description: this.merchandiseForm.value.merchandisePresentation,
       groupId: this.merchandiseForm.value.merchandiseCategories,
       brandId: this.merchandiseForm.value.merchandiseBrands,
       typeId: this.merchandiseForm.value.merchandiseTypes,
-      divisionId: this.merchandiseForm.value.merchandise.divisions,
+      divisionId: this.merchandiseForm.value.merchandiseDivisions,
       deactivated: this.merchandiseForm.value.merchandiseActive,
       acceptsReturns: this.merchandiseForm.value.merchandiseReturns,
       acceptsReturnsRate: this.merchandiseForm.value.merchandiseReturnsRate,
-      currentStock: 0.0,
-      availableStock: 0.0,
+      currentStock: this.merchandiseForm.value.merchandiseStock ?? 0,
+      availableStock: this.merchandiseForm.value.merchandiseAvailableStock ?? 0,
       marketShare: 0,
       regulated: this.merchandiseForm.value.merchandiseRegulated,
-      acceptsRebate: this.merchandiseForm.value.merchandiseRe,
-      height: 0.0,
-      width: 0.0,
-      depth: 0.0,
+      acceptsRebate: this.merchandiseForm.value.merchandiseAcceptRebates,
+      height: 0,
+      width: 0,
+      depth: 0,
       createdOn: new Date(),
       createddBy: '',
       LastModifiedOn: new Date(),
@@ -188,11 +220,8 @@ export class MerchandiseDetailComponent implements OnInit {
     } else {
       this.merchandiseService.addMerchandise(newOrg);
     }
-    this.disableForm();
-  }
 
-  addNewItem(){
-    
+    this.disableForm();
   }
 
   disableForm() {

@@ -1,0 +1,40 @@
+// Grid Toolbar
+::ng-deep .icon-only-grid .e-toolbar-item:not(.e-search-wrapper):not(.e-template) .e-tbar-btn-text {
+  display: none !important;
+}
+
+::ng-deep .icon-only-grid .e-search-wrapper,
+::ng-deep .icon-only-grid .e-search-wrapper input {
+  display: inline-flex !important;
+  visibility: visible !important;
+}
+
+.e-tbar-btn {
+  min-width: 36px;
+  padding: 0 8px;
+}
+
+// Grid Header
+::ng-deep .icon-only-grid .e-gridheader .e-headertext {
+  font-weight: 700;   // bold
+  font-size: 16px;    // bigger (adjust as needed)
+}
+
+// Dialog
+::ng-deep .brand-dialog .e-footer-content .e-btn {
+  border-radius: 6px;
+  border: 1px solid #b8b2c8;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.22);
+  padding: 6px 18px;
+}
+
+::ng-deep .brand-dialog .e-footer-content .e-btn:hover {
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.28);
+  transform: translateY(-1px);
+}
+
+::ng-deep .brand-dialog .e-footer-content .e-primary {
+  font-weight: 600;
+}
+
+// 
