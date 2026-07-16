@@ -7,10 +7,12 @@ import {
   EMPTY,
   map,
   Observable,
+  shareReplay,
   Subject,
   tap,
 } from 'rxjs';
 import { IApiResponse } from '../models/api-response';
+import { IAppEntity } from '../models/entity';
 import '@lib/string';
 import { ToastService } from './toastService';
 import { ErrorHandlerService } from './errorHandlerService';
@@ -25,7 +27,9 @@ export class ApplicationService {
 
   private errorMessageSubject = new Subject<string>();
 
-  entityId!: number; 
+  entityId!: number;
+
+  entities$!: Observable<IAppEntity[]>;
 
   errorMessage$ = this.errorMessageSubject.asObservable();
 
@@ -41,6 +45,22 @@ export class ApplicationService {
       //  console.log('appser organization - ' + data);
     })
   );
+
+  // Working organization (empresa de trabajo)
+  private workingOrganizationSource = new BehaviorSubject<{
+    organizationId: number;
+    name: string;
+  } | null>(null);
+  workingOrganization$ = this.workingOrganizationSource.asObservable();
+
+  setWorkingOrganization(organizationId: number, name: string) {
+    // Working company (header/login) is separate from page selection used by child grids.
+    this.workingOrganizationSource.next({ organizationId, name });
+  }
+
+  get workingOrganization() {
+    return this.workingOrganizationSource.value;
+  }
 
   // Entity Selected 
   private entitySelectedSource = new BehaviorSubject<number>(0);
@@ -109,7 +129,9 @@ export class ApplicationService {
   constructor(
     private http: HttpClient, 
     private toastService: ToastService,
-    private errorHandler: ErrorHandlerService) {}
+    private errorHandler: ErrorHandlerService) {
+    this.entities$ = this.getEntities().pipe(shareReplay(1));
+  }
 
   enableDetailForm(grid: childgrid, enable: boolean) {
     this.enablePhoneChildGrid(!enable);
@@ -136,6 +158,24 @@ export class ApplicationService {
         map(response => response.result),
         tap(entityId => this.entitySelectedSource.next(entityId)), // 🔥 push here
         catchError(this.errorHandler.handleError.bind(this.errorHandler))
+      );
+  }
+
+  getEntities(): Observable<IAppEntity[]> {
+    return this.http
+      .get<IApiResponse<Record<string, unknown>[]>>(
+        `${this.apiUrl}entity/all`,
+      )
+      .pipe(
+        map((data) =>
+          (data.result ?? []).map((entity) => ({
+            entityId: Number(entity['entityId'] ?? entity['EntityId'] ?? 0),
+            entityName: String(
+              entity['entityName'] ?? entity['EntityName'] ?? '',
+            ),
+          })),
+        ),
+        catchError(this.errorHandler.handleError.bind(this.errorHandler)),
       );
   }
 

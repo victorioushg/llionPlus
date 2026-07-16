@@ -45,3 +45,28 @@ export interface IMerchandiseType {
   typeId: number;
   typeDescription: string;
 }
+
+export interface IMerchandiseUom {
+  uom: string;
+  equivalence: number;
+  uomEquivalent: string;
+  defaultUnit: boolean;
+  divisible: boolean;
+  retail: boolean;
+  wholeSale: boolean;
+  weight: number;
+  merchandiseId: number;
+}
+
+export interface IMerchandisePrice {
+  priceCode: string;
+  priceValue: number;
+  priceDiscount: number;
+  priceBid: boolean;
+  priceProfit: number;
+  linearProfit: boolean;
+  priceBarCode: string;
+  dateFrom: Date;
+  dateTo: Date;
+  merchandiseId: number;
+}

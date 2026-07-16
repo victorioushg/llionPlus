@@ -1,25 +1,35 @@
-import { ChangeDetectionStrategy, Component, Input, OnInit, ViewChild } from '@angular/core';
-
 import {
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+  Component,
+  OnDestroy,
+  OnInit,
+  ViewChild,
+} from '@angular/core';
+import {
+  DialogEditEventArgs,
   EditSettingsModel,
   GridComponent,
+  SaveEventArgs,
   ToolbarItems,
-  SearchSettingsModel,
-  SearchEventArgs,
-  RecordDoubleClickEventArgs,
-  CommandModel,
-  RowSelectEventArgs,
-  CommandClickEventArgs,
 } from '@syncfusion/ej2-angular-grids';
-
-import EntityToolbar from '@assets/json/entitiestoolbar.json';
-import { IPhone } from './phone';
-import { childgrid, sharedSetting, toastType } from '@shared/enums/enums';
+import { NgForm } from '@angular/forms';
+import {
+  Observable,
+  Subject,
+  catchError,
+  combineLatest,
+  EMPTY,
+  map,
+  of,
+  takeUntil,
+} from 'rxjs';
+import { IPhone, IPhoneType } from './phone';
 import { PhoneService } from './phone.service';
-import { ClickEventArgs } from '@syncfusion/ej2-angular-navigations';
 import { ApplicationService } from '@shared/services/applicattionService';
-import { EMPTY, Observable, catchError, combineLatest, map, tap } from 'rxjs';
 import { ToastService } from '@shared/services/toastService';
+import { sharedSetting, toastType } from '@shared/enums/enums';
+import Countries from '@assets/json/countries.json';
 
 @Component({
   selector: 'llion-grid-phone',
@@ -28,121 +38,188 @@ import { ToastService } from '@shared/services/toastService';
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: false,
 })
-export class PhoneGridComponent implements OnInit {
-  @ViewChild('phonegrid') public phonegrid!: GridComponent;
-
-  public commands!: CommandModel[];
-  parentRef_EntityId: number = 0;
-  entityId: number = 0;
-  errorMessage = '';
-  gridtitle: string = 'teléfonos';
-  gridHeight = sharedSetting.formGridHeight;
-
-  selectedPhone: IPhone | undefined;
+export class PhoneGridComponent implements OnInit, OnDestroy {
+  @ViewChild('phonegrid') phonegrid?: GridComponent;
+  @ViewChild('phoneForm') phoneForm?: NgForm;
 
   phones$!: Observable<IPhone[]>;
-
+  phoneTypes$!: Observable<IPhoneType[]>;
   enabled$!: Observable<boolean>;
 
-  toolbar: ToolbarItems[] | object = EntityToolbar.map((elem) => ({
-    ...elem,
-    template: elem.template
-      ? `<label class='grid-label' id='title-grid'>${this.gridtitle}</label>`
-      : undefined,
-    align: elem.align ? elem.align : undefined,
+  gridHeight = sharedSetting.formGridHeight;
+  gridEnabled = false;
+  organizationId = 0;
+  entityId = 0;
+
+  phoneMask = '(999) 999-9999';
+  phoneCodes: { [key: string]: Object }[] = Countries.map((country) => ({
+    name: ' ' + country.name + ` (${country.dial_code})`,
+    code: country.code,
+    dial_code: country.dial_code,
+    flagclass: 'fi fi-' + country.code.toLocaleLowerCase() + ' fis',
   }));
+  phoneCountryFields: Object = {
+    text: 'name',
+    value: 'code',
+    iconCss: 'flagclass',
+  };
+  phoneTypeFields: Object = {
+    text: 'name',
+    value: 'type',
+  };
+  filterType = 'Contains';
+
+  phoneData: IPhone = this.createEmptyPhone();
+
+  toolbar: ToolbarItems[] = [];
+  editSettings: EditSettingsModel = {
+    allowAdding: false,
+    allowEditing: false,
+    allowDeleting: false,
+    mode: 'Dialog',
+  };
+
+  private readonly destroy$ = new Subject<void>();
 
   constructor(
     private phoneService: PhoneService,
     private applicationService: ApplicationService,
-    private toastService: ToastService
+    private toastService: ToastService,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
-    this.applicationService.WhenReady(
-      () => this.phonegrid,
-      () =>
-        this.applicationService.WhenReady(
-          () => this.phonegrid.toolbarModule,
-          () => {
-            this.phonegrid.toolbarModule.enableItems(['add'], true);
-            this.gridtitle = 'teléfonos';
-            this.phonegrid.element.classList.add('disablegrid');
-            document.getElementById('phonegrid')?.classList.add('wrapper');
-            this.commands = [
-              {
-                type: 'Delete',
-                buttonOption: { cssClass: 'e-btn', iconCss: 'e-trash e-icons' },
-              },
-            ];
-          }
-        )
-    );
+    this.enabled$ = this.applicationService.enablePhoneChildGridAction$;
+    this.phoneTypes$ = of([
+      { type: 'Principal', name: 'Principal' },
+      { type: 'Móvil', name: 'Móvil' },
+      { type: 'Fax', name: 'Fax' },
+      { type: 'Otro', name: 'Otro' },
+    ]);
 
     this.phones$ = combineLatest([
       this.phoneService.phoneWithCRUD$,
       this.applicationService.enablePhoneChildGridAction$,
     ]).pipe(
-      map(([phones, enabled]) => phones.filter(Boolean)),
+      map(([phones]) => phones.filter(Boolean)),
       catchError((err) => {
         this.toastService.showMyToast(err, toastType.error);
         return EMPTY;
       })
     );
 
-    this.enabled$ = this.applicationService.enableEmailChildGridAction$.pipe(
-      tap((enabled) => {
-        if (this.phonegrid) {
-          if (!enabled) {
-            this.phonegrid.element.classList.add('disablegrid');
-            document.getElementById('phone-grid')?.classList.add('wrapper');
-          } else {
-            this.phonegrid.element.classList.remove('disablegrid');
-            document.getElementById('phone-grid')?.classList.remove('wrapper');
-          }
+    combineLatest([
+      this.applicationService.enablePhoneChildGridAction$,
+      this.applicationService.organizationIdSelectedAction$,
+    ])
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(([editing, organizationId]) => {
+        this.organizationId = organizationId ?? 0;
+        this.gridEnabled = !!editing && this.organizationId > 0;
+        this.applyEditState();
+        this.cdr.markForCheck();
+      });
+
+    this.applicationService.entitySelectedAction$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((entityId) => {
+        this.entityId = entityId ?? 0;
+      });
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  actionBegin(args: SaveEventArgs): void {
+    const needsEditMode =
+      args.requestType === 'beginEdit' ||
+      args.requestType === 'add' ||
+      args.requestType === 'save' ||
+      args.requestType === 'delete';
+
+    if (needsEditMode && !this.gridEnabled) {
+      args.cancel = true;
+      this.toastService.showMyToast(
+        'Debe editar la organización para gestionar teléfonos',
+        toastType.warning
+      );
+      return;
+    }
+
+    if (args.requestType === 'beginEdit' || args.requestType === 'add') {
+      const row = (args.rowData ?? {}) as Partial<IPhone>;
+      this.phoneData = {
+        ...this.createEmptyPhone(),
+        ...row,
+        organizationId: this.organizationId,
+        entityId: this.entityId || row.entityId || 0,
+      };
+      this.cdr.markForCheck();
+    }
+
+    if (args.requestType === 'save') {
+      if (this.phoneForm?.valid) {
+        const payload: IPhone = {
+          ...this.phoneData,
+          organizationId: this.organizationId,
+          entityId: this.entityId,
+        };
+        args.data = payload;
+
+        if (payload.phoneId && payload.phoneId > 0) {
+          this.phoneService.updatePhone(payload);
+        } else {
+          this.phoneService.addPhone(payload);
         }
-      })
-    );
+      } else {
+        args.cancel = true;
+      }
+    }
 
-    this.parentRef_EntityId = this.phoneService.entityId;
-
-    this.applicationService.entitySelected$.subscribe((entity) => {
-      this.entityId = entity;
-    });
+    if (args.requestType === 'delete') {
+      const row = (args.data ?? {}) as IPhone;
+      if (row.phoneId > 0) {
+        this.phoneService.deletePhone(row);
+      }
+    }
   }
 
-  onRowSelected(args: RowSelectEventArgs): void {
-    this.selectedPhone = (args.data ? args.data : []) as IPhone;
-    this.phoneService.phoneSelected(this.selectedPhone);
-    this.applicationService.entitySelected(this.selectedPhone.phoneId);
+  actionComplete(args: DialogEditEventArgs): void {
+    if (args.requestType === 'beginEdit' || args.requestType === 'add') {
+      const dialog = args.dialog as { header?: string } | undefined;
+      if (dialog) {
+        dialog.header =
+          args.requestType === 'add' ? 'Agregar teléfono' : 'Editar teléfono';
+      }
+    }
   }
 
-  onRecordDoubleClick(args: RecordDoubleClickEventArgs): void {
-    this.selectedPhone = args.rowData as IPhone;
-    this.phoneService.phoneSelected(this.selectedPhone);
-    this.applicationService.enableDetailForm(childgrid.Phone, true);
+  private applyEditState(): void {
+    const enabled = this.gridEnabled;
+    this.toolbar = enabled ? ['Add', 'Edit', 'Delete'] : [];
+    this.editSettings = {
+      allowAdding: enabled,
+      allowEditing: enabled,
+      allowDeleting: enabled,
+      mode: 'Dialog',
+    };
+
+    if (this.phonegrid) {
+      this.phonegrid.toolbar = this.toolbar;
+      this.phonegrid.editSettings = { ...this.editSettings };
+    }
   }
 
-  onToolbarClick(args: ClickEventArgs): void {
-    const phone: IPhone = {
+  private createEmptyPhone(): IPhone {
+    return {
       phoneId: 0,
       countryCode: '',
       phoneNumber: '',
       phoneType: '',
-      entityId: this.parentRef_EntityId,
-      organizationId: this.entityId,
+      entityId: this.entityId,
+      organizationId: this.organizationId,
     };
-    const target: HTMLElement = args.originalEvent.target as HTMLElement;
-    if (target.parentElement?.id === 'add') {
-      this.phoneService.phoneSelected(phone);
-      this.applicationService.enableDetailForm(childgrid.Phone, true);
-      args.cancel = true;
-    }
-  }
-
-  commandClick(args: CommandClickEventArgs): void {
-    if (args.target?.title == 'Delete' && this.selectedPhone) {
-      this.phoneService.deletePhone(this.selectedPhone);
-    }
   }
 }

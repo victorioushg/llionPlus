@@ -1,4 +1,5 @@
-<div class="wrapper-detail" *ngIf="merchandise$ | async as mer">
+<div class="wrapper-detail" id="merchandise-detail-section" *ngIf="merchandise$ | async as mer">
+  <h6 class="detail-section-title">Mercancía</h6>
   <form
     id="merchandise-detail-form"
     class="merchandise-detail-form"
@@ -197,31 +198,6 @@
         ></ejs-numerictextbox>
       </div>
       <div class="col-md-3"></div>
-    </div>
-    <br />
-    <div class="row">
-      <div class="col-md-6"></div>
-      <div class="col-md-6">
-        <div id="form-buttons">
-          <button
-            ejs-button
-            (click)="onCancelClick()"
-            [disabled]="!(enabled$ | async)"
-            style="float: right"
-          >
-            Cancelar
-          </button>
-          <button
-            ejs-button
-            (click)="onSaveClick()"
-            cssClass="e-primary"
-            [disabled]="!(enabled$ | async)"
-            style="float: right"
-          >
-            Aceptar
-          </button>
-        </div>
-      </div>
     </div>
   </form>
 </div>

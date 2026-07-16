@@ -1,6 +1,7 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  OnDestroy,
   OnInit,
   ViewChild,
 } from '@angular/core';
@@ -17,7 +18,14 @@ import {
   IMerchandiseDivision,
   IMerchandiseType,
 } from '../merchandise';
-import { catchError, EMPTY, Observable, shareReplay, Subject, tap } from 'rxjs';
+import {
+  catchError,
+  EMPTY,
+  Observable,
+  Subject,
+  takeUntil,
+  tap,
+} from 'rxjs';
 import { GroupTableComponent } from '@shared/components/group-table/group-table.component';
 import { ApplicationService } from '@shared/services/applicattionService';
 import { IGroup } from '@app/shared/models/group';
@@ -29,7 +37,7 @@ import { IGroup } from '@app/shared/models/group';
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: false,
 })
-export class MerchandiseDetailComponent implements OnInit {
+export class MerchandiseDetailComponent implements OnInit, OnDestroy {
   // Brands
   @ViewChild('brandTable') brandTable!: GroupTableComponent;
   public brandsData: any[] = [];
@@ -57,6 +65,7 @@ export class MerchandiseDetailComponent implements OnInit {
   }
 
   private errorMessageSubject = new Subject<string>();
+  private readonly destroy$ = new Subject<void>();
   merchandiseForm!: FormGroup;
 
   errorMessage$ = this.errorMessageSubject.asObservable();
@@ -165,67 +174,120 @@ export class MerchandiseDetailComponent implements OnInit {
           'merchandiseAcceptRebates',
         );
         enabled ? rebatesControl?.enable() : rebatesControl?.disable();
-
-        let formbuttons = document.getElementById('form-buttons');
-        if (formbuttons) formbuttons.style.display = enabled ? 'block' : 'none';
       }),
     );
 
     this.disabled$ = this.enabled$.pipe(map((value) => !value));
+
+    this.merchandiseService.merchandiseFormAction$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((action) => {
+        if (action === 'save') {
+          this.saveForm();
+          return;
+        }
+        this.cancelForm();
+      });
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  private cancelForm(): void {
+    this.disableForm();
+  }
+
+  private saveForm(): void {
+    if (!this.merchandiseForm.valid) {
+      this.merchandiseForm.markAllAsTouched();
+      return;
+    }
+
+    const formValue = this.merchandiseForm.getRawValue();
+    const merchandiseToSave: IMerchandise = {
+      ...this.merchandise,
+      merchandiseId: this.merchandise?.merchandiseId ?? 0,
+      alternCode: formValue.merchandiseAlternCode ?? '',
+      name: formValue.merchandiseName ?? '',
+      description: formValue.merchandisePresentation ?? '',
+      groupId: formValue.merchandiseCategories ?? 0,
+      brandId: formValue.merchandiseBrands ?? 0,
+      typeId: formValue.merchandiseTypes ?? 0,
+      divisionId: formValue.merchandiseDivisions ?? 0,
+      deactivated: !!formValue.merchandiseActive,
+      acceptsReturns: formValue.merchandiseReturns ?? false,
+      acceptsReturnsRate: formValue.merchandiseReturnsRate ?? 0,
+      currentStock: formValue.merchandiseStock ?? 0,
+      availableStock: formValue.merchandiseAvailableStock ?? 0,
+      regulated: formValue.merchandiseRegulated ?? false,
+      acceptsRebate: formValue.merchandiseAcceptRebates ?? false,
+    };
+
+    if (merchandiseToSave.merchandiseId > 0) {
+      this.merchandiseService.updateMerchandise(merchandiseToSave);
+    } else {
+      this.merchandiseService.addMerchandise(merchandiseToSave);
+    }
+
+    this.disableForm();
   }
 
   clearForm() {
     this.merchandiseForm.reset();
   }
 
-  onCancelClick() {
-    this.disableForm();
-    if (this.merchandise.merchandiseId === 0) {
-      this.clearForm();
-    }
-  }
+  // onCancelClick() {
+  //   this.disableForm();
+  //   if (this.merchandise.merchandiseId === 0) {
+  //     this.clearForm();
+  //   }
+  // }
 
-  onSaveClick() {
-    const newOrg: IMerchandise = {
-      merchandiseId: this.merchandise ? this.merchandise.merchandiseId : 0,
-      alternCode: this.merchandiseForm.value.merchandiseAlternCode,
-      name: this.merchandiseForm.value.merchandiseName,
-      description: this.merchandiseForm.value.merchandisePresentation,
-      groupId: this.merchandiseForm.value.merchandiseCategories,
-      brandId: this.merchandiseForm.value.merchandiseBrands,
-      typeId: this.merchandiseForm.value.merchandiseTypes,
-      divisionId: this.merchandiseForm.value.merchandiseDivisions,
-      deactivated: this.merchandiseForm.value.merchandiseActive,
-      acceptsReturns: this.merchandiseForm.value.merchandiseReturns,
-      acceptsReturnsRate: this.merchandiseForm.value.merchandiseReturnsRate,
-      currentStock: this.merchandiseForm.value.merchandiseStock ?? 0,
-      availableStock: this.merchandiseForm.value.merchandiseAvailableStock ?? 0,
-      marketShare: 0,
-      regulated: this.merchandiseForm.value.merchandiseRegulated,
-      acceptsRebate: this.merchandiseForm.value.merchandiseAcceptRebates,
-      height: 0,
-      width: 0,
-      depth: 0,
-      createdOn: new Date(),
-      createddBy: '',
-      LastModifiedOn: new Date(),
-      accountId: 0,
-      classId: 0,
-      parentId: 0,
-      organizationId: 0,
-    };
+  // onSaveClick() {
+  //   const newOrg: IMerchandise = {
+  //     merchandiseId: this.merchandise ? this.merchandise.merchandiseId : 0,
+  //     alternCode: this.merchandiseForm.value.merchandiseAlternCode,
+  //     name: this.merchandiseForm.value.merchandiseName,
+  //     description: this.merchandiseForm.value.merchandisePresentation,
+  //     groupId: this.merchandiseForm.value.merchandiseCategories,
+  //     brandId: this.merchandiseForm.value.merchandiseBrands,
+  //     typeId: this.merchandiseForm.value.merchandiseTypes,
+  //     divisionId: this.merchandiseForm.value.merchandiseDivisions,
+  //     deactivated: this.merchandiseForm.value.merchandiseActive,
+  //     acceptsReturns: this.merchandiseForm.value.merchandiseReturns,
+  //     acceptsReturnsRate: this.merchandiseForm.value.merchandiseReturnsRate,
+  //     currentStock: this.merchandiseForm.value.merchandiseStock ?? 0,
+  //     availableStock: this.merchandiseForm.value.merchandiseAvailableStock ?? 0,
+  //     marketShare: 0,
+  //     regulated: this.merchandiseForm.value.merchandiseRegulated,
+  //     acceptsRebate: this.merchandiseForm.value.merchandiseAcceptRebates,
+  //     height: 0,
+  //     width: 0,
+  //     depth: 0,
+  //     createdOn: new Date(),
+  //     createddBy: '',
+  //     LastModifiedOn: new Date(),
+  //     accountId: 0,
+  //     classId: 0,
+  //     parentId: 0,
+  //     organizationId: 0,
+  //   };
 
-    if (this.merchandise) {
-      this.merchandiseService.updateMerchandise(newOrg);
-    } else {
-      this.merchandiseService.addMerchandise(newOrg);
-    }
+  //   if (this.merchandise) {
+  //     this.merchandiseService.updateMerchandise(newOrg);
+  //   } else {
+  //     this.merchandiseService.addMerchandise(newOrg);
+  //   }
 
-    this.disableForm();
-  }
+  //   this.disableForm();
+  // }
 
   disableForm() {
     this.merchandiseService.enableMerchandiseForm(false);
+    // NOTE: In the grid component, `true` adds the `disablegrid` class.
+    // So passing `false` here re-enables the grid UI.
     this.merchandiseService.enableMerchandiseGrid(false);
     this.applicationService.enableAddressChildGrid(false);
     this.applicationService.enableEmailChildGrid(false);

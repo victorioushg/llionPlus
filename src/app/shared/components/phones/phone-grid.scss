@@ -1,22 +1,89 @@
-@use "variables" as *;
+@use 'variables' as *;
 
-.e-grid .e-gridheader {
-  display: none;
+@mixin child-toolbar($grid-id) {
+  ::ng-deep ##{$grid-id} .e-toolbar {
+    background-color: $llion-color-primary-container;
+  }
+
+  ::ng-deep ##{$grid-id} .e-toolbar .e-toolbar-items,
+  ::ng-deep ##{$grid-id} .e-toolbar .e-toolbar-items.e-tbar-pos {
+    background-color: $llion-color-primary-container;
+  }
+
+  ::ng-deep ##{$grid-id} .e-toolbar .e-toolbar-items .e-tbar-btn {
+    background: $llion-color-white;
+    border: 1px solid #5a70cc;
+  }
+
+  ::ng-deep ##{$grid-id} .e-toolbar-item.e-search-wrapper {
+    padding-top: 7px;
+  }
+
+  ::ng-deep ##{$grid-id} .e-grid .e-toolbar-items .e-toolbar-item.e-search-wrapper .e-search {
+    background-color: $llion-color-primary-container;
+  }
 }
 
-#phone-grid .e-toolbar {
-  background-color: $llion-color-primary-container;
-
+:host {
+  display: block;
+  width: 100%;
 }
 
-::ng-deep #phone-grid .e-toolbar .e-toolbar-item.e-overlay {
-  background: #fafafa;
-  opacity: 0.5;
-  color: rgba(0, 0, 0, 0.26);
-  visibility: hidden;
+#phone-grid {
+  width: 100%;
+  max-width: 100%;
+  margin-bottom: 12px;
 }
 
-::ng-deep #phone-grid .e-toolbar-item.e-template {
-  padding-top: 0px;
-  padding-bottom: 0px;
+.detail-section-title {
+  margin: 0 0 8px;
+  font-weight: 600;
+  color: $llion-color-font;
+}
+
+::ng-deep #phone-grid .e-grid {
+  width: 100% !important;
+  max-width: 100%;
+  table-layout: fixed;
+
+  .e-gridheader .e-headercell,
+  .e-gridheader .e-headercelldiv {
+    height: 32px !important;
+    max-height: 32px !important;
+    line-height: 32px;
+    padding-top: 0;
+    padding-bottom: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .e-headercelldiv {
+    font-size: 13px;
+  }
+
+  .e-rowcell {
+    padding-top: 6px;
+    padding-bottom: 6px;
+    line-height: normal;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+@include child-toolbar('phone-grid');
+
+::ng-deep .child-edit-dialog {
+  padding: 8px 4px 4px;
+
+  .row {
+    margin-bottom: 12px;
+  }
+
+  .e-float-input,
+  .e-control-wrapper,
+  .e-dropdownlist {
+    width: 100%;
+  }
 }

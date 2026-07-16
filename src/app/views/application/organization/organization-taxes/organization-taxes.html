@@ -1,0 +1,214 @@
+<div class="wrapper">
+  <div id="organization-taxes-grid">
+    <h6 class="detail-section-title">Impuestos</h6>
+    <ejs-grid
+      #taxesgrid
+      [dataSource]="(taxesData$ | async) || []"
+      [toolbar]="taxesToolbar"
+      [editSettings]="taxesEditSettings"
+      [cssClass]="taxesGridEnabled ? '' : 'disablegrid'"
+      [height]="taxesGridHeight"
+      [rowHeight]="taxesGridRowHeight"
+      [headerHeight]="taxesGridHeaderHeight"
+      [width]="'100%'"
+      clipMode="EllipsisWithTooltip"
+      (actionBegin)="actionBegin($event)"
+      (actionComplete)="actionComplete($event)"
+    >
+      <e-columns>
+        <e-column field="taxType" headerText="Tipo" width="12%"></e-column>
+        <e-column
+          field="description"
+          headerText="Descripción"
+          width="36%"
+        ></e-column>
+        <e-column
+          field="taxDateFrom"
+          headerText="Vigencia"
+          type="date"
+          format="dd/MM/yyyy"
+          textAlign="Center"
+          width="16%"
+        ></e-column>
+        <e-column
+          field="rateType"
+          headerText="Codigo Tasa"
+          width="20%"
+        ></e-column>
+        <e-column
+          field="rate"
+          headerText="Tasa"
+          format="P2"
+          textAlign="Right"
+          width="16%"
+        ></e-column>
+        <e-column
+          field="taxBaseAmountFrom"
+          headerText="Desde"
+          format="N2"
+          textAlign="Right"
+          [visible]="false"
+        ></e-column>
+        <e-column
+          field="taxBaseAmountTo"
+          headerText="Hasta"
+          format="N2"
+          textAlign="Right"
+          [visible]="false"
+        ></e-column>
+        <e-column
+          field="taxDateTo"
+          headerText="Vigencia hasta"
+          type="date"
+          format="dd/MM/yyyy"
+          [visible]="false"
+        ></e-column>
+        <e-column
+          field="applicableTo"
+          headerText="Aplica a"
+          [visible]="false"
+        ></e-column>
+        <e-column
+          field="taxId"
+          [isPrimaryKey]="true"
+          [visible]="false"
+        ></e-column>
+        <e-column field="organizationId" [visible]="false"></e-column>
+      </e-columns>
+
+      <ng-template #editSettingsTemplate let-data>
+        <div ngForm #taxForm="ngForm" class="tax-edit-dialog">
+          <input type="hidden" name="taxId" [(ngModel)]="taxData.taxId" />
+          <input
+            type="hidden"
+            name="organizationId"
+            [(ngModel)]="taxData.organizationId"
+          />
+
+          <div class="row">
+            <div class="col-md-6">
+              <ejs-dropdownlist
+                id="taxType"
+                name="taxType"
+                [(ngModel)]="taxData.taxType"
+                [dataSource]="(taxTypes$ | async) || []"
+                [fields]="taxTypeFields"
+                [allowFiltering]="true"
+                placeholder="Tipo"
+                floatLabelType="Always"
+                popupHeight="220px"
+                [required]="true"
+              ></ejs-dropdownlist>
+            </div>
+            <div class="col-md-6">
+              <ejs-textbox
+                id="rateType"
+                name="rateType"
+                [(ngModel)]="taxData.rateType"
+                placeholder="Codigo Tasa"
+                floatLabelType="Always"
+                [required]="true"
+              ></ejs-textbox>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-md-12">
+              <ejs-textbox
+                id="description"
+                name="description"
+                [(ngModel)]="taxData.description"
+                placeholder="Descripción"
+                floatLabelType="Always"
+              ></ejs-textbox>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-md-12">
+              <ejs-multiselect
+                id="applicableTo"
+                name="applicableTo"
+                [(ngModel)]="applicableToValues"
+                [dataSource]="entities"
+                [fields]="entityFields"
+                placeholder="Aplica a"
+                floatLabelType="Always"
+                mode="Box"
+                [allowFiltering]="true"
+                popupHeight="220px"
+              ></ejs-multiselect>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-md-4">
+              <ejs-datepicker
+                id="taxDateFrom"
+                name="taxDateFrom"
+                [(ngModel)]="taxData.taxDateFrom"
+                placeholder="Vigencia desde"
+                floatLabelType="Always"
+                format="dd/MM/yyyy"
+                [required]="true"
+              ></ejs-datepicker>
+            </div>
+            <div class="col-md-4">
+              <ejs-datepicker
+                id="taxDateTo"
+                name="taxDateTo"
+                [(ngModel)]="taxData.taxDateTo"
+                placeholder="Vigencia hasta"
+                floatLabelType="Always"
+                format="dd/MM/yyyy"
+              ></ejs-datepicker>
+            </div>
+            <div class="col-md-4">
+              <ejs-numerictextbox
+                id="rate"
+                name="rate"
+                [(ngModel)]="taxData.rate"
+                placeholder="Tasa"
+                floatLabelType="Always"
+                format="p2"
+                [decimals]="4"
+                [validateDecimalOnType]="true"
+                [showSpinButton]="false"
+                [required]="true"
+              ></ejs-numerictextbox>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-md-6">
+              <ejs-numerictextbox
+                id="taxBaseAmountFrom"
+                name="taxBaseAmountFrom"
+                [(ngModel)]="taxData.taxBaseAmountFrom"
+                placeholder="Base desde"
+                floatLabelType="Always"
+                format="n2"
+                [decimals]="2"
+                [validateDecimalOnType]="true"
+                [showSpinButton]="false"
+              ></ejs-numerictextbox>
+            </div>
+            <div class="col-md-6">
+              <ejs-numerictextbox
+                id="taxBaseAmountTo"
+                name="taxBaseAmountTo"
+                [(ngModel)]="taxData.taxBaseAmountTo"
+                placeholder="Base hasta"
+                floatLabelType="Always"
+                format="n2"
+                [decimals]="2"
+                [validateDecimalOnType]="true"
+                [showSpinButton]="false"
+              ></ejs-numerictextbox>
+            </div>
+          </div>
+        </div>
+      </ng-template>
+    </ejs-grid>
+  </div>
+</div>

@@ -2,6 +2,7 @@ import {
   AfterViewInit,
   Component,
   ElementRef,
+  OnDestroy,
   OnInit,
   ViewChild,
 } from '@angular/core';
@@ -26,8 +27,10 @@ import {
   EMPTY,
   map,
   Observable,
+  shareReplay,
   startWith,
-  tap,
+  Subject,
+  takeUntil,
 } from 'rxjs';
 import { ChangeDetectionStrategy } from '@angular/core';
 import { IOrganization } from './organization';
@@ -36,11 +39,8 @@ import { toastType } from '@shared/enums/enums';
 import {
   ClickEventArgs,
   TabComponent,
-  TabItemsDirective,
-  TabItemDirective,
 } from '@syncfusion/ej2-angular-navigations';
 import { ApplicationService } from '@shared/services/applicattionService';
-import { TabHeader } from '@shared/models/syncfusion-interfaces';
 
 @Component({
   selector: 'llion-content',
@@ -49,11 +49,13 @@ import { TabHeader } from '@shared/models/syncfusion-interfaces';
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: false,
 })
-export class OrganizationComponent implements OnInit, AfterViewInit {
+export class OrganizationComponent implements OnInit, AfterViewInit, OnDestroy {
   public commands!: CommandModel[];
 
-  private searchStringSubject = new BehaviorSubject<string>('');
-  searchStringAction$ = this.searchStringSubject.asObservable();
+  private readonly searchStringSubject = new BehaviorSubject<string>('');
+  readonly searchStringAction$ = this.searchStringSubject.asObservable();
+  private readonly selectedOrganizationSubject =
+    new BehaviorSubject<IOrganization | null>(null);
 
   organizations$!: Observable<IOrganization[]>;
   entityId!: number;
@@ -65,18 +67,26 @@ export class OrganizationComponent implements OnInit, AfterViewInit {
   @ViewChild('tabs') public tabObj?: TabComponent;
   @ViewChild('toast') toast!: ElementRef;
 
-  selectedOrganization: IOrganization | undefined;
+  selectedOrganization$ = this.selectedOrganizationSubject.asObservable();
 
   enabled$!: Observable<boolean>;
+  disabledGrid$!: Observable<boolean>;
 
   // public headerText!: Object[];
-  headerText: Object[] = [
-    { text: 'dashboard' },
+  headerText: { text: string }[] = [
     { text: 'organización' },
     { text: 'parámetros y contadores' },
     { text: 'impuestos y retenciones' },
     { text: 'créditos y débitos' },
+    { text: 'monedas y cambios' },
   ];
+
+  /**
+   * Tabs enabled only while editing the organization:
+   * parámetros (1), impuestos (2), créditos (3), monedas (4)
+   */
+  private readonly orgDependentTabIndexes = [1, 2, 3, 4];
+  private readonly destroy$ = new Subject<void>();
 
   /////
   constructor(
@@ -88,10 +98,13 @@ export class OrganizationComponent implements OnInit, AfterViewInit {
   ngAfterViewInit(): void {
     if (this.tabObj) {
       (this.tabObj as TabComponent).element.classList.add('e-fill');
+      this.updateOrgDependentTabs(false);
     }
   }
 
   ngOnInit(): void {
+    this.clearOrganizationSelection();
+
     this.commands = [
       {
         type: 'Delete',
@@ -118,24 +131,14 @@ export class OrganizationComponent implements OnInit, AfterViewInit {
     );
 
     this.enabled$ = this.organizationService.enableOrganizationGridAction$.pipe(
-      tap((enabled) => {
-        if (this.grid) {
-          if (enabled) {
-            this.grid.element.classList.add('disablegrid');
-            document.getElementById('grid')?.classList.add('wrapper');
-          } else {
-            this.grid.element.classList.remove('disablegrid');
-            document.getElementById('grid')?.classList.remove('wrapper');
-          }
-        }
-      })
+      shareReplay(1)
     );
+    this.disabledGrid$ = this.enabled$.pipe(shareReplay(1));
 
-    // EntityId Reactive
-    // this.applicationService.getEntityId('Organization').subscribe((entityId) => {
-    //   this.entityId = entityId;
-    //   this.applicationService.entitySelected(entityId);
-    // });
+    // Child tabs + context only while the organization is being modified
+    this.organizationService.enableOrganizationFormAction$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((editing) => this.applyEditMode(editing));
   }
 
   onToolbarClick(args: ClickEventArgs): void {
@@ -147,7 +150,8 @@ export class OrganizationComponent implements OnInit, AfterViewInit {
         : target.id.split('_').pop();
 
     if (targetId === 'add') {
-      this.applicationService.organizationIdSelected(0);
+      this.clearOrganizationSelection();
+      this.enableParentForm(true);
       args.cancel = true;
     } else if (targetId === 'searchbutton') {
       this.search();
@@ -159,8 +163,17 @@ export class OrganizationComponent implements OnInit, AfterViewInit {
   }
 
   onRecordDoubleClick(args: RecordDoubleClickEventArgs): void {
-    if (this.selectedOrganization !== undefined) {
-      this.applicationService.organizationIdSelected(this.selectedOrganization.organizationId);
+    const organization = (args.rowData ??
+      this.selectedOrganizationSubject.value) as IOrganization | null;
+    const organizationId = organization?.organizationId ?? 0;
+
+    if (organization && organizationId > 0) {
+      // Prefer rowData so edit works even if selection event races after dblclick
+      this.selectedOrganizationSubject.next(organization);
+      this.applicationService.organizationIdSelected(organizationId);
+      if (this.organizationService.entityId > 0) {
+        this.applicationService.entitySelected(this.organizationService.entityId);
+      }
       this.enableParentForm(true);
     } else {
       this.toastService.showMyToast(
@@ -170,7 +183,7 @@ export class OrganizationComponent implements OnInit, AfterViewInit {
     }
   }
 
-  enableParentForm(enable: boolean) {
+  enableParentForm(enable: boolean): void {
     this.organizationService.enableOrganizationGrid(enable);
     this.organizationService.enableOrganizationForm(enable);
     this.applicationService.enableAddressChildGrid(enable);
@@ -186,28 +199,100 @@ export class OrganizationComponent implements OnInit, AfterViewInit {
   }
 
   commandClick(args: CommandClickEventArgs): void {
-    if (args.target?.title == 'Delete' && this.selectedOrganization) {
-      this.organizationService.deleteOrganization(this.selectedOrganization);
+    const selectedOrganization = this.selectedOrganizationSubject.value;
+    if (args.target?.title == 'Delete' && selectedOrganization) {
+      this.organizationService.deleteOrganization(selectedOrganization);
     }
   }
 
   onRowSelected(args: RowSelectEventArgs): void {
-    this.selectedOrganization = (args.data ? args.data : []) as IOrganization;
-    this.applicationService.organizationIdSelected(this.selectedOrganization.organizationId);
-   
+    const organization = (args.data ? args.data : null) as IOrganization | null;
+    if (!organization?.organizationId) {
+      return;
+    }
+
+    const previousId =
+      this.selectedOrganizationSubject.value?.organizationId ?? 0;
+    const sameOrganization = previousId === organization.organizationId;
+
+    this.selectedOrganizationSubject.next(organization);
+    this.applicationService.organizationIdSelected(organization.organizationId);
+    if (this.organizationService.entityId > 0) {
+      this.applicationService.entitySelected(this.organizationService.entityId);
+    }
+
+    // Leaving edit when selecting another org; skip if same row (dblclick race)
+    if (!sameOrganization) {
+      this.enableParentForm(false);
+    }
   }
 
-  onRowDeselected(args: RowDeselectEventArgs): void {
-    // NOT Uncomment
-    //  this.selectedOrganization = undefined;
-    //  this.organizationService.selectedOrganizationChanged(0);
+  onRowDeselected(_args: RowDeselectEventArgs): void {
+    // Keep last selection so organization tab still shows data while interacting with the form.
   }
 
-  private search(clear: boolean = false) {
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+    this.clearOrganizationSelection();
+  }
+
+  /** Clears selection; organization tab and dependent tabs have no data. */
+  private clearOrganizationSelection(): void {
+    this.enableParentForm(false);
+    this.selectedOrganizationSubject.next(null);
+    this.organizationService.setOrganizationContext(0);
+    this.applicationService.organizationIdSelected(0);
+    this.updateOrgDependentTabs(false);
+  }
+
+  private applyEditMode(editing: boolean): void {
+    const organizationId =
+      this.selectedOrganizationSubject.value?.organizationId ?? 0;
+
+    // Child tabs (taxes, retenciones, credits, …) need a persisted org id
+    if (editing && organizationId > 0) {
+      this.organizationService.setOrganizationContext(organizationId);
+      this.updateOrgDependentTabs(true);
+      return;
+    }
+
+    this.organizationService.setOrganizationContext(0);
+    this.updateOrgDependentTabs(false);
+  }
+
+  private updateOrgDependentTabs(visible: boolean): void {
+    if (!this.tabObj) {
+      return;
+    }
+
+    for (const index of this.orgDependentTabIndexes) {
+      this.tabObj.hideTab(index, !visible);
+    }
+
+    if (
+      !visible &&
+      this.orgDependentTabIndexes.includes(this.tabObj.selectedItem)
+    ) {
+      this.tabObj.select(0);
+    }
+  }
+
+  private search(clear: boolean = false): void {
+    if (!this.grid?.element?.id) {
+      this.searchStringSubject.next('');
+      return;
+    }
     const searchString: HTMLInputElement = document.getElementById(
       this.grid.element.id + '_searchbar'
     ) as HTMLInputElement;
-    if (clear) searchString.value = '';
+    if (!searchString) {
+      this.searchStringSubject.next('');
+      return;
+    }
+    if (clear) {
+      searchString.value = '';
+    }
     this.searchStringSubject.next(searchString.value || '');
   }
 }

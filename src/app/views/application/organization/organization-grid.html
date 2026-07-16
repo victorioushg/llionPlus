@@ -8,11 +8,12 @@
           </div>
         </div>
       </div>
-      <div id="organization-grid">
+      <div id="organization-grid" [class.wrapper]="disabledGrid$ | async">
         <ejs-grid
           #grid
           [dataSource]="organizations$ | async"
           [allowFiltering]="enabled$ | async"
+          [cssClass]="(disabledGrid$ | async) ? 'disablegrid' : ''"
           [toolbar]="toolbar"
           [searchSettings]="searchSettings"
           (actionBegin)="actionBegin($event)"
@@ -35,7 +36,7 @@
               width="100"
             ></e-column>
             <e-column
-              field="id"
+              field="organizationId"
               [isPrimaryKey]="true"
               [visible]="false"
             ></e-column>
@@ -50,26 +51,49 @@
             <div class="row">
               <div class="col-lg-12">
                 <ng-template #content>
-                  <div class="row">
-                    <div class="col-lg-6">
-                      <llion-organization-detail></llion-organization-detail>
-                    </div>
-                    <div class="col-lg-6">
-                      <llion-organization-detail-input></llion-organization-detail-input>
-                    </div>
-                  </div>
+                  <llion-organization-detail></llion-organization-detail>
                 </ng-template>
               </div>
             </div>
           </e-tabitem>
           <e-tabitem [header]="headerText[1]">
-            <ng-template #content></ng-template>
+            <ng-template #content>
+              <div class="row">
+                <div class="col-lg-6">
+                  <llion-organization-parameters></llion-organization-parameters>
+                </div>
+              </div>
+            </ng-template>
           </e-tabitem>
           <e-tabitem [header]="headerText[2]">
-            <ng-template #content></ng-template>
+            <ng-template #content>
+              <div class="row">
+                <div class="col-lg-6">
+                  <llion-organization-taxes></llion-organization-taxes>
+                </div>
+                <div class="col-lg-6">
+                  <llion-organization-retentions></llion-organization-retentions>
+                </div>
+              </div>
+            </ng-template>
           </e-tabitem>
           <e-tabitem [header]="headerText[3]">
-            <ng-template #content></ng-template>
+            <ng-template #content>
+              <div class="row">
+                <div class="col-lg-6">
+                  <llion-organization-credits></llion-organization-credits>
+                </div>
+              </div>
+            </ng-template>
+          </e-tabitem>
+          <e-tabitem [header]="headerText[4]">
+            <ng-template #content>
+              <div class="row">
+                <div class="col-lg-6">
+                  <llion-organization-exchanges></llion-organization-exchanges>
+                </div>
+              </div>
+            </ng-template>
           </e-tabitem>
         </e-tabitems>
       </ejs-tab>

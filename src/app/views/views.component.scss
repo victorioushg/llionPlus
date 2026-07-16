@@ -134,6 +134,18 @@
 }
 #system-date {
   align-content: center;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  white-space: nowrap;
+}
+
+#working-organization {
+  font-weight: 600;
+  color: inherit;
+  max-width: 28rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 
@@ -168,9 +180,11 @@
   align-items: center;
   flex-direction: row-reverse;
   justify-content:space-between  ;
+  border-left: 5px solid transparent;
 }
   
-.e-treeview .e-list-item.e-active>.e-text-content {
+.e-treeview .e-list-item.e-active>.e-text-content,
+.e-treeview .e-list-item.e-hover>.e-text-content {
   background-color: $llion-color-primary-container;
   border-left: 5px solid $llion-color-primary;
 }
@@ -185,7 +199,7 @@
 }
 
 .e-treeview .e-list-item.e-hover {
-    background-color: $llion-color-light-gray;
+    background-color: $llion-color-primary-container;
 }
 
 .e-treeview .e-fullrow {
@@ -267,6 +281,22 @@ body {
 }
 #menuHeadItem {
   background-color: $llion-color-primary-container;
+}
+
+/* Header user menu dropdown — left strip like principal sidebar */
+.e-menu-popup .e-ul .e-menu-item,
+.e-menu-container.e-popup .e-ul .e-menu-item {
+  border-left: 5px solid transparent;
+}
+
+.e-menu-popup .e-ul .e-menu-item.e-focused,
+.e-menu-popup .e-ul .e-menu-item.e-selected,
+.e-menu-popup .e-ul .e-menu-item:hover,
+.e-menu-container.e-popup .e-ul .e-menu-item.e-focused,
+.e-menu-container.e-popup .e-ul .e-menu-item.e-selected,
+.e-menu-container.e-popup .e-ul .e-menu-item:hover {
+  background-color: $llion-color-primary-container;
+  border-left: 5px solid $llion-color-primary;
 }
 
 

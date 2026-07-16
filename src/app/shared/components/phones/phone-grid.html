@@ -1,22 +1,100 @@
-<div id="phone-grid">
+<div id="phone-grid" [class.wrapper]="!gridEnabled">
+  <h6 class="detail-section-title">Teléfonos</h6>
   <ejs-grid
     #phonegrid
-    [dataSource]="phones$ | async"
-    [height]="gridHeight"
+    [dataSource]="(phones$ | async) || []"
     [toolbar]="toolbar"
-    [allowTextWrap]="enabled$ | async"
-    (toolbarClick)="onToolbarClick($event)"
-    (recordDoubleClick)="onRecordDoubleClick($event)"
+    [editSettings]="editSettings"
+    [cssClass]="gridEnabled ? '' : 'disablegrid'"
+    [height]="gridHeight"
+    [width]="'100%'"
+    clipMode="EllipsisWithTooltip"
+    (actionBegin)="actionBegin($event)"
+    (actionComplete)="actionComplete($event)"
   >
     <e-columns>
-      <e-column width=50 [commands]='commands'></e-column>
-      <e-column field="phoneNumber"></e-column>
-      <e-column field="phoneType"></e-column>
+      <e-column field="phoneType" headerText="Tipo" width="25%"></e-column>
+      <e-column
+        field="countryCode"
+        headerText="Código"
+        width="20%"
+      ></e-column>
+      <e-column
+        field="phoneNumber"
+        headerText="Número"
+        width="55%"
+      ></e-column>
       <e-column
         field="phoneId"
         [isPrimaryKey]="true"
         [visible]="false"
       ></e-column>
+      <e-column field="organizationId" [visible]="false"></e-column>
+      <e-column field="entityId" [visible]="false"></e-column>
     </e-columns>
+
+    <ng-template #editSettingsTemplate let-data>
+      <div ngForm #phoneForm="ngForm" class="child-edit-dialog">
+        <input
+          type="hidden"
+          name="phoneId"
+          [(ngModel)]="phoneData.phoneId"
+        />
+        <input
+          type="hidden"
+          name="organizationId"
+          [(ngModel)]="phoneData.organizationId"
+        />
+        <input
+          type="hidden"
+          name="entityId"
+          [(ngModel)]="phoneData.entityId"
+        />
+
+        <div class="row">
+          <div class="col-md-6">
+            <ejs-dropdownlist
+              id="phoneType"
+              name="phoneType"
+              [(ngModel)]="phoneData.phoneType"
+              [dataSource]="(phoneTypes$ | async) || []"
+              [fields]="phoneTypeFields"
+              placeholder="tipo de teléfono"
+              floatLabelType="Always"
+              [allowFiltering]="true"
+              [required]="true"
+            ></ejs-dropdownlist>
+          </div>
+          <div class="col-md-6">
+            <ejs-dropdownlist
+              id="countryCode"
+              name="countryCode"
+              [(ngModel)]="phoneData.countryCode"
+              [dataSource]="phoneCodes"
+              [fields]="phoneCountryFields"
+              placeholder="código internacional"
+              floatLabelType="Always"
+              [allowFiltering]="true"
+              [filterType]="filterType"
+              [required]="true"
+            ></ejs-dropdownlist>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col-md-12">
+            <ejs-maskedtextbox
+              id="phoneNumber"
+              name="phoneNumber"
+              [(ngModel)]="phoneData.phoneNumber"
+              placeholder="número de teléfono"
+              floatLabelType="Always"
+              [mask]="phoneMask"
+              [required]="true"
+            ></ejs-maskedtextbox>
+          </div>
+        </div>
+      </div>
+    </ng-template>
   </ejs-grid>
 </div>

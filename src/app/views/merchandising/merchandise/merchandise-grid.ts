@@ -1,5 +1,6 @@
 import {
   AfterViewInit,
+  ChangeDetectorRef,
   Component,
   ElementRef,
   OnInit,
@@ -15,6 +16,7 @@ import {
   CommandModel,
   CommandClickEventArgs,
   SearchSettingsModel,
+  EditSettingsModel,
 } from '@syncfusion/ej2-angular-grids';
 
 import { MerchandiseService } from './merchandise.service';
@@ -26,20 +28,17 @@ import {
   EMPTY,
   map,
   Observable,
+  shareReplay,
   startWith,
-  tap,
 } from 'rxjs';
 import { ChangeDetectionStrategy } from '@angular/core';
-import { IMerchandise } from '../merchandise/merchandise';
+import { IMerchandise, IMerchandisePrice } from '../merchandise/merchandise';
 import { ToastService } from '@shared/services/toastService';
 import { toastType } from '@shared/enums/enums';
 import {
   ClickEventArgs,
   TabComponent,
-  TabItemsDirective,
-  TabItemDirective,
 } from '@syncfusion/ej2-angular-navigations';
-import { TabHeader } from '@shared/models/syncfusion-interfaces';
 
 @Component({
   selector: 'llion-content',
@@ -52,25 +51,49 @@ export class MerchandiseComponent implements OnInit, AfterViewInit {
   public commands!: CommandModel[];
   public screenHeight!: number;
 
-  private searchStringSubject = new BehaviorSubject<string>('');
-  searchStringAction$ = this.searchStringSubject.asObservable();
+  private readonly searchStringSubject = new BehaviorSubject<string>('');
+  readonly searchStringAction$ = this.searchStringSubject.asObservable();
+  private readonly selectedMerchandiseSubject =
+    new BehaviorSubject<IMerchandise | null>(null);
 
   merchandises$!: Observable<IMerchandise[]>;
+  priceData$!: Observable<IMerchandisePrice[]>;
   entityId!: number;
 
   toolbar: ToolbarItems[] | object = MiniToolbar;
+  priceToolbar: ToolbarItems[] = [
+    'Add',
+    'Edit',
+    'Delete',
+    'Update',
+    'Cancel',
+  ];
+  priceEditSettings: EditSettingsModel = {
+    allowAdding: true,
+    allowEditing: true,
+    allowDeleting: true,
+    mode: 'Normal',
+    newRowPosition: 'Top',
+  };
+  readonly priceGridRowHeight = 36;
   searchSettings?: SearchSettingsModel;
 
   @ViewChild('grid') public grid!: GridComponent;
+  @ViewChild('pricegrid') public gridprice!: GridComponent;
   @ViewChild('tabs') public tabObj?: TabComponent;
   @ViewChild('toast') toast!: ElementRef;
 
-  selectedMerchandise: IMerchandise | undefined;
+  selectedMerchandise$ = this.selectedMerchandiseSubject.asObservable();
 
   enabled$!: Observable<boolean>;
+  disabledGrid$!: Observable<boolean>;
+  formEnabled$!: Observable<boolean>;
+
+  // Controls when the view is revealed to avoid the Syncfusion render "noise".
+  isReady = false;
 
   // public headerText!: Object[];
-  headerText: Object[] = [
+  headerText: { text: string }[] = [
     { text: 'mercancia' },
     { text: 'movimientos' },
     { text: 'compras' },
@@ -83,12 +106,22 @@ export class MerchandiseComponent implements OnInit, AfterViewInit {
   /////
   constructor(
     private merchandiseService: MerchandiseService,
-    private toastService: ToastService
+    private toastService: ToastService,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngAfterViewInit(): void {
     if (this.tabObj) {
       (this.tabObj as TabComponent).element.classList.add('e-fill');
+    }
+    // Fallback reveal in case the grid resolves with no data to bind.
+    setTimeout(() => this.markReady(), 700);
+  }
+
+  private markReady(): void {
+    if (!this.isReady) {
+      this.isReady = true;
+      this.cdr.markForCheck();
     }
   }
 
@@ -116,31 +149,14 @@ export class MerchandiseComponent implements OnInit, AfterViewInit {
         return EMPTY;
       })
     );
+    this.priceData$ = this.merchandiseService.merchandisePrices$;
 
     this.enabled$ = this.merchandiseService.enableMerchandiseGridAction$.pipe(
-      tap((enabled) => {
-        if (this.grid) {
-          if (enabled) {
-            this.grid.element.classList.add('disablegrid');
-            document.getElementById('grid')?.classList.add('wrapper');
-          } else {
-            this.grid.element.classList.remove('disablegrid');
-            document.getElementById('grid')?.classList.remove('wrapper');
-          }
-        }
-      })
+      shareReplay(1)
     );
-  }
-
-   onCreated(): void {
-     (
-       document.getElementById(
-         (this.grid as GridComponent).element.id + '_searchbar') as Element
-     ).addEventListener('keyup', () => {
-       (this.grid as GridComponent).search(
-         ((event as MouseEvent).target as HTMLInputElement).value
-       );
-    });
+    this.disabledGrid$ = this.enabled$.pipe(shareReplay(1));
+    this.formEnabled$ =
+      this.merchandiseService.enableMerchandiseFormAction$.pipe(shareReplay(1));
   }
 
   onToolbarClick(args: ClickEventArgs): void {
@@ -152,7 +168,9 @@ export class MerchandiseComponent implements OnInit, AfterViewInit {
         : target.id.split('_').pop();
 
     if (targetId === 'add') {
+      this.selectedMerchandiseSubject.next(null);
       this.merchandiseService.selectedMerchandiseChanged(0);
+      this.enableParentForm(true);
       args.cancel = true;
     } else if (targetId === 'searchbutton') {
       this.search();
@@ -164,11 +182,15 @@ export class MerchandiseComponent implements OnInit, AfterViewInit {
   }
 
   onRecordDoubleClick(args: RecordDoubleClickEventArgs): void {
-    if (this.selectedMerchandise !== undefined) {
-      this.merchandiseService.merchandiseIdSelected(
-        this.selectedMerchandise.merchandiseId
-      );
+    const merchandise = (args.rowData ??
+      this.selectedMerchandiseSubject.value) as IMerchandise | null;
+    const merchandiseId = merchandise?.merchandiseId ?? 0;
+
+    if (merchandiseId > 0) {
+      this.selectedMerchandiseSubject.next(merchandise);
+      this.merchandiseService.merchandiseIdSelected(merchandiseId);
       this.enableParentForm(true);
+      this.cdr.markForCheck();
     } else {
       this.toastService.showMyToast(
         'Debe seleccionar una mercancía...',
@@ -177,9 +199,9 @@ export class MerchandiseComponent implements OnInit, AfterViewInit {
     }
   }
 
-  enableParentForm(enable: boolean) {
-    this.merchandiseService.enableMerchandiseGrid(enable);
+  enableParentForm(enable: boolean): void {
     this.merchandiseService.enableMerchandiseForm(enable);
+    this.merchandiseService.enableMerchandiseGrid(enable);
   }
 
   actionBegin(args: SearchEventArgs): void {
@@ -190,27 +212,66 @@ export class MerchandiseComponent implements OnInit, AfterViewInit {
   }
 
   commandClick(args: CommandClickEventArgs): void {
-    if (args.target?.title == 'Delete' && this.selectedMerchandise) {
-      this.merchandiseService.deleteMerchandise(this.selectedMerchandise);
+    const selectedMerchandise = this.selectedMerchandiseSubject.value;
+    if (args.target?.title == 'Delete' && selectedMerchandise) {
+      this.merchandiseService.deleteMerchandise(selectedMerchandise);
     }
   }
 
   onRowSelected(args: RowSelectEventArgs): void {
-    this.selectedMerchandise = (args.data ? args.data : []) as IMerchandise;
-    this.merchandiseService.selectedMerchandiseChanged(this.selectedMerchandise.merchandiseId);
+    const merchandise = (args.data ? args.data : []) as IMerchandise;
+    this.selectedMerchandiseSubject.next(merchandise);
+    this.merchandiseService.selectedMerchandiseChanged(
+      merchandise.merchandiseId
+    );
   }
 
-  onRowDeselected(args: RowDeselectEventArgs): void {
+  onRowDeselected(_args: RowDeselectEventArgs): void {
     // NOT Uncomment
     //  this.selectedMerchandise = undefined;
     //  this.merchandiseService.selectedMerchandiseChanged(0);
   }
 
-  private search(clear: boolean = false) {
+  onDataBound(): void {
+    this.markReady();
+
+    const selectedMerchandiseId = this.selectedMerchandiseSubject.value?.merchandiseId;
+    if (!selectedMerchandiseId || !this.grid) {
+      return;
+    }
+
+    const records = this.grid.getCurrentViewRecords() as IMerchandise[];
+    const rowIndex = records.findIndex(
+      (merchandise) => merchandise.merchandiseId === selectedMerchandiseId
+    );
+
+    if (rowIndex >= 0) {
+      this.grid.selectRow(rowIndex);
+    }
+  }
+
+  private search(clear: boolean = false): void {
+    if (!this.grid?.element?.id) {
+      this.searchStringSubject.next('');
+      return;
+    }
     const searchString: HTMLInputElement = document.getElementById(
       this.grid.element.id + '_searchbar'
     ) as HTMLInputElement;
+    if (!searchString) {
+      this.searchStringSubject.next('');
+      return;
+    }
     if (clear) searchString.value = '';
     this.searchStringSubject.next(searchString.value || '');
   }
+
+onCancelClick(): void {
+    this.merchandiseService.requestCancelMerchandiseForm();
+  }
+
+  onSaveClick(): void {
+    this.merchandiseService.requestSaveMerchandiseForm();
+  }
+
 }

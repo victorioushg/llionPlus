@@ -1,5 +1,11 @@
 @use "variables" as *;
 
+.detail-section-title {
+  margin: 0 0 8px;
+  font-weight: 600;
+  color: $llion-color-font;
+}
+
 .e-checkbox-wrapper {
   margin-top: 20px;
 }

@@ -1,142 +1,196 @@
-import { Component, Input, OnInit, ViewChild } from '@angular/core';
-
 import {
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+  Component,
+  OnDestroy,
+  OnInit,
+  ViewChild,
+} from '@angular/core';
+import {
+  DialogEditEventArgs,
+  EditSettingsModel,
   GridComponent,
-  RecordDoubleClickEventArgs,
-  CommandModel,
+  SaveEventArgs,
   ToolbarItems,
-  RowSelectEventArgs,
-  CommandClickEventArgs,
 } from '@syncfusion/ej2-angular-grids';
-
-import EntityToolbar from '@assets/json/entitiestoolbar.json';
+import { NgForm } from '@angular/forms';
+import {
+  Observable,
+  Subject,
+  catchError,
+  combineLatest,
+  EMPTY,
+  map,
+  takeUntil,
+} from 'rxjs';
 import { IEmail } from './email';
-import { childgrid, sharedSetting, toastType } from '@shared/enums/enums';
 import { EmailService } from './email.service';
-import { ClickEventArgs } from '@syncfusion/ej2-angular-navigations';
 import { ApplicationService } from '@shared/services/applicattionService';
-import { EMPTY, Observable, catchError, combineLatest, map, tap } from 'rxjs';
 import { ToastService } from '@shared/services/toastService';
+import { sharedSetting, toastType } from '@shared/enums/enums';
 
 @Component({
   selector: 'llion-grid-email',
   templateUrl: './email-grid.html',
   styleUrls: ['./email-grid.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: false,
 })
-export class EmailGridComponent implements OnInit {
-  @ViewChild('emailgrid') public emailgrid!: GridComponent;
-
-  public commands!: CommandModel[];
-  organizationId!: number;
-  entityId: number = 0;
-  errorMessage = '';
-  gridtitle: string = 'correos electrónicos';
-  gridHeight = sharedSetting.formGridHeight;
-
-  selectedEmail: IEmail | undefined;
+export class EmailGridComponent implements OnInit, OnDestroy {
+  @ViewChild('emailgrid') emailgrid?: GridComponent;
+  @ViewChild('emailForm') emailForm?: NgForm;
 
   emails$!: Observable<IEmail[]>;
-
   enabled$!: Observable<boolean>;
 
-  toolbar: ToolbarItems[] | object = EntityToolbar.map((elem) => ({
-    ...elem,
-    template: elem.template
-      ? `<label class='grid-label' id='title-grid'>${this.gridtitle}</label>`
-      : undefined,
-    align: elem.align ? elem.align : undefined,
-  }));
+  gridHeight = sharedSetting.formGridHeight;
+  gridEnabled = false;
+  organizationId = 0;
+  entityId = 0;
+
+  emailData: IEmail = this.createEmptyEmail();
+
+  toolbar: ToolbarItems[] = [];
+  editSettings: EditSettingsModel = {
+    allowAdding: false,
+    allowEditing: false,
+    allowDeleting: false,
+    mode: 'Dialog',
+  };
+
+  private readonly destroy$ = new Subject<void>();
 
   constructor(
     private emailService: EmailService,
     private applicationService: ApplicationService,
-    private toastService: ToastService
+    private toastService: ToastService,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
-    this.applicationService.WhenReady(
-      () => this.emailgrid,
-      () =>
-        this.applicationService.WhenReady(
-          () => this.emailgrid.toolbarModule,
-          () => {
-            this.emailgrid.toolbarModule.enableItems(['add'], true);
-            this.gridtitle = 'correos electrónicos';
-            this.emailgrid.element.classList.add('disablegrid');
-            document.getElementById('emailgrid')?.classList.add('wrapper');
-            this.commands = [
-              {
-                type: 'Delete',
-                buttonOption: { cssClass: 'e-btn', iconCss: 'e-trash e-icons' },
-              },
-            ];
-          }
-        )
-    );
+    this.enabled$ = this.applicationService.enableEmailChildGridAction$;
 
     this.emails$ = combineLatest([
       this.emailService.emailWithCRUD$,
       this.applicationService.enableEmailChildGridAction$,
     ]).pipe(
-      map(([emails, enabled]) => emails.filter(Boolean)),
+      map(([emails]) => emails.filter(Boolean)),
       catchError((err) => {
         this.toastService.showMyToast(err, toastType.error);
         return EMPTY;
       })
     );
 
-    this.enabled$ = this.applicationService.enableEmailChildGridAction$.pipe(
-      tap((enabled) => {
-        if (this.emailgrid) {
-          if (!enabled) {
-            this.emailgrid.element.classList.add('disablegrid');
-            document.getElementById('email-grid')?.classList.add('wrapper');
-          } else {
-            this.emailgrid.element.classList.remove('disablegrid');
-            document.getElementById('email-grid')?.classList.remove('wrapper');
-          }
+    combineLatest([
+      this.applicationService.enableEmailChildGridAction$,
+      this.applicationService.organizationIdSelectedAction$,
+    ])
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(([editing, organizationId]) => {
+        this.organizationId = organizationId ?? 0;
+        this.gridEnabled = !!editing && this.organizationId > 0;
+        this.applyEditState();
+        this.cdr.markForCheck();
+      });
+
+    this.applicationService.entitySelectedAction$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((entityId) => {
+        this.entityId = entityId ?? 0;
+      });
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  actionBegin(args: SaveEventArgs): void {
+    const needsEditMode =
+      args.requestType === 'beginEdit' ||
+      args.requestType === 'add' ||
+      args.requestType === 'save' ||
+      args.requestType === 'delete';
+
+    if (needsEditMode && !this.gridEnabled) {
+      args.cancel = true;
+      this.toastService.showMyToast(
+        'Debe editar la organización para gestionar correos',
+        toastType.warning
+      );
+      return;
+    }
+
+    if (args.requestType === 'beginEdit' || args.requestType === 'add') {
+      const row = (args.rowData ?? {}) as Partial<IEmail>;
+      this.emailData = {
+        ...this.createEmptyEmail(),
+        ...row,
+        organizationId: this.organizationId,
+        entityId: this.entityId || row.entityId || 0,
+      };
+      this.cdr.markForCheck();
+    }
+
+    if (args.requestType === 'save') {
+      if (this.emailForm?.valid) {
+        const payload: IEmail = {
+          ...this.emailData,
+          organizationId: this.organizationId,
+          entityId: this.entityId,
+        };
+        args.data = payload;
+
+        if (payload.emailId && payload.emailId > 0) {
+          this.emailService.updateEmail(payload);
+        } else {
+          this.emailService.addEmail(payload);
         }
-      })
-    );
+      } else {
+        args.cancel = true;
+      }
+    }
 
-    this.organizationId = this.emailService.organizationId;
-
-    this.applicationService.entitySelected$.subscribe((entity) => {
-      this.entityId = entity;
-    });
+    if (args.requestType === 'delete') {
+      const row = (args.data ?? {}) as IEmail;
+      if (row.emailId > 0) {
+        this.emailService.deleteEmail(row);
+      }
+    }
   }
 
-  onRowSelected(args: RowSelectEventArgs): void {
-    this.selectedEmail = (args.data ? args.data : []) as IEmail;
-    this.emailService.emailSelected(this.selectedEmail);
-    this.applicationService.entitySelected(this.selectedEmail.emailId);
+  actionComplete(args: DialogEditEventArgs): void {
+    if (args.requestType === 'beginEdit' || args.requestType === 'add') {
+      const dialog = args.dialog as { header?: string } | undefined;
+      if (dialog) {
+        dialog.header =
+          args.requestType === 'add' ? 'Agregar correo' : 'Editar correo';
+      }
+    }
   }
 
-  onRecordDoubleClick(args: RecordDoubleClickEventArgs): void {
-    this.selectedEmail = args.rowData as IEmail;
-    this.emailService.emailSelected(this.selectedEmail);
-    this.applicationService.enableDetailForm(childgrid.Email, true);
+  private applyEditState(): void {
+    const enabled = this.gridEnabled;
+    this.toolbar = enabled ? ['Add', 'Edit', 'Delete'] : [];
+    this.editSettings = {
+      allowAdding: enabled,
+      allowEditing: enabled,
+      allowDeleting: enabled,
+      mode: 'Dialog',
+    };
+
+    if (this.emailgrid) {
+      this.emailgrid.toolbar = this.toolbar;
+      this.emailgrid.editSettings = { ...this.editSettings };
+    }
   }
 
-  onToolbarClick(args: ClickEventArgs): void {
-    const address: IEmail = {
+  private createEmptyEmail(): IEmail {
+    return {
       emailId: 0,
       emailAddress: '',
       entityId: this.entityId,
       organizationId: this.organizationId,
     };
-    const target: HTMLElement = args.originalEvent.target as HTMLElement;
-    if (target.parentElement?.id === 'add') {
-      this.emailService.emailSelected(address);
-      this.applicationService.enableDetailForm(childgrid.Email, true);
-      args.cancel = true;
-    }
-  }
-
-  commandClick(args: CommandClickEventArgs): void {
-    if (args.target?.title == 'Delete' && this.selectedEmail) {
-      this.emailService.deleteEmail(this.selectedEmail);
-    }
   }
 }

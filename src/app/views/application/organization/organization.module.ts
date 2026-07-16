@@ -5,18 +5,19 @@ import { routes } from './_routes';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { OrganizationComponent } from '@views/application/organization/organization-grid';
 import { OrganizationDetailComponent } from './organization-detail/organization-detail';
-import { OrganizationDetailInputComponent } from './organization-detail-input/organization-detail-input';
+import { OrganizationTaxesComponent } from './organization-taxes/organization-taxes';
+import { OrganizationRetentionsComponent } from './organization-retentions/organization-retentions';
+import { OrganizationExchangesComponent } from './organization-exchanges/organization-exchanges';
+import { OrganizationParametersComponent } from './organization-parameters/organization-parameters';
+import { OrganizationCreditsComponent } from './organization-credits/organization-credits';
 // Syncfusion
 import { GridAllModule } from '@syncfusion/ej2-angular-grids';
 import {
   ToolbarModule,
   TabModule, 
-  TabComponent,
-  TabItemsDirective,
-  TabItemDirective,
 } from '@syncfusion/ej2-angular-navigations';
-import { TextBoxModule,  MaskedTextBoxModule } from '@syncfusion/ej2-angular-inputs';
-import { DropDownListModule } from '@syncfusion/ej2-angular-dropdowns';
+import { TextBoxModule,  MaskedTextBoxModule, NumericTextBoxModule } from '@syncfusion/ej2-angular-inputs';
+import { DropDownListModule, MultiSelectModule } from '@syncfusion/ej2-angular-dropdowns';
 import { ButtonModule, SwitchModule } from '@syncfusion/ej2-angular-buttons';
 
 import { DatePickerModule } from '@syncfusion/ej2-angular-calendars';
@@ -25,11 +26,8 @@ import { enableRipple } from '@syncfusion/ej2-base';
 
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 
-import { AddressComponent } from '@shared/components/address/address-detail';
 import { AddressGridComponent } from '@shared/components/address/address-grid';
-import { EmailComponent } from '@shared/components/email/email-detail';
 import { EmailGridComponent } from '@shared/components/email/email-grid';
-import { PhoneComponent } from '@shared/components/phones/phone-detail';
 import { PhoneGridComponent } from '@shared/components/phones/phone-grid';
 
 enableRipple(true);
@@ -38,12 +36,13 @@ enableRipple(true);
   declarations: [
     OrganizationComponent,
     OrganizationDetailComponent,
-    OrganizationDetailInputComponent,
-    AddressComponent, 
+    OrganizationTaxesComponent,
+    OrganizationRetentionsComponent,
+    OrganizationExchangesComponent,
+    OrganizationParametersComponent,
+    OrganizationCreditsComponent,
     AddressGridComponent,
-    EmailComponent,
     EmailGridComponent, 
-    PhoneComponent,
     PhoneGridComponent
   ],
   imports: [
@@ -54,8 +53,10 @@ enableRipple(true);
     TabModule, 
     GridAllModule,
     TextBoxModule,
-    MaskedTextBoxModule, 
+    MaskedTextBoxModule,
+    NumericTextBoxModule, 
     DropDownListModule,
+    MultiSelectModule,
     SwitchModule,
     DatePickerModule,
     ButtonModule,

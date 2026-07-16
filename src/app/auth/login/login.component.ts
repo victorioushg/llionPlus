@@ -11,6 +11,8 @@ import {
 import { AuthenticatedResponse } from '@shared/models/authenticated-response.model';
 import { ToastService } from '@shared/services/toastService';
 import { toastType } from '@shared/enums/enums';
+import { ApplicationService } from '@shared/services/applicattionService';
+import { User } from '@shared/models/User';
 
 @Component({
   selector: 'llion-login',
@@ -28,7 +30,8 @@ export class LoginComponent implements OnInit {
     private formBuilder: FormBuilder,
     private router: Router,
     private http: HttpClient,
-    private toast: ToastService
+    private toast: ToastService,
+    private applicationService: ApplicationService
   ) {
     enableRipple(true);
   }
@@ -56,11 +59,31 @@ export class LoginComponent implements OnInit {
           next: (response: AuthenticatedResponse) => {
             const token = response.token;
             localStorage.setItem('jwt', token);
-            this.credentials.password = '';
+
+            const currentUser: User = {
+              username: this.credentials.username,
+              password: '',
+              token,
+              userId: response.userId,
+              organizations: response.organizations ?? [],
+              defaultOrganizationId: response.defaultOrganizationId ?? 0,
+              defaultOrganizationName: response.defaultOrganizationName ?? '',
+              workingOrganizationId: response.defaultOrganizationId ?? 0,
+              workingOrganizationName: response.defaultOrganizationName ?? '',
+            };
+
             localStorage.setItem(
               'currentLlionUser',
-              JSON.stringify(this.credentials)
+              JSON.stringify(currentUser)
             );
+
+            if (currentUser.workingOrganizationId) {
+              this.applicationService.setWorkingOrganization(
+                currentUser.workingOrganizationId,
+                currentUser.workingOrganizationName ?? ''
+              );
+            }
+
             this.invalidLogin = false;
             this.router.navigate(['/']);
           },

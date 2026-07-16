@@ -1,0 +1,119 @@
+<div class="wrapper" [class.parameters-grid-disabled]="!parametersGridEnabled">
+  <div id="organization-parameters-grid">
+    <h6 class="detail-section-title">Parámetros y contadores</h6>
+    <ejs-grid
+      #parametersgrid
+      [dataSource]="(parameters$ | async) || []"
+      [toolbar]="parametersToolbar"
+      [editSettings]="parametersEditSettings"
+      [cssClass]="parametersGridEnabled ? '' : 'disablegrid'"
+      [height]="parametersGridHeight"
+      [rowHeight]="parametersGridRowHeight"
+      [headerHeight]="parametersGridHeaderHeight"
+      [width]="'100%'"
+      clipMode="EllipsisWithTooltip"
+      (actionBegin)="actionBegin($event)"
+      (actionComplete)="actionComplete($event)"
+    >
+      <e-columns>
+        <e-column
+          field="module"
+          headerText="Módulo"
+          width="18%"
+        ></e-column>
+        <e-column
+          field="description"
+          headerText="Descripción"
+          width="34%"
+        ></e-column>
+        <e-column
+          field="parameterType"
+          headerText="Tipo"
+          width="18%"
+        ></e-column>
+        <e-column
+          field="value"
+          headerText="Valor"
+          width="30%"
+        ></e-column>
+        <e-column
+          field="parameterId"
+          [isPrimaryKey]="true"
+          [visible]="false"
+        ></e-column>
+        <e-column field="organizationId" [visible]="false"></e-column>
+      </e-columns>
+
+      <ng-template #editSettingsTemplate let-data>
+        <div ngForm #parameterForm="ngForm" class="parameter-edit-dialog">
+          <input
+            type="hidden"
+            name="parameterId"
+            [(ngModel)]="parameterData.parameterId"
+          />
+          <input
+            type="hidden"
+            name="organizationId"
+            [(ngModel)]="parameterData.organizationId"
+          />
+
+          <div class="row">
+            <div class="col-md-6">
+              <ejs-dropdownlist
+                id="module"
+                name="module"
+                [(ngModel)]="parameterData.module"
+                [dataSource]="(origins$ | async) || []"
+                [fields]="moduleFields"
+                placeholder="Módulo"
+                floatLabelType="Always"
+                [allowFiltering]="true"
+                popupWidth="320px"
+                [required]="true"
+              ></ejs-dropdownlist>
+            </div>
+            <div class="col-md-6">
+              <ejs-dropdownlist
+                id="parameterType"
+                name="parameterType"
+                [(ngModel)]="parameterData.parameterType"
+                [dataSource]="(parameterTypes$ | async) || []"
+                [fields]="parameterTypeFields"
+                placeholder="Tipo"
+                floatLabelType="Always"
+                [allowFiltering]="true"
+                [required]="true"
+              ></ejs-dropdownlist>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-md-12">
+              <ejs-textbox
+                id="description"
+                name="description"
+                [(ngModel)]="parameterData.description"
+                placeholder="Descripción"
+                floatLabelType="Always"
+                [required]="true"
+              ></ejs-textbox>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-md-12">
+              <ejs-textbox
+                id="value"
+                name="value"
+                [(ngModel)]="parameterData.value"
+                placeholder="Valor"
+                floatLabelType="Always"
+                [required]="true"
+              ></ejs-textbox>
+            </div>
+          </div>
+        </div>
+      </ng-template>
+    </ejs-grid>
+  </div>
+</div>

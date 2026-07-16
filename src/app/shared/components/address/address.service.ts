@@ -11,6 +11,7 @@ import {
   Observable,
   Subject,
   catchError,
+  combineLatest,
   concatMap,
   map,
   merge,
@@ -102,20 +103,26 @@ export class AddressService {
       },
     );
 
-    this.addressesByEntityId$ =
-      this.applicationService.entitySelectedAction$.pipe(
-        switchMap((selectedEntity) => {
-          return this.http
-            .get<IApiResponse<IAddress[]>>(
-              `${this.apiUrl}addresses/${selectedEntity}/${this.organizationId}`
-            )
-            .pipe(
-              map((data: IApiResponse) => {
-                return data.result as IAddress[];
-              })
-            );
-        })
-      );
+    this.addressesByEntityId$ = combineLatest([
+      this.applicationService.entitySelectedAction$,
+      this.applicationService.organizationIdSelectedAction$,
+    ]).pipe(
+      switchMap(([selectedEntity, organizationId]) => {
+        this.organizationId = organizationId ?? 0;
+        if (!selectedEntity || !organizationId || organizationId <= 0) {
+          return of([] as IAddress[]);
+        }
+        return this.http
+          .get<IApiResponse<IAddress[]>>(
+            `${this.apiUrl}addresses/${selectedEntity}/${organizationId}`
+          )
+          .pipe(
+            map((data: IApiResponse) => {
+              return data.result as IAddress[];
+            })
+          );
+      })
+    );
 
     this.addressTypes$ = this.http
       .get<IApiResponse<IAddressType[]>>(`${this.apiUrl}addressestypes`)

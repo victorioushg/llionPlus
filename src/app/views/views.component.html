@@ -26,6 +26,9 @@
     <div id="hamburger-b">
       <a id="title-path">{{ title }}</a>
       <div id="system-date">
+        <span *ngIf="workingOrganizationName" id="working-organization">
+          {{ workingOrganizationName }}
+        </span>
         {{ systemDate | date : "MMM, dd yyyy" }}
         {{ systemDate | date : "h:mm:ss a" }}
       </div>

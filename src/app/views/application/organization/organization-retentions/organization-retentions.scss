@@ -1,0 +1,95 @@
+@use 'variables' as *;
+@use '../child-grid-toolbar' as toolbar;
+
+:host {
+  display: block;
+  width: 100%;
+}
+
+.wrapper {
+  width: 100%;
+
+  &.retentions-grid-disabled {
+    pointer-events: none;
+    opacity: 0.65;
+  }
+}
+
+#organization-retentions-grid {
+  width: 100%;
+  max-width: 100%;
+}
+
+.detail-section-title {
+  margin: 0 0 8px;
+  font-weight: 600;
+  color: $llion-color-font;
+}
+
+::ng-deep #organization-retentions-grid .e-grid {
+  width: 100% !important;
+  max-width: 100%;
+  table-layout: fixed;
+
+  .e-gridheader .e-headercell,
+  .e-gridheader .e-headercelldiv {
+    height: 32px !important;
+    max-height: 32px !important;
+    line-height: 32px;
+    padding-top: 0;
+    padding-bottom: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .e-headercelldiv {
+    font-size: 13px;
+  }
+
+  .e-rowcell {
+    padding-top: 6px;
+    padding-bottom: 6px;
+    line-height: normal;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .e-rowcell .e-checkbox-wrapper,
+  .e-rowcell .e-css.e-checkbox-wrapper {
+    margin-top: 0;
+    vertical-align: middle;
+  }
+}
+
+@include toolbar.child-grid-toolbar('organization-retentions-grid');
+
+::ng-deep .retention-edit-dialog {
+  padding: 8px 4px 4px;
+
+  .row {
+    margin-bottom: 12px;
+  }
+
+  .switches-col {
+    display: flex;
+    align-items: flex-end;
+    padding-bottom: 4px;
+  }
+
+  .switch-label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    color: $llion-color-font;
+    margin: 0;
+  }
+
+  .e-float-input,
+  .e-control-wrapper,
+  .e-dropdownlist {
+    width: 100%;
+  }
+}

@@ -109,7 +109,14 @@ h6 {
   content: "\e88b";
 }
 
-// Toast
+// Toast — pastel gradients
+.e-toast-container .e-toast {
+  border: 1px solid transparent !important;
+  border-radius: 12px !important;
+  box-shadow: 0 8px 24px rgba(36, 64, 89, 0.12) !important;
+  overflow: hidden;
+}
+
 .e-toast-container .e-toast .e-toast-message .e-toast-title {
   font-family: "MPlus1p";
   font-size: 16px !important;
@@ -128,73 +135,150 @@ h6 {
 }
 
 .e-toast-container .e-toast.e-toast-success {
-  background-color: $llion-color-success !important;
-  color: $llion-color-success-text !important;
+  background: linear-gradient(
+    135deg,
+    #e8f8ef 0%,
+    #d4f0e2 45%,
+    #c5ebd8 100%
+  ) !important;
+  border-color: #b7e0cb !important;
+  color: #2f6b4f !important;
 }
 
 .e-toast-container .e-toast.e-toast-success:hover {
-  background-color: $llion-color-success !important;
-  box-shadow: 0 3px 6px 0 rgba(0, 0, 0, 0.26);
-  color: $llion-color-success-text !important;
+  background: linear-gradient(
+    135deg,
+    #dff5e9 0%,
+    #c8ebd9 50%,
+    #b6e4cf 100%
+  ) !important;
+  box-shadow: 0 10px 28px rgba(47, 107, 79, 0.18) !important;
+  color: #2f6b4f !important;
+}
+
+.e-toast-container .e-toast.e-toast-success .e-toast-icon,
+.e-toast-container .e-toast.e-toast-success .e-toast-message,
+.e-toast-container .e-toast.e-toast-success .e-toast-content {
+  color: #2f6b4f !important;
+}
+
+.e-toast-container .e-toast.e-toast-success .e-toast-progress {
+  background: linear-gradient(90deg, #9ad8b8, #6fc49a) !important;
 }
 
 .e-toast-container .e-toast.e-toast-info {
-  background-color: $llion-color-info !important;
-  color: $llion-color-info-text !important;
+  background: linear-gradient(
+    135deg,
+    #efe8ff 0%,
+    #e4d7ff 45%,
+    #d9cbff 100%
+  ) !important;
+  border-color: #d2c2f5 !important;
+  color: #5a4a8a !important;
 }
 
 .e-toast-container .e-toast.e-toast-info:hover {
-  background-color: $llion-color-info !important;
-  box-shadow: 0 3px 6px 0 rgba(0, 0, 0, 0.26);
-  color: $llion-color-info-text !important;
+  background: linear-gradient(
+    135deg,
+    #e8deff 0%,
+    #dccfff 50%,
+    #d0c0ff 100%
+  ) !important;
+  box-shadow: 0 10px 28px rgba(90, 74, 138, 0.18) !important;
+  color: #5a4a8a !important;
+}
+
+.e-toast-container .e-toast.e-toast-info .e-toast-icon,
+.e-toast-container .e-toast.e-toast-info .e-toast-message,
+.e-toast-container .e-toast.e-toast-info .e-toast-content {
+  color: #5a4a8a !important;
+}
+
+.e-toast-container .e-toast.e-toast-info .e-toast-progress {
+  background: linear-gradient(90deg, #c4b0f0, #9b84d9) !important;
 }
 
 .e-toast-container .e-toast.e-toast-warning {
-  background-color: $llion-color-warning !important;
-  color: $llion-color-warning-text !important;
+  background: linear-gradient(
+    135deg,
+    #fff4e5 0%,
+    #ffe8cc 45%,
+    #ffdfb8 100%
+  ) !important;
+  border-color: #f5d5a8 !important;
+  color: #8a5a20 !important;
 }
 
 .e-toast-container .e-toast.e-toast-warning:hover {
-  background-color: $llion-color-warning !important;
-  box-shadow: 0 3px 6px 0 rgba(0, 0, 0, 0.26);
-  color: $llion-color-warning-text !important;
+  background: linear-gradient(
+    135deg,
+    #fff0db 0%,
+    #ffe1c0 50%,
+    #ffd7ad 100%
+  ) !important;
+  box-shadow: 0 10px 28px rgba(138, 90, 32, 0.16) !important;
+  color: #8a5a20 !important;
+}
+
+.e-toast-container .e-toast.e-toast-warning .e-toast-icon,
+.e-toast-container .e-toast.e-toast-warning .e-toast-message,
+.e-toast-container .e-toast.e-toast-warning .e-toast-content {
+  color: #8a5a20 !important;
+}
+
+.e-toast-container .e-toast.e-toast-warning .e-toast-progress {
+  background: linear-gradient(90deg, #f0c48a, #e0a85c) !important;
 }
 
 .e-toast-container .e-toast.e-toast-danger {
-  background-color: $llion-color-error !important;
-  color: $llion-color-error-text !important;
+  background: linear-gradient(
+    135deg,
+    #ffe9ee 0%,
+    #ffd6df 45%,
+    #ffc9d5 100%
+  ) !important;
+  border-color: #f5b8c6 !important;
+  color: #8a3a4a !important;
 }
 
 .e-toast-container .e-toast.e-toast-danger:hover {
-  background-color: $llion-color-error !important;
-  box-shadow: 0 3px 6px 0 rgba(0, 0, 0, 0.26);
-  color: $llion-color-error-text !important;
+  background: linear-gradient(
+    135deg,
+    #ffe0e8 0%,
+    #ffccd8 50%,
+    #ffbfcd 100%
+  ) !important;
+  box-shadow: 0 10px 28px rgba(138, 58, 74, 0.16) !important;
+  color: #8a3a4a !important;
+}
+
+.e-toast-container .e-toast.e-toast-danger .e-toast-icon,
+.e-toast-container .e-toast.e-toast-danger .e-toast-message,
+.e-toast-container .e-toast.e-toast-danger .e-toast-content {
+  color: #8a3a4a !important;
+}
+
+.e-toast-container .e-toast.e-toast-danger .e-toast-progress {
+  background: linear-gradient(90deg, #f0a0b2, #e07a90) !important;
 }
 
 .e-toast-container .e-toast .e-toast-progress {
-  background-color: $llion-color-white !important; // rgb(6, 151, 214);
+  height: 3px !important;
+  opacity: 0.9;
 }
 
 .e-toast-container .e-toast .e-toast-actions .e-btn {
-  background-color: $llion-color-white !important; // transparent;
-  border-color: $llion-color-white !important; // transparent;
+  background-color: rgba(255, 255, 255, 0.55) !important;
+  border-color: transparent !important;
   box-shadow: none;
-  color: #2fbcf9;
+  color: inherit;
 }
 
-.e-toast-container .e-toast .e-toast-actions .e-btn:hover {
-  background-color: $llion-color-white !important; // transparent;
-  color: #2fbcf9;
-}
-
-.e-toast-container .e-toast .e-toast-actions .e-btn:focus {
-  background-color: $llion-color-white !important; // transparent;
-  color: #2fbcf9;
-}
-
+.e-toast-container .e-toast .e-toast-actions .e-btn:hover,
+.e-toast-container .e-toast .e-toast-actions .e-btn:focus,
 .e-toast-container .e-toast .e-toast-actions .e-btn:active {
-  background-color: $llion-color-white !important; // transparent;
-  color: #2fbcf9;
+  background-color: rgba(255, 255, 255, 0.8) !important;
+  color: inherit;
 }
 
 // Grids 
@@ -337,4 +421,60 @@ h6 {
   -webkit-user-select: none;
   user-select: none;
   width: 40px;
+}
+
+/* ===== Llion Syncfusion spinner (logo + primary gradient ring) ===== */
+.llion-spinner {
+  position: relative;
+  width: 96px;
+  height: 96px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.llion-spinner-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: conic-gradient(
+    from 0deg,
+    rgba(103, 80, 164, 0) 0%,
+    rgba(103, 80, 164, 0.15) 20%,
+    $llion-color-primary 55%,
+    rgba(103, 80, 164, 0.9) 78%,
+    rgba(103, 80, 164, 0) 100%
+  );
+  -webkit-mask: radial-gradient(
+    farthest-side,
+    transparent calc(100% - 5px),
+    #000 0
+  );
+  mask: radial-gradient(farthest-side, transparent calc(100% - 5px), #000 0);
+  animation: llion-spinner-rotate 0.9s linear infinite;
+}
+
+.llion-spinner-logo {
+  position: relative;
+  z-index: 1;
+  width: 44px;
+  height: 44px;
+  object-fit: contain;
+  pointer-events: none;
+}
+
+@keyframes llion-spinner-rotate {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.llion-global-spinner.e-spinner-pane,
+.e-spinner-pane.llion-global-spinner {
+  background: rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(1px);
+}
+
+.e-spinner-pane .e-spinner-inner .llion-spinner {
+  margin: 0 auto;
 }

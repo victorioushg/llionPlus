@@ -1,0 +1,28 @@
+@use 'variables' as *;
+@use '../child-grid-toolbar' as toolbar;
+
+:host {
+  display: block;
+  width: 100%;
+}
+
+.wrapper {
+  width: 100%;
+}
+
+#merchandise-uom-grid {
+  width: 100%;
+}
+
+::ng-deep #merchandise-uom-grid .e-grid .e-headercell .e-headercelldiv {
+  font-size: 13px;
+}
+
+.uom-grid-title,
+.detail-section-title {
+  margin: 0 0 8px;
+  font-weight: 600;
+  color: $llion-color-font;
+}
+
+@include toolbar.child-grid-toolbar('merchandise-uom-grid');

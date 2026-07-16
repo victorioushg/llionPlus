@@ -1,25 +1,148 @@
-<div id="address-grid">
+<div id="address-grid" [class.wrapper]="!gridEnabled">
+  <h6 class="detail-section-title">Direcciones</h6>
   <ejs-grid
     #grid
-    [dataSource]="addresses$ | async"
-    [height]="gridHeight"
+    [dataSource]="(addresses$ | async) || []"
     [toolbar]="toolbar"
-    [allowTextWrap]="enabled$ | async" 
-    (toolbarClick)="onToolbarClick($event)"
-    (recordDoubleClick)="onRecordDoubleClick($event)"
+    [editSettings]="editSettings"
+    [cssClass]="gridEnabled ? '' : 'disablegrid'"
+    [height]="gridHeight"
+    [width]="'100%'"
+    clipMode="EllipsisWithTooltip"
+    (actionBegin)="actionBegin($event)"
+    (actionComplete)="actionComplete($event)"
   >
     <e-columns>
-      <e-column width="50" [commands]="commands"></e-column>
       <e-column
         field="displayAddress"
         headerText="Dirección"
-        width="250"
+        width="70%"
+      ></e-column>
+      <e-column
+        field="addressTypeId"
+        headerText="Tipo"
+        width="30%"
       ></e-column>
       <e-column
         field="addressId"
         [isPrimaryKey]="true"
         [visible]="false"
       ></e-column>
+      <e-column field="organizationId" [visible]="false"></e-column>
+      <e-column field="entityId" [visible]="false"></e-column>
     </e-columns>
+
+    <ng-template #editSettingsTemplate let-data>
+      <div ngForm #addressForm="ngForm" class="child-edit-dialog">
+        <input
+          type="hidden"
+          name="addressId"
+          [(ngModel)]="addressData.addressId"
+        />
+        <input
+          type="hidden"
+          name="organizationId"
+          [(ngModel)]="addressData.organizationId"
+        />
+        <input
+          type="hidden"
+          name="entityId"
+          [(ngModel)]="addressData.entityId"
+        />
+
+        <div class="row">
+          <div class="col-md-12">
+            <ejs-textbox
+              id="address1"
+              name="address1"
+              [(ngModel)]="addressData.address1"
+              placeholder="dirección"
+              floatLabelType="Always"
+              [required]="true"
+            ></ejs-textbox>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-md-12">
+            <ejs-textbox
+              id="address2"
+              name="address2"
+              [(ngModel)]="addressData.address2"
+              placeholder="dirección (línea 2)"
+              floatLabelType="Always"
+            ></ejs-textbox>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-md-6">
+            <ejs-dropdownlist
+              id="addressTypeId"
+              name="addressTypeId"
+              [(ngModel)]="addressData.addressTypeId"
+              [dataSource]="(addressTypes$ | async) || []"
+              [fields]="addressTypeFields"
+              placeholder="tipo de dirección"
+              floatLabelType="Always"
+              [allowFiltering]="true"
+              [required]="true"
+            ></ejs-dropdownlist>
+          </div>
+          <div class="col-md-6">
+            <ejs-textbox
+              id="postalCode"
+              name="postalCode"
+              [(ngModel)]="addressData.postalCode"
+              placeholder="código postal"
+              floatLabelType="Always"
+              [required]="true"
+            ></ejs-textbox>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-md-6">
+            <ejs-textbox
+              id="city"
+              name="city"
+              [(ngModel)]="addressData.city"
+              placeholder="ciudad/pueblo/aldea"
+              floatLabelType="Always"
+              [required]="true"
+            ></ejs-textbox>
+          </div>
+          <div class="col-md-6">
+            <ejs-textbox
+              id="county"
+              name="county"
+              [(ngModel)]="addressData.county"
+              placeholder="municipio/cantón"
+              floatLabelType="Always"
+              [required]="true"
+            ></ejs-textbox>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-md-6">
+            <ejs-textbox
+              id="state"
+              name="state"
+              [(ngModel)]="addressData.state"
+              placeholder="estado/departamento"
+              floatLabelType="Always"
+              [required]="true"
+            ></ejs-textbox>
+          </div>
+          <div class="col-md-6">
+            <ejs-textbox
+              id="country"
+              name="country"
+              [(ngModel)]="addressData.country"
+              placeholder="país"
+              floatLabelType="Always"
+              [required]="true"
+            ></ejs-textbox>
+          </div>
+        </div>
+      </div>
+    </ng-template>
   </ejs-grid>
 </div>

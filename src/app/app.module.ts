@@ -11,16 +11,14 @@ import { MaskedTextBoxModule, TextBoxModule } from '@syncfusion/ej2-angular-inpu
 import {
   SidebarModule,
   TreeViewModule,
-  TabComponent,
-  TabItemsDirective,
-  TabItemDirective,
   TabModule,
 } from '@syncfusion/ej2-angular-navigations';
-import { GridModule, EditService, ToolbarService } from '@syncfusion/ej2-angular-grids';
 
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { ToastService } from './shared/services/toastService';
 import { HttpErrorInterceptor } from './http-error.interceptor';
+import { LoadingInterceptor } from '@shared/Interceptors/loading.interceptor';
+import { SpinnerService } from '@shared/services/spinner.service';
 import { ROUTES } from './_routes';
 import { LoginComponent } from '@auth/login/login.component';
 import { AppComponent } from './app.component';
@@ -33,11 +31,11 @@ export function tokenGetter() {
 
 @NgModule({
   declarations: [
-    AppComponent, 
-    LoginComponent
-  ], // Only declare non-standalone components
+    AppComponent,
+    LoginComponent,
+  ],
   imports: [
-    BrowserModule, 
+    BrowserModule,
     RouterModule.forRoot(ROUTES),
     StoreModule.forRoot({}),
     FormsModule,
@@ -48,27 +46,24 @@ export function tokenGetter() {
         tokenGetter: tokenGetter,
       },
     }),
-    DialogModule, 
+    DialogModule,
     ButtonModule,
     TextBoxModule,
-    MaskedTextBoxModule, 
+    MaskedTextBoxModule,
     SidebarModule,
     TreeViewModule,
     FontAwesomeModule,
-    TabModule, 
+    TabModule,
   ],
   exports: [RouterModule],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
   providers: [
     ToastService,
-    { provide: HTTP_INTERCEPTORS, useClass: HttpErrorInterceptor, multi: true },
+    SpinnerService,
     ErrorHandlerService,
-    {
-      provide: HTTP_INTERCEPTORS,
-      useClass: HttpErrorInterceptor,
-      multi: true
-    }
+    { provide: HTTP_INTERCEPTORS, useClass: LoadingInterceptor, multi: true },
+    { provide: HTTP_INTERCEPTORS, useClass: HttpErrorInterceptor, multi: true },
   ],
-  bootstrap: [AppComponent], 
+  bootstrap: [AppComponent],
 })
 export class AppModule {}

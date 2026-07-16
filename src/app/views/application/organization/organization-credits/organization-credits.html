@@ -1,0 +1,159 @@
+<div class="wrapper" [class.credits-grid-disabled]="!creditsGridEnabled">
+  <div id="organization-credits-grid">
+    <h6 class="detail-section-title">Créditos y débitos</h6>
+    <ejs-grid
+      #creditsgrid
+      [dataSource]="(credits$ | async) || []"
+      [toolbar]="creditsToolbar"
+      [editSettings]="creditsEditSettings"
+      [cssClass]="creditsGridEnabled ? '' : 'disablegrid'"
+      [height]="creditsGridHeight"
+      [rowHeight]="creditsGridRowHeight"
+      [headerHeight]="creditsGridHeaderHeight"
+      [width]="'100%'"
+      clipMode="EllipsisWithTooltip"
+      (actionBegin)="actionBegin($event)"
+      (actionComplete)="actionComplete($event)"
+    >
+      <e-columns>
+        <e-column field="code" headerText="Código" width="14%"></e-column>
+        <e-column
+          field="description"
+          headerText="Descripción"
+          width="36%"
+        ></e-column>
+        <e-column
+          field="creditDebitFlag"
+          headerText="Tipo"
+          width="14%"
+          [valueAccessor]="creditTypeAccessor"
+        ></e-column>
+        <e-column
+          field="movesInventory"
+          headerText="Inventario"
+          width="12%"
+          displayAsCheckBox="true"
+          textAlign="Center"
+          type="boolean"
+        ></e-column>
+        <e-column
+          field="adjustPrice"
+          headerText="Ajusta precio"
+          width="12%"
+          displayAsCheckBox="true"
+          textAlign="Center"
+          type="boolean"
+        ></e-column>
+        <e-column
+          field="goodCondition"
+          headerText="Buen estado"
+          width="12%"
+          displayAsCheckBox="true"
+          textAlign="Center"
+          type="boolean"
+        ></e-column>
+        <e-column
+          field="creditDebitId"
+          [isPrimaryKey]="true"
+          [visible]="false"
+        ></e-column>
+        <e-column field="organizationId" [visible]="false"></e-column>
+        <e-column field="validateSalesUnit" [visible]="false"></e-column>
+      </e-columns>
+
+      <ng-template #editSettingsTemplate let-data>
+        <div ngForm #creditForm="ngForm" class="credit-edit-dialog">
+          <input
+            type="hidden"
+            name="creditDebitId"
+            [(ngModel)]="creditData.creditDebitId"
+          />
+          <input
+            type="hidden"
+            name="organizationId"
+            [(ngModel)]="creditData.organizationId"
+          />
+
+          <div class="row">
+            <div class="col-md-4">
+              <ejs-textbox
+                id="code"
+                name="code"
+                [(ngModel)]="creditData.code"
+                placeholder="Código"
+                floatLabelType="Always"
+                [required]="true"
+              ></ejs-textbox>
+            </div>
+            <div class="col-md-8">
+              <ejs-dropdownlist
+                id="creditDebitFlag"
+                name="creditDebitFlag"
+                [(ngModel)]="creditData.creditDebitFlag"
+                [dataSource]="creditTypeOptions"
+                [fields]="creditTypeFields"
+                placeholder="Tipo"
+                floatLabelType="Always"
+                [required]="true"
+              ></ejs-dropdownlist>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-md-12">
+              <ejs-textbox
+                id="description"
+                name="description"
+                [(ngModel)]="creditData.description"
+                placeholder="Descripción"
+                floatLabelType="Always"
+                [required]="true"
+              ></ejs-textbox>
+            </div>
+          </div>
+
+          <div class="row switches-row">
+            <div class="col-md-6">
+              <label class="switch-label">
+                <ejs-switch
+                  [(ngModel)]="creditData.movesInventory"
+                  name="movesInventory"
+                ></ejs-switch>
+                Mueve inventario
+              </label>
+            </div>
+            <div class="col-md-6">
+              <label class="switch-label">
+                <ejs-switch
+                  [(ngModel)]="creditData.validateSalesUnit"
+                  name="validateSalesUnit"
+                ></ejs-switch>
+                Valida unidad de venta
+              </label>
+            </div>
+          </div>
+          <div class="row switches-row">
+            <div class="col-md-6">
+              <label class="switch-label">
+                <ejs-switch
+                  [(ngModel)]="creditData.adjustPrice"
+                  name="adjustPrice"
+                ></ejs-switch>
+                Ajusta precio
+              </label>
+            </div>
+            <div class="col-md-6">
+              <label class="switch-label">
+                <ejs-switch
+                  [(ngModel)]="creditData.goodCondition"
+                  name="goodCondition"
+                ></ejs-switch>
+                Mercancía en buen estado
+              </label>
+            </div>
+          </div>
+        </div>
+      </ng-template>
+    </ejs-grid>
+  </div>
+</div>

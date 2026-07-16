@@ -1,32 +1,36 @@
-import { IMerchandise } from "../merchandise";
+import { IMerchandise } from '../merchandise';
 
 export interface IMerchandiseMovement {
+  movementId: number;
   merchandiseId: number;
   movementDate: Date;
   movementType: string;
   documentNumber: string;
-  quantity: number;
+  quantity: number | null;
   uom: string;
-  weight?: number;
-  totalcost?: number;
-  totalcostwithdiscount?: number;
-  origin: string;
-  documentorigin: string;
-  customer_provider?: number;
-  totalsale?: number;
-  totalsalewithdiscount?: number;
-  sellerid?: number;
-  workhouseid: number;
-  block_date?: Date;
-  createdon?: Date;
-  createdby: string;
-  fiscalperiod?: number;
-  
-  accountId?: number;
-  classId?: number;
-  parentId?: number;
+  weight?: number | null;
   organizationId: number;
-  historic? : boolean; 
+  totalCost?: number | null;
+  totalCostWithDiscount?: number | null;
+  origin?: string | null;
+  documentOrigin?: string | null;
+  customer_Provider?: number | null;
+  totalSale?: number | null;
+  totalSaleWithDiscount?: number | null;
+  salesPersonId?: number | null;
+  warehouseId: number;
+  createdOn?: Date | null;
+  createdBy?: string | null;
+  accountID?: number | null;
+  classId?: number | null;
+  block_Date?: Date | null;
+  historic?: boolean | null;
+  parentID?: number | null;
+  processed?: boolean | null;
+  /** Display-only from joins (GET) */
+  salesPersonName?: string | null;
+  customerProviderName?: string | null;
+  warehouse?: string | null;
 }
 
 export interface IMerchandiseWithMovements {

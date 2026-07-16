@@ -25,19 +25,22 @@
   background-color: $llion-color-primary-container;
 }
 
-.e-grid .e-gridheader {
- // display: none;
-}
-
-.disablegrid {
+#movement-container.is-disabled,
+#movement-container.is-disabled ::ng-deep .e-grid {
   pointer-events: none;
-  opacity: 0.4;
+  opacity: 0.45;
 }
 
-.wrapper {
-  cursor: not-allowed;
-}
+::ng-deep .movement-edit-dialog {
+  padding: 8px 4px 4px;
 
-.e-checkbox-wrapper {
-  margin-top: 10px;
+  .row {
+    margin-bottom: 12px;
+  }
+
+  .e-float-input,
+  .e-control-wrapper,
+  .e-dropdownlist {
+    width: 100%;
+  }
 }

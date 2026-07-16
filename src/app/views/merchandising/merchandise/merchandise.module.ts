@@ -13,14 +13,22 @@ import { GroupTableComponent } from '@shared/components/group-table/group-table.
 import { GridAllModule } from '@syncfusion/ej2-angular-grids';
 import {
   ToolbarModule,
-  TabModule, 
+  TabModule,
   TabComponent,
   TabItemsDirective,
   TabItemDirective,
 } from '@syncfusion/ej2-angular-navigations';
-import { TextBoxModule,  MaskedTextBoxModule, NumericTextBoxModule } from '@syncfusion/ej2-angular-inputs';
+import {
+  TextBoxModule,
+  MaskedTextBoxModule,
+  NumericTextBoxModule,
+} from '@syncfusion/ej2-angular-inputs';
 import { DropDownListModule } from '@syncfusion/ej2-angular-dropdowns';
-import { ButtonModule, SwitchModule, CheckBoxModule  } from '@syncfusion/ej2-angular-buttons';
+import {
+  ButtonModule,
+  SwitchModule,
+  CheckBoxModule,
+} from '@syncfusion/ej2-angular-buttons';
 import { DatePickerModule } from '@syncfusion/ej2-angular-calendars';
 import { enableRipple } from '@syncfusion/ej2-base';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
@@ -31,31 +39,30 @@ enableRipple(true);
   declarations: [
     MerchandiseComponent,
     MerchandiseDetailComponent,
-    MerchandiseMovementComponent, 
-  
+    MerchandiseMovementComponent,
+    MerchandiseDetailInputComponent,
   ],
   imports: [
     CommonModule,
     RouterModule.forChild(routes),
     FontAwesomeModule,
     ToolbarModule,
-    TabModule, 
+    TabModule,
     GridAllModule,
     TextBoxModule,
-    MaskedTextBoxModule, 
-    NumericTextBoxModule, 
+    MaskedTextBoxModule,
+    NumericTextBoxModule,
     DropDownListModule,
     SwitchModule,
     DatePickerModule,
     ButtonModule,
-    CheckBoxModule, 
+    CheckBoxModule,
     FormsModule,
-    ReactiveFormsModule, 
-    MerchandiseDetailInputComponent,
-    GroupTableComponent
+    ReactiveFormsModule,
+    GroupTableComponent,
   ],
 
-  schemas: [CUSTOM_ELEMENTS_SCHEMA], 
+  schemas: [CUSTOM_ELEMENTS_SCHEMA],
   providers: [],
 })
 export class MerchandiseModule {}

@@ -1,10 +1,8 @@
-import { Injectable, NgZone } from '@angular/core';
+import { Injectable } from '@angular/core';
 import {
   IMerchandise,
-  IMerchandiseBrand,
-  IMerchandiseCategory,
-  IMerchandiseDivision,
-  IMerchandiseType,
+  IMerchandisePrice,
+  IMerchandiseUom,
 } from './merchandise';
 
 import {
@@ -25,7 +23,6 @@ import {
   scan,
   shareReplay,
   switchMap,
-  take,
   tap,
   BehaviorSubject,
   combineLatest,
@@ -33,7 +30,6 @@ import {
   Observable,
   of,
   Subject,
-  throwError,
   EMPTY,
   forkJoin,
 } from 'rxjs';
@@ -50,14 +46,17 @@ import { IGroup } from '@app/shared/models/group';
 })
 export class MerchandiseService {
   private merchandiseUrl = environment.API_URL + 'merchandise';
+  private merchandiseChildGridUrl = environment.API_URL + 'Merchandise';
 
-  // 
-  // 
+  //
+  //
   emptyMerchandise: IMerchandise = {} as IMerchandise;
 
-  private entityId!: number;
   private organizationId: number = 1;
-  private merchandiseId: number = 0;
+
+  get currentOrganizationId(): number {
+    return this.organizationId;
+  }
 
   merchandises$!: Observable<IMerchandise[]>;
   merchandiseBrands$!: Observable<IGroup[]>;
@@ -72,16 +71,16 @@ export class MerchandiseService {
   merchandiseWithMovements$!: Observable<IMerchandiseWithMovements>;
   merchandiseSelected$!: Observable<IMerchandise>;
   merchandiseMovements$!: Observable<IMerchandiseMovement[]>;
+  merchandiseUom$!: Observable<IMerchandiseUom[]>;
+  merchandisePrices$!: Observable<IMerchandisePrice[]>;
+  movementTypes$!: Observable<IGroup[]>;
 
-  private merchandiseIdSelectedSubject = new BehaviorSubject<number>(0);
-  merchandiseIdSelectedAction$ =
-    this.merchandiseIdSelectedSubject.asObservable();
-  merchandiseIdSelected(merchandiseId: number) {
-    this.merchandiseIdSelectedSubject.next(merchandiseId);
+  private movementsRefreshSubject = new BehaviorSubject<number>(0);
+
+  // Used by grid double-click to ensure the detail form loads.
+  merchandiseIdSelected(merchandiseId: number): void {
+    this.merchandiseSelectedSubject.next(merchandiseId);
   }
-  merchandiseIdSelected$ = this.merchandiseIdSelectedAction$.pipe(
-    tap((data: number) => {}),
-  );
 
   // To Delete
   // private enabledFormSource = new BehaviorSubject<boolean>(false);
@@ -90,11 +89,12 @@ export class MerchandiseService {
   // Action Stream for adding/updating/deleting products
   private merchandiseModifiedSubject = new Subject<Action<IMerchandise>>();
   merchandiseModifiedAction$ = this.merchandiseModifiedSubject.asObservable();
+  private merchandiseFormActionSubject = new Subject<'save' | 'cancel'>();
+  merchandiseFormAction$ = this.merchandiseFormActionSubject.asObservable();
 
   // Save the merchandise via http
   // And then create and buffer a new array of products with scan.
   merchandiseWithCRUD$!: Observable<IMerchandise[]>;
-  movementWithCRUD$!: Observable<IMerchandiseMovement[]>;
   // Enabling
   private enabledMerchandiseGridSource = new BehaviorSubject<boolean>(false);
   enableMerchandiseGridAction$: Observable<boolean> =
@@ -149,81 +149,60 @@ export class MerchandiseService {
   }
 
   private initializeObservables(): void {
-    this.applicationService.getEntityId('Merchandise').subscribe((entityId) => {
-      this.entityId = entityId;
-      this.applicationService.entitySelected(entityId);
-    });
-
     // Catalog
     this.merchandises$ = this.http
-      .get<IApiResponse<IMerchandise[]>>(`${this.merchandiseUrl}/${this.organizationId}/0`)
+      .get<
+        IApiResponse<IMerchandise[]>
+      >(`${this.merchandiseUrl}/${this.organizationId}/0`)
       .pipe(
-        map((data) => data.result),
-        catchError(this.errorHandlerService.handleError),
-      );
-
-    this.merchandiseBrands$ = this.applicationService
-      .getEntityId('Merchandise')
-      .pipe(
-        switchMap((entityId) => {
-          this.entityId = entityId;
-
-          console.log('EntityId received:', entityId);
-
-          return this.http.get<IApiResponse<IGroup[]>>(
-            `${this.merchandiseUrl}/brands/${entityId}/${this.organizationId}`,
-          );
-        }),
-        map((data) => data.result),
-        // tap(brands => {
-        //   console.log('Brands received:', brands);
-        // }),
-        catchError(this.errorHandlerService.handleError),
-        shareReplay(1),
-      );
-
-    this.merchandiseCategories$ = this.applicationService
-      .getEntityId('Merchandise')
-      .pipe(
-        switchMap((entityId) =>
-          this.http.get<IApiResponse<IGroup[]>>(
-            `${this.merchandiseUrl}/categories/${entityId}/${this.organizationId}`,
-          ),
-        ),
         map((data) => data.result),
         catchError(this.errorHandlerService.handleError),
         shareReplay(1),
       );
 
-    this.merchandiseDivisions$ = this.applicationService
-      .getEntityId('Merchandise')
+    this.merchandiseBrands$ = this.http
+      .get<IApiResponse<IGroup[]>>(
+        `${this.merchandiseUrl}/brands/${this.organizationId}`,
+      )
       .pipe(
-        switchMap((entityId) =>
-          this.http.get<IApiResponse<IGroup[]>>(
-            `${this.merchandiseUrl}/divisions/${entityId}/${this.organizationId}`,
-          ),
-        ),
         map((data) => data.result),
         catchError(this.errorHandlerService.handleError),
         shareReplay(1),
       );
 
-    this.merchandiseTypes$ = this.applicationService
-      .getEntityId('Merchandise')
+    this.merchandiseCategories$ = this.http
+      .get<IApiResponse<IGroup[]>>(
+        `${this.merchandiseUrl}/categories/${this.organizationId}`,
+      )
       .pipe(
-        switchMap((entityId) =>
-          this.http.get<IApiResponse<IGroup[]>>(
-            `${this.merchandiseUrl}/types/${entityId}`,
-          ),
-        ),
         map((data) => data.result),
         catchError(this.errorHandlerService.handleError),
         shareReplay(1),
       );
 
-    this.merchandiseWithMovements$ = this.merchandiseSelectedAction$.pipe(
-      switchMap((merchandiseId) => {
-        // nothing selected
+    this.merchandiseDivisions$ = this.http
+      .get<IApiResponse<IGroup[]>>(
+        `${this.merchandiseUrl}/divisions/${this.organizationId}`,
+      )
+      .pipe(
+        map((data) => data.result),
+        catchError(this.errorHandlerService.handleError),
+        shareReplay(1),
+      );
+
+    this.merchandiseTypes$ = this.http
+      .get<IApiResponse<IGroup[]>>(`${this.merchandiseUrl}/types`)
+      .pipe(
+        map((data) => data.result),
+        catchError(this.errorHandlerService.handleError),
+        shareReplay(1),
+      );
+
+    this.merchandiseWithMovements$ = combineLatest([
+      this.merchandiseSelectedAction$,
+      this.movementsRefreshSubject,
+    ]).pipe(
+      switchMap(([merchandiseId]) => {
         if (!merchandiseId || merchandiseId <= 0) {
           return of({
             merchandise: this.emptyMerchandise,
@@ -231,14 +210,11 @@ export class MerchandiseService {
           });
         }
 
-        // load merchandise + movements in parallel
         return forkJoin({
           merchandise: this.getMerchandise(merchandiseId),
           movements: this.getMerchandiseMovements(merchandiseId),
         });
       }),
-
-      // cache last value for all subscribers
       shareReplay(1),
     );
 
@@ -249,6 +225,32 @@ export class MerchandiseService {
 
     this.merchandiseMovements$ = this.merchandiseWithMovements$.pipe(
       map((x) => x.movements),
+    );
+
+    this.movementTypes$ = this.http
+      .get<IApiResponse<IGroup[]>>(`${this.merchandiseUrl}/movementtypes`)
+      .pipe(
+        map((data) => data.result ?? []),
+        catchError(this.errorHandlerService.handleError),
+        shareReplay(1),
+      );
+
+    this.merchandiseUom$ = this.merchandiseSelectedAction$.pipe(
+      switchMap((merchandiseId) =>
+        !merchandiseId || merchandiseId <= 0
+          ? of([])
+          : this.getMerchandiseUom(merchandiseId),
+      ),
+      shareReplay(1),
+    );
+
+    this.merchandisePrices$ = this.merchandiseSelectedAction$.pipe(
+      switchMap((merchandiseId) =>
+        !merchandiseId || merchandiseId <= 0
+          ? of([])
+          : this.getMerchandisePrices(merchandiseId),
+      ),
+      shareReplay(1),
     );
 
     this.merchandiseWithCRUD$ = merge(
@@ -268,21 +270,21 @@ export class MerchandiseService {
     );
 
     // Merchandise Movements
-  //  this.movementsWithCRUD$ = merge(
-  //     this.merchandises$,
-  //     this.merchandiseModifiedAction$.pipe(
-  //       concatMap((operation) => this.saveMerchandise(operation)),
-  //     ),
-  //   ).pipe(
-  //     scan(
-  //       (acc, value) =>
-  //         value instanceof Array
-  //           ? [...value]
-  //           : this.modifyMerchandises(acc, value),
-  //       [] as IMerchandise[],
-  //     ),
-  //     shareReplay(1),
-  //   );
+    //  this.movementsWithCRUD$ = merge(
+    //     this.merchandises$,
+    //     this.merchandiseModifiedAction$.pipe(
+    //       concatMap((operation) => this.saveMerchandise(operation)),
+    //     ),
+    //   ).pipe(
+    //     scan(
+    //       (acc, value) =>
+    //         value instanceof Array
+    //           ? [...value]
+    //           : this.modifyMerchandises(acc, value),
+    //       [] as IMerchandise[],
+    //     ),
+    //     shareReplay(1),
+    //   );
   }
 
   addMerchandise(newMerchandise: IMerchandise): void {
@@ -305,6 +307,14 @@ export class MerchandiseService {
       item: selectedMerchandise,
       action: 'update',
     });
+  }
+
+  requestSaveMerchandiseForm(): void {
+    this.merchandiseFormActionSubject.next('save');
+  }
+
+  requestCancelMerchandiseForm(): void {
+    this.merchandiseFormActionSubject.next('cancel');
   }
 
   saveMerchandise(
@@ -342,14 +352,22 @@ export class MerchandiseService {
           },
         )
         .pipe(
-          tap((data) => {
+          tap(() => {
             this.toastService.showMyToast(
               `${merchandise.description}, datos almacenados`,
               toastType.success,
             );
           }),
           // Return the original merchandise so it can replace the merchandise in the array
-          map(() => ({ item: merchandise, action: operation.action })),
+          map((data) => {
+            const savedId = data?.result;
+            const nextItem: IMerchandise =
+              savedId !== undefined && savedId !== null
+                ? { ...merchandise, merchandiseId: savedId }
+                : merchandise;
+
+            return { item: nextItem, action: operation.action };
+          }),
           catchError(this.errorHandlerService.handleError),
         );
     }
@@ -379,7 +397,88 @@ export class MerchandiseService {
         IApiResponse<IMerchandiseMovement[]>
       >(`${this.merchandiseUrl}/movements/${id}/${this.organizationId}`)
       .pipe(
+        map((data) => data.result ?? []),
+        catchError(this.errorHandlerService.handleError),
+      );
+  }
+
+  refreshMovements(): void {
+    this.movementsRefreshSubject.next(this.movementsRefreshSubject.value + 1);
+  }
+
+  addMovement(item: IMerchandiseMovement): Observable<number> {
+    return this.http
+      .post<IApiResponse<number>>(`${this.merchandiseUrl}/movement`, item, {
+        headers: this.headers,
+      })
+      .pipe(
+        tap(() => {
+          this.toastService.showMyToast(
+            'Movimiento almacenado',
+            toastType.success,
+          );
+          this.refreshMovements();
+        }),
         map((data) => data.result),
+        catchError(this.errorHandlerService.handleError),
+      );
+  }
+
+  updateMovement(item: IMerchandiseMovement): Observable<number> {
+    return this.http
+      .put<IApiResponse<number>>(`${this.merchandiseUrl}/movement`, item, {
+        headers: this.headers,
+      })
+      .pipe(
+        tap(() => {
+          this.toastService.showMyToast(
+            'Movimiento actualizado',
+            toastType.success,
+          );
+          this.refreshMovements();
+        }),
+        map((data) => data.result),
+        catchError(this.errorHandlerService.handleError),
+      );
+  }
+
+  deleteMovement(movementId: number, merchandiseId: number): Observable<number> {
+    return this.http
+      .delete<IApiResponse<number>>(
+        `${this.merchandiseUrl}/movement/${movementId}/${merchandiseId}`,
+        { headers: this.headers },
+      )
+      .pipe(
+        tap(() => {
+          this.toastService.showMyToast(
+            'Movimiento eliminado',
+            toastType.success,
+          );
+          this.refreshMovements();
+        }),
+        map((data) => data.result),
+        catchError(this.errorHandlerService.handleError),
+      );
+  }
+
+  getMerchandiseUom(id: number): Observable<IMerchandiseUom[]> {
+    return this.http
+      .get<
+        IApiResponse<IMerchandiseUom[]>
+      >(`${this.merchandiseChildGridUrl}/uom/${id}`)
+      .pipe(
+        map((data) => data.result ?? []),
+        catchError(this.errorHandlerService.handleError),
+      );
+  }
+
+  getMerchandisePrices(id: number): Observable<IMerchandisePrice[]> {
+    return this.http
+      .get<
+        IApiResponse<IMerchandisePrice[]>
+      >(`${this.merchandiseChildGridUrl}/prices/${id}`)
+      .pipe(
+        map((data) => data.result ?? []),
         catchError(this.errorHandlerService.handleError),
       );
   }

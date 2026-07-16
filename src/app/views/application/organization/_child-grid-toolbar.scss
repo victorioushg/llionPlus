@@ -1,0 +1,25 @@
+@use 'variables' as *;
+
+@mixin child-grid-toolbar($grid-id) {
+  ::ng-deep ##{$grid-id} .e-toolbar {
+    background-color: $llion-color-primary-container;
+  }
+
+  ::ng-deep ##{$grid-id} .e-toolbar .e-toolbar-items,
+  ::ng-deep ##{$grid-id} .e-toolbar .e-toolbar-items.e-tbar-pos {
+    background-color: $llion-color-primary-container;
+  }
+
+  ::ng-deep ##{$grid-id} .e-toolbar .e-toolbar-items .e-tbar-btn {
+    background: $llion-color-white;
+    border: 1px solid #5a70cc;
+  }
+
+  ::ng-deep ##{$grid-id} .e-toolbar-item.e-search-wrapper {
+    padding-top: 7px;
+  }
+
+  ::ng-deep ##{$grid-id} .e-grid .e-toolbar-items .e-toolbar-item.e-search-wrapper .e-search {
+    background-color: $llion-color-primary-container;
+  }
+}

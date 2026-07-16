@@ -67,11 +67,18 @@ export class EmailService {
       }
     );
 
-    this.emailsByEntityId$ = this.applicationService.entitySelectedAction$.pipe(
-      switchMap((selectedEntity) => {
+    this.emailsByEntityId$ = combineLatest([
+      this.applicationService.entitySelectedAction$,
+      this.applicationService.organizationIdSelectedAction$,
+    ]).pipe(
+      switchMap(([selectedEntity, organizationId]) => {
+        this.organizationId = organizationId ?? 0;
+        if (!selectedEntity || !organizationId || organizationId <= 0) {
+          return of([] as IEmail[]);
+        }
         return this.http
           .get<IApiResponse<IEmail[]>>(
-            `${this.apiUrl}emails/${selectedEntity}/${this.organizationId}`
+            `${this.apiUrl}emails/${selectedEntity}/${organizationId}`
           )
           .pipe(
             map((data: IApiResponse) => {

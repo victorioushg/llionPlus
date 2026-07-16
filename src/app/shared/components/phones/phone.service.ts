@@ -89,11 +89,18 @@ export class PhoneService {
       this.organizationId = result;
     });
 
-    this.phonesByEntityId$ = this.applicationService.entitySelectedAction$.pipe(
-      switchMap((selectedEntity) => {
+    this.phonesByEntityId$ = combineLatest([
+      this.applicationService.entitySelectedAction$,
+      this.applicationService.organizationIdSelectedAction$,
+    ]).pipe(
+      switchMap(([selectedEntity, organizationId]) => {
+        this.organizationId = organizationId ?? 0;
+        if (!selectedEntity || !organizationId || organizationId <= 0) {
+          return of([] as IPhone[]);
+        }
         return this.http
           .get<IApiResponse<IPhone[]>>(
-            `${this.apiUrl}phones/${selectedEntity}/${this.organizationId}`
+            `${this.apiUrl}phones/${selectedEntity}/${organizationId}`
           )
           .pipe(
             map((data: IApiResponse) => {

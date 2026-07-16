@@ -1,4 +1,69 @@
 @use "variables" as *;
+@use "./child-grid-toolbar" as toolbar;
+
+#container {
+  position: relative;
+}
+
+.main-content {
+  opacity: 1;
+  transition: opacity 0.25s ease-in;
+}
+
+.main-content.is-hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.content-loading-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: $llion-color-white;
+  z-index: 20;
+}
+
+.content-spinner {
+  position: relative;
+  width: 72px;
+  height: 72px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.content-spinner::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: conic-gradient(
+    from 0deg,
+    rgba(103, 80, 164, 0) 0%,
+    rgba(103, 80, 164, 0.15) 25%,
+    $llion-color-primary 55%,
+    rgba(103, 80, 164, 0.85) 75%,
+    rgba(103, 80, 164, 0) 100%
+  );
+  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 4px), #000 0);
+  mask: radial-gradient(farthest-side, transparent calc(100% - 4px), #000 0);
+  animation: content-spin 0.9s linear infinite;
+}
+
+.content-spinner::after {
+  content: '';
+  width: 36px;
+  height: 36px;
+  background: url('/assets/images/llion_gray.png') center / contain no-repeat;
+}
+
+@keyframes content-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
 
 .e-grid td:first-child.e-selectionbackground {
   border-left: 7px solid $llion-color-primary;
@@ -8,24 +73,9 @@
   border-left: 7px solid $llion-color-white;
 }
 
-#merchandise-grid .e-toolbar {
-  background-color: $llion-color-primary-container;
-}
+@include toolbar.child-grid-toolbar('merchandise-grid');
 
-.e-toolbar .e-toolbar-items .e-tbar-btn {
-  background: $llion-color-white;
-  border: 1px solid #5a70cc;
-}
-
-::ng-deep #merchandise-grid .e-toolbar-item.e-search-wrapper {
-  padding-top: 7px;
-}
-
-::ng-deep #merchandise-grid .e-grid .e-toolbar-items .e-toolbar-item.e-search-wrapper .e-search {
-  background-color: $llion-color-primary-container;
-}
-
-.e-grid .e-gridheader {
+::ng-deep #merchandise-grid .e-grid .e-gridheader {
   display: none;
 }
 
@@ -38,6 +88,39 @@
   cursor: not-allowed;
 }
 
-.e-checkbox-wrapper {
-  margin-top: 10px;
+.price-grid-title {
+  margin: 0 0 8px;
+  font-weight: 600;
+  color: $llion-color-font;
+}
+
+.detail-uom-row {
+  align-items: flex-start;
+
+  > .uom-column {
+    display: flex;
+
+    llion-merchandise-detail-input {
+      display: flex;
+      flex: 1;
+      width: 100%;
+      min-height: 0;
+    }
+  }
+}
+
+@include toolbar.child-grid-toolbar('merchandise-prices-grid');
+
+::ng-deep #merchandise-prices-grid .e-grid {
+  .e-rowcell {
+    padding-top: 6px;
+    padding-bottom: 6px;
+    line-height: normal;
+  }
+
+  .e-rowcell .e-checkbox-wrapper,
+  .e-rowcell .e-css.e-checkbox-wrapper {
+    margin-top: 0;
+    vertical-align: middle;
+  }
 }

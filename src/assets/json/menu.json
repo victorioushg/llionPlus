@@ -157,33 +157,45 @@
   },
   {
     "nodeId": "09",
-    "nodeText": "control",
-    "image": "../../assets/images/icons8/24/icons8-slider-24.png",
+    "nodeText": "producción",
+    "image": "../../assets/images/icons8/24/icons8-warehouse-24.png",
     "nodeChild": [
       {
         "nodeId": "09-01",
-        "nodeText": "parámetros",
-        "image": "../../assets/images/transparent-icon.png"
-      },
-      {
-        "nodeId": "09-02",
-        "nodeText": "monedas y cambios",
+        "nodeText": "producción",
         "image": "../../assets/images/transparent-icon.png"
       }
     ]
   },
   {
     "nodeId": "10",
-    "nodeText": "administración",
-    "image": "../../assets/images/icons8/24/icons8-admin-settings-male-24.png",
+    "nodeText": "control",
+    "image": "../../assets/images/icons8/24/icons8-slider-24.png",
     "nodeChild": [
       {
         "nodeId": "10-01",
-        "nodeText": "organizaciones",
+        "nodeText": "parámetros",
         "image": "../../assets/images/transparent-icon.png"
       },
       {
         "nodeId": "10-02",
+        "nodeText": "monedas y cambios",
+        "image": "../../assets/images/transparent-icon.png"
+      }
+    ]
+  },
+  {
+    "nodeId": "11",
+    "nodeText": "administración",
+    "image": "../../assets/images/icons8/24/icons8-admin-settings-male-24.png",
+    "nodeChild": [
+      {
+        "nodeId": "11-01",
+        "nodeText": "organizaciones",
+        "image": "../../assets/images/transparent-icon.png"
+      },
+      {
+        "nodeId": "11-02",
         "nodeText": "usuarios",
         "image": "../../assets/images/transparent-icon.png"
       }

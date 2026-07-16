@@ -1,17 +1,79 @@
-<div class="wrapper" >
+<div class="wrapper">
   <div class="row">
     <div class="col-md-12">
-   
-    </div>
-  </div>
-  <div class="row">
-    <div class="col-md-12" >
-    
-    </div>
-  </div>
-  <div class="row">
-    <div class="col-md-12">
-     
+      <div id="merchandise-uom-grid">
+        <h6 class="detail-section-title">Unidades de Venta y Equivalencias</h6>
+        <ejs-grid
+          #uomgrid
+          [dataSource]="(uomData$ | async) || []"
+          [toolbar]="uomToolbar"
+          [editSettings]="uomEditSettings"
+          [height]="uomGridHeight"
+          [allowTextWrap]="true"
+          [textWrapSettings]="{ wrapMode: 'Header' }"
+        >
+          <e-columns>
+            <e-column
+              field="uom"
+              headerText="Unidad Venta"
+              [isPrimaryKey]="true"
+            ></e-column>
+            <e-column
+              field="equivalence"
+              headerText="Equivale"
+              width="60"
+              editType="numericedit"
+              format="N3"
+              textAlign="Right"
+            ></e-column>
+            <e-column field="uomEquivalent" headerText="Unidad Equivalente"></e-column>
+            <e-column
+              field="defaultUnit"
+              headerText="Default"
+              width="70"
+              type="boolean"
+              editType="booleanedit"
+              [displayAsCheckBox]="true"
+              textAlign="Center"
+            ></e-column>
+            <e-column
+              field="divisible"
+              headerText="Divisible"
+              type="boolean"
+              editType="booleanedit"
+              [displayAsCheckBox]="true"
+              textAlign="Center"
+            ></e-column>
+            <e-column
+              field="retail"
+              headerText="Unidad Minorista"
+              type="boolean"
+              editType="booleanedit"
+              [displayAsCheckBox]="true"
+              textAlign="Center"
+            ></e-column>
+            <e-column
+              field="wholeSale"
+              headerText="Unidad Mayorista"
+              type="boolean"
+              editType="booleanedit"
+              [displayAsCheckBox]="true"
+              textAlign="Center"
+            ></e-column>
+            <e-column
+              field="weight"
+              headerText="Peso"
+              editType="numericedit"
+              format="N3"
+              textAlign="Right"
+            ></e-column>
+            <e-column
+              field="merchandiseId"
+              [visible]="false"
+            ></e-column>
+          </e-columns>
+        </ejs-grid>
+      </div>
     </div>
   </div>
 </div>
