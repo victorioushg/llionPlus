@@ -3,8 +3,11 @@ import {
   ChangeDetectorRef,
   Component,
   ElementRef,
+  OnDestroy,
   OnInit,
+  QueryList,
   ViewChild,
+  ViewChildren,
 } from '@angular/core';
 import {
   GridComponent,
@@ -20,25 +23,33 @@ import {
 } from '@syncfusion/ej2-angular-grids';
 
 import { MerchandiseService } from './merchandise.service';
-import MiniToolbar from '@assets/json/minitoolbar.json';
 import {
   BehaviorSubject,
   catchError,
   combineLatest,
   EMPTY,
+  fromEvent,
   map,
   Observable,
   shareReplay,
   startWith,
+  Subject,
+  takeUntil,
 } from 'rxjs';
+import { debounceTime } from 'rxjs/operators';
 import { ChangeDetectionStrategy } from '@angular/core';
 import { IMerchandise, IMerchandisePrice } from '../merchandise/merchandise';
 import { ToastService } from '@shared/services/toastService';
 import { toastType } from '@shared/enums/enums';
 import {
   ClickEventArgs,
+  ItemModel,
+  SelectEventArgs,
   TabComponent,
 } from '@syncfusion/ej2-angular-navigations';
+import { withToolbarTitle } from '@shared/utils/grid-toolbar';
+import { MerchandiseExpedienteComponent } from './merchandise-expediente/merchandise-expediente';
+import { MerchandiseMovementComponent } from './merchandise-movements/merchandise-movement-grid';
 
 @Component({
   selector: 'llion-content',
@@ -47,7 +58,7 @@ import {
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: false,
 })
-export class MerchandiseComponent implements OnInit, AfterViewInit {
+export class MerchandiseComponent implements OnInit, AfterViewInit, OnDestroy {
   public commands!: CommandModel[];
   public screenHeight!: number;
 
@@ -55,19 +66,30 @@ export class MerchandiseComponent implements OnInit, AfterViewInit {
   readonly searchStringAction$ = this.searchStringSubject.asObservable();
   private readonly selectedMerchandiseSubject =
     new BehaviorSubject<IMerchandise | null>(null);
+  private readonly destroy$ = new Subject<void>();
+  private selectedTabIndex = 0;
 
   merchandises$!: Observable<IMerchandise[]>;
   priceData$!: Observable<IMerchandisePrice[]>;
   entityId!: number;
 
-  toolbar: ToolbarItems[] | object = MiniToolbar;
-  priceToolbar: ToolbarItems[] = [
-    'Add',
-    'Edit',
-    'Delete',
-    'Update',
-    'Cancel',
-  ];
+  /** Same Add button characteristics as UOM grid (Syncfusion e-add), plus Search */
+  toolbar = withToolbarTitle(
+    [
+      {
+        text: 'Add',
+        tooltipText: 'Add',
+        prefixIcon: 'e-add',
+        id: 'add',
+      },
+      'Search',
+    ],
+    'Mercancías'
+  );
+  priceToolbar = withToolbarTitle(
+    ['Add', 'Edit', 'Delete', 'Update', 'Cancel'],
+    'Precios de mercancía'
+  );
   priceEditSettings: EditSettingsModel = {
     allowAdding: true,
     allowEditing: true,
@@ -82,6 +104,10 @@ export class MerchandiseComponent implements OnInit, AfterViewInit {
   @ViewChild('pricegrid') public gridprice!: GridComponent;
   @ViewChild('tabs') public tabObj?: TabComponent;
   @ViewChild('toast') toast!: ElementRef;
+  @ViewChild(MerchandiseMovementComponent)
+  movementsPanel?: MerchandiseMovementComponent;
+  @ViewChildren(MerchandiseExpedienteComponent)
+  expedientePanels!: QueryList<MerchandiseExpedienteComponent>;
 
   selectedMerchandise$ = this.selectedMerchandiseSubject.asObservable();
 
@@ -92,18 +118,15 @@ export class MerchandiseComponent implements OnInit, AfterViewInit {
   // Controls when the view is revealed to avoid the Syncfusion render "noise".
   isReady = false;
 
-  // public headerText!: Object[];
   headerText: { text: string }[] = [
     { text: 'mercancia' },
     { text: 'movimientos' },
     { text: 'compras' },
-    { text: 'ventas'},
-    { text: 'existencias'}, 
-    { text: 'cuotas'},
-    { text: 'expediente' }
+    { text: 'ventas' },
+    { text: 'existencias' },
+    { text: 'expediente y Media' },
   ];
 
-  /////
   constructor(
     private merchandiseService: MerchandiseService,
     private toastService: ToastService,
@@ -114,8 +137,32 @@ export class MerchandiseComponent implements OnInit, AfterViewInit {
     if (this.tabObj) {
       (this.tabObj as TabComponent).element.classList.add('e-fill');
     }
-    // Fallback reveal in case the grid resolves with no data to bind.
-    setTimeout(() => this.markReady(), 700);
+    setTimeout(() => {
+      this.markReady();
+      this.updateGridHeights();
+    }, 700);
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  onTabSelected(args: SelectEventArgs): void {
+    this.selectedTabIndex = args.selectedIndex ?? 0;
+
+    if (this.selectedTabIndex === 1) {
+      setTimeout(() => this.syncMovementBottom(), 50);
+    }
+
+    if (this.selectedTabIndex === 5) {
+      setTimeout(() => {
+        this.merchandiseService.refreshMedia();
+        this.merchandiseService.refreshProfiles();
+        this.expedientePanels?.forEach((panel) => panel.refreshLayouts());
+        this.cdr.markForCheck();
+      }, 100);
+    }
   }
 
   private markReady(): void {
@@ -125,8 +172,31 @@ export class MerchandiseComponent implements OnInit, AfterViewInit {
     }
   }
 
+  private updateGridHeights(): void {
+    this.screenHeight = Math.max(200, window.innerHeight - 230);
+    if (this.grid) {
+      this.grid.height = this.screenHeight;
+    }
+    this.cdr.markForCheck();
+
+    // Refine movimientos bottom against the live merchandise grid edge.
+    setTimeout(() => this.syncMovementBottom(), 0);
+  }
+
+  private syncMovementBottom(): void {
+    const merchEl = this.grid?.element as HTMLElement | undefined;
+    if (!merchEl || !this.movementsPanel) {
+      return;
+    }
+    this.movementsPanel.alignBottomTo(merchEl.getBoundingClientRect().bottom);
+  }
+
   ngOnInit(): void {
-    this.screenHeight = window.innerHeight - 250;
+    this.updateGridHeights();
+    fromEvent(window, 'resize')
+      .pipe(debounceTime(100), takeUntil(this.destroy$))
+      .subscribe(() => this.updateGridHeights());
+
     this.commands = [
       {
         type: 'Delete',
@@ -160,14 +230,23 @@ export class MerchandiseComponent implements OnInit, AfterViewInit {
   }
 
   onToolbarClick(args: ClickEventArgs): void {
-    const target: HTMLElement = args.originalEvent.target as HTMLElement; //.closest('button'); // find clicked button
+    if (
+      args.item?.id === 'gridToolbarTitle' ||
+      args.item?.cssClass === 'e-grid-toolbar-title'
+    ) {
+      args.cancel = true;
+      return;
+    }
 
+    const itemId = (args.item?.id ?? '').split('_').pop();
+    const target = args.originalEvent?.target as HTMLElement | undefined;
     const targetId =
-      target.id === ''
-        ? target.closest('button')?.id
-        : target.id.split('_').pop();
+      itemId ||
+      (target?.id === ''
+        ? target.closest('button')?.id?.split('_').pop()
+        : target?.id?.split('_').pop());
 
-    if (targetId === 'add') {
+    if (targetId === 'add' || args.item?.text === 'Add') {
       this.selectedMerchandiseSubject.next(null);
       this.merchandiseService.selectedMerchandiseChanged(0);
       this.enableParentForm(true);

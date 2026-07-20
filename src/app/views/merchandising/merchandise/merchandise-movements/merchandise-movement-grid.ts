@@ -3,6 +3,7 @@ import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
   Component,
+  Input,
   OnDestroy,
   OnInit,
   ViewChild,
@@ -21,6 +22,7 @@ import { IMerchandiseUom } from '../merchandise';
 import { MerchandiseService } from '../merchandise.service';
 import { ToastService } from '@shared/services/toastService';
 import { toastType } from '@shared/enums/enums';
+import { withToolbarTitle } from '@shared/utils/grid-toolbar';
 import { IGroup } from '@shared/models/group';
 
 @Component({
@@ -43,14 +45,70 @@ export class MerchandiseMovementComponent
   screenMovementsHeight = 320;
   readonly rowHeight = 36;
   readonly headerHeight = 32;
+  /** Syncfusion tab strip above this grid (merchandise list has no tab). */
+  private readonly tabStripHeight = 42;
   gridEnabled = false;
+
+  /**
+   * Approximate height from the left merchandise grid content height.
+   * Final alignment is refined by alignBottomTo() after layout/resize.
+   */
+  @Input() set contentHeight(value: number) {
+    if (!value || value <= 0) {
+      return;
+    }
+    this.applyContentHeight(
+      Math.max(160, value - this.tabStripHeight - this.headerHeight)
+    );
+  }
+
+  /** Match this grid's bottom edge to the merchandise grid bottom. */
+  alignBottomTo(targetBottom: number): void {
+    const el = this.grid?.element as HTMLElement | undefined;
+    if (!el || !targetBottom) {
+      return;
+    }
+
+    const top = el.getBoundingClientRect().top;
+    if (top <= 0) {
+      return;
+    }
+
+    const toolbarH =
+      (el.querySelector('.e-toolbar') as HTMLElement | null)?.offsetHeight ?? 0;
+    const headerH =
+      (el.querySelector('.e-gridheader') as HTMLElement | null)?.offsetHeight ??
+      this.headerHeight;
+    const nextHeight = Math.max(
+      160,
+      Math.round(targetBottom - top - toolbarH - headerH)
+    );
+    this.applyContentHeight(nextHeight);
+  }
+
+  private applyContentHeight(height: number): void {
+    if (this.screenMovementsHeight === height) {
+      return;
+    }
+    this.screenMovementsHeight = height;
+    setTimeout(() => {
+      if (this.grid) {
+        this.grid.height = this.screenMovementsHeight;
+        this.grid.refresh();
+      }
+      this.cdr.markForCheck();
+    });
+  }
 
   movementTypeFields: Object = { text: 'description', value: 'description' };
   uomFields: Object = { text: 'uom', value: 'uom' };
 
   movementData: IMerchandiseMovement = this.createEmptyMovement();
 
-  toolbar: ToolbarItems[] = ['Add', 'Edit', 'Delete', 'Search'];
+  toolbar = withToolbarTitle(
+    ['Add', 'Edit', 'Delete', 'Search'],
+    'Movimientos'
+  );
   editSettings: EditSettingsModel = {
     allowAdding: true,
     allowEditing: true,
@@ -186,9 +244,10 @@ export class MerchandiseMovementComponent
 
   private applyEditState(enabled: boolean): void {
     this.gridEnabled = enabled;
-    this.toolbar = enabled
-      ? (['Add', 'Edit', 'Delete', 'Search'] as ToolbarItems[])
-      : (['Search'] as ToolbarItems[]);
+    this.toolbar = withToolbarTitle(
+      enabled ? ['Add', 'Edit', 'Delete', 'Search'] : ['Search'],
+      'Movimientos'
+    );
     this.editSettings = {
       allowAdding: enabled,
       allowEditing: enabled,

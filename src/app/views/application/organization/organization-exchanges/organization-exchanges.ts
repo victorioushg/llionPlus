@@ -22,6 +22,7 @@ import {
 import { OrganizationService } from '../organization.service';
 import { ToastService } from '@shared/services/toastService';
 import { toastType } from '@shared/enums/enums';
+import { withToolbarTitle } from '@shared/utils/grid-toolbar';
 
 @Component({
   selector: 'llion-organization-exchanges',
@@ -47,7 +48,10 @@ export class OrganizationExchangesComponent implements OnInit, OnDestroy {
 
   exchangeData: IOrganizationExchangeRate = this.createEmptyExchange();
 
-  exchangesToolbar: ToolbarItems[] = [];
+  exchangesToolbar = withToolbarTitle(
+    [],
+    'Monedas y cambios'
+  ) as ToolbarItems[];
 
   exchangesEditSettings: EditSettingsModel = {
     allowAdding: false,
@@ -181,7 +185,10 @@ export class OrganizationExchangesComponent implements OnInit, OnDestroy {
   private applyOrganizationEditState(editing: boolean): void {
     const enabled = editing && this.selectedOrganizationId > 0;
     this.exchangesGridEnabled = enabled;
-    this.exchangesToolbar = enabled ? ['Add', 'Edit', 'Delete'] : [];
+    this.exchangesToolbar = withToolbarTitle(
+      enabled ? ['Add', 'Edit', 'Delete'] : [],
+      'Monedas y cambios'
+    ) as ToolbarItems[];
     this.exchangesEditSettings = {
       allowAdding: enabled,
       allowEditing: enabled,

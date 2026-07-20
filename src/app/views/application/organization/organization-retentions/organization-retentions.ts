@@ -19,6 +19,7 @@ import { IOrganizationTaxRetention } from '../organization';
 import { OrganizationService } from '../organization.service';
 import { ToastService } from '@shared/services/toastService';
 import { toastType } from '@shared/enums/enums';
+import { withToolbarTitle } from '@shared/utils/grid-toolbar';
 
 @Component({
   selector: 'llion-organization-retentions',
@@ -40,7 +41,7 @@ export class OrganizationRetentionsComponent implements OnInit, OnDestroy {
 
   retentionData: IOrganizationTaxRetention = this.createEmptyRetention();
 
-  retentionsToolbar: ToolbarItems[] = [];
+  retentionsToolbar = withToolbarTitle([], 'Retenciones') as ToolbarItems[];
 
   retentionsEditSettings: EditSettingsModel = {
     allowAdding: false,
@@ -172,7 +173,10 @@ export class OrganizationRetentionsComponent implements OnInit, OnDestroy {
   private applyOrganizationEditState(editing: boolean): void {
     const enabled = editing && this.selectedOrganizationId > 0;
     this.retentionsGridEnabled = enabled;
-    this.retentionsToolbar = enabled ? ['Add', 'Edit', 'Delete'] : [];
+    this.retentionsToolbar = withToolbarTitle(
+      enabled ? ['Add', 'Edit', 'Delete'] : [],
+      'Retenciones'
+    ) as ToolbarItems[];
     this.retentionsEditSettings = {
       allowAdding: enabled,
       allowEditing: enabled,

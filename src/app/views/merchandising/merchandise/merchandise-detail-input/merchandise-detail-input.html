@@ -2,7 +2,6 @@
   <div class="row">
     <div class="col-md-12">
       <div id="merchandise-uom-grid">
-        <h6 class="detail-section-title">Unidades de Venta y Equivalencias</h6>
         <ejs-grid
           #uomgrid
           [dataSource]="(uomData$ | async) || []"
@@ -15,7 +14,7 @@
           <e-columns>
             <e-column
               field="uom"
-              headerText="Unidad Venta"
+              headerText="UV"
               [isPrimaryKey]="true"
             ></e-column>
             <e-column
@@ -26,7 +25,7 @@
               format="N3"
               textAlign="Right"
             ></e-column>
-            <e-column field="uomEquivalent" headerText="Unidad Equivalente"></e-column>
+            <e-column field="uomEquivalent" headerText="UV Eq"></e-column>
             <e-column
               field="defaultUnit"
               headerText="Default"
@@ -38,7 +37,7 @@
             ></e-column>
             <e-column
               field="divisible"
-              headerText="Divisible"
+              headerText="Divide"
               type="boolean"
               editType="booleanedit"
               [displayAsCheckBox]="true"
@@ -46,7 +45,7 @@
             ></e-column>
             <e-column
               field="retail"
-              headerText="Unidad Minorista"
+              headerText="Minor"
               type="boolean"
               editType="booleanedit"
               [displayAsCheckBox]="true"
@@ -54,7 +53,7 @@
             ></e-column>
             <e-column
               field="wholeSale"
-              headerText="Unidad Mayorista"
+              headerText="Mayor"
               type="boolean"
               editType="booleanedit"
               [displayAsCheckBox]="true"
@@ -67,10 +66,47 @@
               format="N3"
               textAlign="Right"
             ></e-column>
+            <e-column field="merchandiseId" [visible]="false"></e-column>
+          </e-columns>
+        </ejs-grid>
+      </div>
+    </div>
+  </div>
+
+  <div class="row codes-row">
+    <div class="col-md-12">
+      <div id="merchandise-codes-grid">
+        <ejs-grid
+          #codesgrid
+          [dataSource]="(codesData$ | async) || []"
+          [toolbar]="codesToolbar"
+          [editSettings]="codesEditSettings"
+          [height]="codesGridHeight"
+          [allowTextWrap]="true"
+          [textWrapSettings]="{ wrapMode: 'Header' }"
+          (actionBegin)="codesActionBegin($event)"
+        >
+          <e-columns>
             <e-column
-              field="merchandiseId"
-              [visible]="false"
+              field="code"
+              headerText="Código"
+              [isPrimaryKey]="true"
+              width="28%"
             ></e-column>
+            <e-column
+              field="merchandiseCodeType"
+              headerText="Tipo"
+              width="32%"
+              editType="dropdownedit"
+              [edit]="codeTypeEditParams"
+            ></e-column>
+            <e-column
+              field="description"
+              headerText="Descripción"
+              width="40%"
+            ></e-column>
+            <e-column field="merchandiseId" [visible]="false"></e-column>
+            <e-column field="organizationId" [visible]="false"></e-column>
           </e-columns>
         </ejs-grid>
       </div>

@@ -22,6 +22,7 @@ import { ApplicationService } from '@shared/services/applicattionService';
 import { IGroup } from '@shared/models/group';
 import { ToastService } from '@shared/services/toastService';
 import { toastType } from '@shared/enums/enums';
+import { withToolbarTitle } from '@shared/utils/grid-toolbar';
 
 @Component({
   selector: 'llion-organization-taxes',
@@ -48,7 +49,7 @@ export class OrganizationTaxesComponent implements OnInit, OnDestroy {
   taxData: IOrganizationTax = this.createEmptyTax();
   applicableToValues: string[] = [];
 
-  taxesToolbar: ToolbarItems[] = [];
+  taxesToolbar = withToolbarTitle([], 'Impuestos') as ToolbarItems[];
 
   taxesEditSettings: EditSettingsModel = {
     allowAdding: false,
@@ -198,7 +199,10 @@ export class OrganizationTaxesComponent implements OnInit, OnDestroy {
   private applyOrganizationEditState(editing: boolean): void {
     const enabled = editing && this.selectedOrganizationId > 0;
     this.taxesGridEnabled = enabled;
-    this.taxesToolbar = enabled ? ['Add', 'Edit', 'Delete'] : [];
+    this.taxesToolbar = withToolbarTitle(
+      enabled ? ['Add', 'Edit', 'Delete'] : [],
+      'Impuestos'
+    ) as ToolbarItems[];
     this.taxesEditSettings = {
       allowAdding: enabled,
       allowEditing: enabled,

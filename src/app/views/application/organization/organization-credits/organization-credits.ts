@@ -19,6 +19,7 @@ import { IOrganizationCreditDebit } from '../organization';
 import { OrganizationService } from '../organization.service';
 import { ToastService } from '@shared/services/toastService';
 import { toastType } from '@shared/enums/enums';
+import { withToolbarTitle } from '@shared/utils/grid-toolbar';
 
 @Component({
   selector: 'llion-organization-credits',
@@ -46,7 +47,10 @@ export class OrganizationCreditsComponent implements OnInit, OnDestroy {
 
   creditData: IOrganizationCreditDebit = this.createEmptyCredit();
 
-  creditsToolbar: ToolbarItems[] = [];
+  creditsToolbar = withToolbarTitle(
+    [],
+    'Créditos y débitos'
+  ) as ToolbarItems[];
 
   creditsEditSettings: EditSettingsModel = {
     allowAdding: false,
@@ -177,7 +181,10 @@ export class OrganizationCreditsComponent implements OnInit, OnDestroy {
   private applyOrganizationEditState(editing: boolean): void {
     const enabled = editing && this.selectedOrganizationId > 0;
     this.creditsGridEnabled = enabled;
-    this.creditsToolbar = enabled ? ['Add', 'Edit', 'Delete'] : [];
+    this.creditsToolbar = withToolbarTitle(
+      enabled ? ['Add', 'Edit', 'Delete'] : [],
+      'Créditos y débitos'
+    ) as ToolbarItems[];
     this.creditsEditSettings = {
       allowAdding: enabled,
       allowEditing: enabled,

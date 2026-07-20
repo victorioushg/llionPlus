@@ -10,11 +10,17 @@
   width: 100%;
 }
 
-#merchandise-uom-grid {
+#merchandise-uom-grid,
+#merchandise-codes-grid {
   width: 100%;
 }
 
-::ng-deep #merchandise-uom-grid .e-grid .e-headercell .e-headercelldiv {
+.codes-row {
+  margin-top: 16px;
+}
+
+::ng-deep #merchandise-uom-grid .e-grid .e-headercell .e-headercelldiv,
+::ng-deep #merchandise-codes-grid .e-grid .e-headercell .e-headercelldiv {
   font-size: 13px;
 }
 
@@ -26,3 +32,4 @@
 }
 
 @include toolbar.child-grid-toolbar('merchandise-uom-grid');
+@include toolbar.child-grid-toolbar('merchandise-codes-grid');

@@ -7,6 +7,8 @@ import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { MerchandiseComponent } from '@views/merchandising/merchandise/merchandise-grid';
 import { MerchandiseDetailComponent } from '@views/merchandising/merchandise/merchandise-detail/merchandise-detail';
 import { MerchandiseDetailInputComponent } from '@views/merchandising/merchandise/merchandise-detail-input/merchandise-detail-input';
+import { MerchandiseTaxesComponent } from '@views/merchandising/merchandise/merchandise-taxes/merchandise-taxes';
+import { MerchandiseExpedienteComponent } from '@views/merchandising/merchandise/merchandise-expediente/merchandise-expediente';
 import { MerchandiseMovementComponent } from '@views/merchandising/merchandise/merchandise-movements/merchandise-movement-grid';
 import { GroupTableComponent } from '@shared/components/group-table/group-table.component';
 // Syncfusion
@@ -41,6 +43,8 @@ enableRipple(true);
     MerchandiseDetailComponent,
     MerchandiseMovementComponent,
     MerchandiseDetailInputComponent,
+    MerchandiseTaxesComponent,
+    MerchandiseExpedienteComponent,
   ],
   imports: [
     CommonModule,

@@ -20,6 +20,7 @@ import {
 
 import { OrganizationService } from './organization.service';
 import MiniToolbar from '@assets/json/minitoolbar.json';
+import { withToolbarTitle } from '@shared/utils/grid-toolbar';
 import {
   BehaviorSubject,
   catchError,
@@ -60,7 +61,10 @@ export class OrganizationComponent implements OnInit, AfterViewInit, OnDestroy {
   organizations$!: Observable<IOrganization[]>;
   entityId!: number;
 
-  toolbar: ToolbarItems[] | object = MiniToolbar;
+  toolbar = withToolbarTitle(
+    MiniToolbar as object[],
+    'Organizaciones'
+  );
   searchSettings?: SearchSettingsModel;
 
   @ViewChild('grid') public grid!: GridComponent;
@@ -142,6 +146,14 @@ export class OrganizationComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   onToolbarClick(args: ClickEventArgs): void {
+    if (
+      args.item?.id === 'gridToolbarTitle' ||
+      args.item?.cssClass === 'e-grid-toolbar-title'
+    ) {
+      args.cancel = true;
+      return;
+    }
+
     const target: HTMLElement = args.originalEvent.target as HTMLElement; //.closest('button'); // find clicked button
 
     const targetId =

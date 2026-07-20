@@ -4,13 +4,6 @@
   </div>
   <div class="row main-content" [class.is-hidden]="!isReady">
     <div class="col-lg-4">
-      <div class="row">
-        <div class="col-md-12">
-          <div id="module-title" class="module-title">
-            <h5>Mercancías</h5>
-          </div>
-        </div>
-      </div>
       <div id="merchandise-grid" [class.wrapper]="disabledGrid$ | async">
         <ejs-grid
           #grid
@@ -50,153 +43,176 @@
       </div>
     </div>
     <div class="col-lg-8">
-      <ejs-tab id="tabs" #tabs>
+      <ejs-tab
+        id="tabs"
+        #tabs
+        loadOn="Init"
+        (selected)="onTabSelected($event)"
+      >
         <e-tabitems>
           <e-tabitem [header]="headerText[0]">
-            <div class="row">
-              <div class="col-lg-12">
-                <ng-template #content>
-                  <div class="row detail-uom-row">
-                    <div class="col-lg-6 detail-column">
-                      <llion-merchandise-detail></llion-merchandise-detail>
-                    </div>
-                    <div class="col-lg-6 uom-column">
-                      <llion-merchandise-detail-input></llion-merchandise-detail-input>
-                    </div>
-                  </div>
-                  <div class="row">
-                    <div class="col-md-12">
-                      <div id="merchandise-prices-grid">
-                        <h6 class="price-grid-title">Precios de mercancía</h6>
-                        <ejs-grid
-                          #pricegrid
-                          [dataSource]="(priceData$ | async) || []"
-                          [toolbar]="priceToolbar"
-                          [editSettings]="priceEditSettings"
-                          [rowHeight]="priceGridRowHeight"
-                        >
-                          <e-columns>
-                            <e-column
-                              field="priceCode"
-                              headerText="Código"
-                              [isPrimaryKey]="true"
-                            ></e-column>
-                            <e-column
-                              field="priceValue"
-                              headerText="Precio"
-                              editType="numericedit"
-                              format="N2"
-                              textAlign="Right"
-                            ></e-column>
-                            <e-column
-                              field="priceDiscount"
-                              headerText="Descuento"
-                              editType="numericedit"
-                              format="N2"
-                              textAlign="Right"
-                            ></e-column>
-                            <e-column
-                              field="priceBid"
-                              headerText="Oferta"
-                              type="boolean"
-                              editType="booleanedit"
-                              [displayAsCheckBox]="true"
-                              textAlign="Center"
-                            ></e-column>
-                            <e-column
-                              field="priceProfit"
-                              headerText="Ganancia"
-                              editType="numericedit"
-                              format="P2"
-                              textAlign="Right"
-                            ></e-column>
-                            <e-column
-                              field="linearProfit"
-                              type="boolean"
-                              editType="booleanedit"
-                              [displayAsCheckBox]="true"
-                              textAlign="Center"
-                              headerText="Cálculo lineal"
-                            ></e-column>
-                            <e-column
-                              field="priceBarCode"
-                              headerText="Barras"
-                            ></e-column>
-                            <e-column
-                              field="dateFrom"
-                              headerText="Desde"
-                              type="date"
-                              editType="datepickeredit"
-                              format="dd/MM/yyyy"
-                              textAlign="Center"
-                            ></e-column>
-                            <e-column
-                              field="dateTo"
-                              headerText="Hasta"
-                              type="date"
-                              editType="datepickeredit"
-                              format="dd/MM/yyyy"
-                              textAlign="Center"
-                            ></e-column>
-                            <e-column
-                              field="merchandiseId"
-                              [visible]="false"
-                            ></e-column>
-                          </e-columns>
-                        </ejs-grid>
-                      </div>
-                    </div>
-                  </div>
-                  <div class="row">
-                    <div class="col-lg-12">
-                      <div id="form-buttons" *ngIf="formEnabled$ | async">
-                        <button
-                          ejs-button
-                          (click)="onCancelClick()"
-                          [disabled]="!(formEnabled$ | async)"
-                          style="float: right"
-                        >
-                          Cancelar
-                        </button>
-                        <button
-                          ejs-button
-                          (click)="onSaveClick()"
-                          cssClass="e-primary"
-                          [disabled]="!(formEnabled$ | async)"
-                          style="float: right"
-                        >
-                          Aceptar
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </ng-template>
-              </div>
-            </div>
-          </e-tabitem>
-          <e-tabitem [header]="headerText[1]">
             <ng-template #content>
+              <div class="row detail-uom-row">
+                <div class="col-lg-6 detail-column">
+                  <llion-merchandise-detail></llion-merchandise-detail>
+                </div>
+                <div class="col-lg-6 uom-column">
+                  <llion-merchandise-detail-input></llion-merchandise-detail-input>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-12">
+                  <div id="merchandise-prices-grid">
+                    <ejs-grid
+                      #pricegrid
+                      [dataSource]="(priceData$ | async) || []"
+                      [toolbar]="priceToolbar"
+                      [editSettings]="priceEditSettings"
+                      [rowHeight]="priceGridRowHeight"
+                    >
+                      <e-columns>
+                        <e-column
+                          field="priceCode"
+                          headerText="Código"
+                          [isPrimaryKey]="true"
+                        ></e-column>
+                        <e-column
+                          field="priceValue"
+                          headerText="Precio"
+                          editType="numericedit"
+                          format="N2"
+                          textAlign="Right"
+                        ></e-column>
+                        <e-column
+                          field="priceDiscount"
+                          headerText="Descuento"
+                          editType="numericedit"
+                          format="N2"
+                          textAlign="Right"
+                        ></e-column>
+                        <e-column
+                          field="priceBid"
+                          headerText="Oferta"
+                          type="boolean"
+                          editType="booleanedit"
+                          [displayAsCheckBox]="true"
+                          textAlign="Center"
+                        ></e-column>
+                        <e-column
+                          field="priceProfit"
+                          headerText="Ganancia"
+                          editType="numericedit"
+                          format="P2"
+                          textAlign="Right"
+                        ></e-column>
+                        <e-column
+                          field="linearProfit"
+                          type="boolean"
+                          editType="booleanedit"
+                          [displayAsCheckBox]="true"
+                          textAlign="Center"
+                          headerText="Cálculo lineal"
+                        ></e-column>
+                        <e-column
+                          field="priceBarCode"
+                          headerText="Barras"
+                        ></e-column>
+                        <e-column
+                          field="dateFrom"
+                          headerText="Desde"
+                          type="date"
+                          editType="datepickeredit"
+                          format="dd/MM/yyyy"
+                          textAlign="Center"
+                        ></e-column>
+                        <e-column
+                          field="dateTo"
+                          headerText="Hasta"
+                          type="date"
+                          editType="datepickeredit"
+                          format="dd/MM/yyyy"
+                          textAlign="Center"
+                        ></e-column>
+                        <e-column
+                          field="merchandiseId"
+                          [visible]="false"
+                        ></e-column>
+                      </e-columns>
+                    </ejs-grid>
+                  </div>
+                </div>
+              </div>
               <div class="row">
                 <div class="col-lg-12">
-                  <llion-merchandise-movements></llion-merchandise-movements>
+                  <div id="form-buttons" *ngIf="formEnabled$ | async">
+                    <button
+                      ejs-button
+                      (click)="onCancelClick()"
+                      [disabled]="!(formEnabled$ | async)"
+                      style="float: right"
+                    >
+                      Cancelar
+                    </button>
+                    <button
+                      ejs-button
+                      (click)="onSaveClick()"
+                      cssClass="e-primary"
+                      [disabled]="!(formEnabled$ | async)"
+                      style="float: right"
+                    >
+                      Aceptar
+                    </button>
+                  </div>
                 </div>
               </div>
             </ng-template>
           </e-tabitem>
+
+          <e-tabitem [header]="headerText[1]">
+            <ng-template #content>
+              <div class="row">
+                <div class="col-lg-12">
+                  <llion-merchandise-movements
+                    [contentHeight]="screenHeight"
+                  ></llion-merchandise-movements>
+                </div>
+              </div>
+            </ng-template>
+          </e-tabitem>
+
           <e-tabitem [header]="headerText[2]">
-            <ng-template #content></ng-template>
+            <ng-template #content>
+              <div class="tab-placeholder">Compras (próximamente)</div>
+            </ng-template>
           </e-tabitem>
+
           <e-tabitem [header]="headerText[3]">
-            <ng-template #content></ng-template>
+            <ng-template #content>
+              <div class="tab-placeholder">Ventas (próximamente)</div>
+            </ng-template>
           </e-tabitem>
+
           <e-tabitem [header]="headerText[4]">
-            <ng-template #content></ng-template>
+            <ng-template #content>
+              <div class="tab-placeholder">Existencias (próximamente)</div>
+            </ng-template>
           </e-tabitem>
+
           <e-tabitem [header]="headerText[5]">
-            <ng-template #content></ng-template>
-          </e-tabitem>
-          <e-tabitem [header]="headerText[6]">
-            <ng-template #content></ng-template>
+            <ng-template #content>
+              <div class="row">
+                <div class="col-lg-6">
+                  <llion-merchandise-expediente
+                    [panel]="'profile'"
+                  ></llion-merchandise-expediente>
+                </div>
+                <div class="col-lg-6">
+                  <llion-merchandise-expediente
+                    [panel]="'media'"
+                  ></llion-merchandise-expediente>
+                </div>
+              </div>
+            </ng-template>
           </e-tabitem>
         </e-tabitems>
       </ejs-tab>

@@ -1,5 +1,4 @@
 <div id="phone-grid" [class.wrapper]="!gridEnabled">
-  <h6 class="detail-section-title">Teléfonos</h6>
   <ejs-grid
     #phonegrid
     [dataSource]="(phones$ | async) || []"

@@ -1,6 +1,5 @@
 <div class="wrapper" [class.retentions-grid-disabled]="!retentionsGridEnabled">
   <div id="organization-retentions-grid">
-    <h6 class="detail-section-title">Retenciones</h6>
     <ejs-grid
       #retentionsgrid
       [dataSource]="(retentions$ | async) || []"

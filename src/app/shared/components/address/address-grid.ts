@@ -23,6 +23,7 @@ import {
   map,
   takeUntil,
 } from 'rxjs';
+import { withToolbarTitle } from '@shared/utils/grid-toolbar';
 import { IAddress, IAddressType } from './address';
 import { AddressService } from './address.service';
 import { ApplicationService } from '@shared/services/applicattionService';
@@ -56,7 +57,7 @@ export class AddressGridComponent implements OnInit, OnDestroy {
 
   addressData: IAddress = this.createEmptyAddress();
 
-  toolbar: ToolbarItems[] = [];
+  toolbar = withToolbarTitle([], 'Direcciones') as ToolbarItems[];
   editSettings: EditSettingsModel = {
     allowAdding: false,
     allowEditing: false,
@@ -189,7 +190,10 @@ export class AddressGridComponent implements OnInit, OnDestroy {
 
   private applyEditState(): void {
     const enabled = this.gridEnabled;
-    this.toolbar = enabled ? ['Add', 'Edit', 'Delete'] : [];
+    this.toolbar = withToolbarTitle(
+      enabled ? ['Add', 'Edit', 'Delete'] : [],
+      'Direcciones'
+    ) as ToolbarItems[];
     this.editSettings = {
       allowAdding: enabled,
       allowEditing: enabled,

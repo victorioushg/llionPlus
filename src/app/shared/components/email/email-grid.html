@@ -1,5 +1,4 @@
 <div id="email-grid" [class.wrapper]="!gridEnabled">
-  <h6 class="detail-section-title">Correos electrónicos</h6>
   <ejs-grid
     #emailgrid
     [dataSource]="(emails$ | async) || []"

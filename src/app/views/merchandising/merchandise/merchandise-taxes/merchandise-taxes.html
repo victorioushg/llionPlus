@@ -1,0 +1,101 @@
+<div class="wrapper">
+  <div id="merchandise-taxes-grid">
+    <ejs-grid
+      #taxesgrid
+      [dataSource]="(taxesData$ | async) || []"
+      [toolbar]="taxesToolbar"
+      [editSettings]="taxesEditSettings"
+      [height]="taxesGridHeight"
+      [rowHeight]="taxesGridRowHeight"
+      [width]="'100%'"
+      clipMode="EllipsisWithTooltip"
+      (actionBegin)="actionBegin($event)"
+      (actionComplete)="actionComplete($event)"
+    >
+      <e-columns>
+        <e-column
+          field="taxType"
+          headerText="Tipo"
+          width="50%"
+          [isPrimaryKey]="true"
+        ></e-column>
+        <e-column
+          field="rateType"
+          headerText="Código"
+          width="25%"
+          [isPrimaryKey]="true"
+        ></e-column>
+        <e-column
+          field="rate"
+          headerText="Tasa"
+          width="25%"
+          textAlign="Right"
+          [allowEditing]="false"
+        >
+          <ng-template #template let-data>
+            {{ formatRate(data?.rate) }}
+          </ng-template>
+        </e-column>
+        <e-column field="merchandiseId" [visible]="false"></e-column>
+        <e-column field="organizationId" [visible]="false"></e-column>
+      </e-columns>
+
+      <ng-template #editSettingsTemplate let-data>
+        <div ngForm #taxForm="ngForm" class="tax-edit-dialog">
+          <input
+            type="hidden"
+            name="merchandiseId"
+            [(ngModel)]="taxData.merchandiseId"
+          />
+          <input
+            type="hidden"
+            name="organizationId"
+            [(ngModel)]="taxData.organizationId"
+          />
+
+          <div class="row">
+            <div class="col-md-12">
+              <ejs-dropdownlist
+                id="taxType"
+                name="taxType"
+                [(ngModel)]="taxData.taxType"
+                [dataSource]="taxTypeOptions"
+                [allowFiltering]="true"
+                placeholder="Tipo de impuesto"
+                floatLabelType="Always"
+                popupHeight="220px"
+                [required]="true"
+                (change)="onTaxTypeChange($event)"
+              ></ejs-dropdownlist>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-md-6">
+              <ejs-dropdownlist
+                id="rateType"
+                name="rateType"
+                [(ngModel)]="taxData.rateType"
+                [dataSource]="rateTypeOptions"
+                [fields]="rateTypeFields"
+                [allowFiltering]="true"
+                placeholder="Código de tasa"
+                floatLabelType="Always"
+                popupHeight="220px"
+                [required]="true"
+                (change)="onRateTypeChange($event)"
+              ></ejs-dropdownlist>
+            </div>
+            <div class="col-md-6">
+              <div class="tax-rate-readonly">
+                <span class="tax-rate-readonly__label">Tasa</span>
+                <span class="tax-rate-readonly__value">{{
+                  taxData.rate != null ? (taxData.rate | percent: '1.2-2') : '—'
+                }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </ng-template>
+    </ejs-grid>
+  </div>
+</div>

@@ -111,6 +111,12 @@
 
 @include toolbar.child-grid-toolbar('merchandise-prices-grid');
 
+.tab-placeholder {
+  min-height: 80px;
+  padding: 16px;
+  color: rgba(0, 0, 0, 0.55);
+}
+
 ::ng-deep #merchandise-prices-grid .e-grid {
   .e-rowcell {
     padding-top: 6px;

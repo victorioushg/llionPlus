@@ -12,6 +12,7 @@ import {
 } from '@syncfusion/ej2-angular-grids';
 import { ParametersService } from './parameters.service';
 import MiniToolbar from '@assets/json/minitoolbar.json';
+import { withToolbarTitle } from '@shared/utils/grid-toolbar';
 import {
   BehaviorSubject,
   catchError,
@@ -70,7 +71,7 @@ export class ParametersComponent implements OnInit {
   //   })
   // );
 
-  toolbar: ToolbarItems[] | object = MiniToolbar;
+  toolbar = withToolbarTitle(MiniToolbar as object[], 'Parámetros');
   searchSettings?: SearchSettingsModel;
 
   @ViewChild('grid') public grid: GridComponent;

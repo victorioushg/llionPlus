@@ -1,7 +1,11 @@
 import { Injectable } from '@angular/core';
 import {
   IMerchandise,
+  IMerchandiseCode,
+  IMerchandiseMedia,
   IMerchandisePrice,
+  IMerchandiseProfile,
+  IMerchandiseTax,
   IMerchandiseUom,
 } from './merchandise';
 
@@ -40,6 +44,7 @@ import { toastType } from '@shared/enums/enums';
 import { Action } from '@shared/models/edit-action';
 import { ErrorHandlerService } from '@shared/services/errorHandlerService';
 import { IGroup } from '@app/shared/models/group';
+import { IOrganizationTax } from '@views/application/organization/organization';
 
 @Injectable({
   providedIn: 'root',
@@ -47,6 +52,7 @@ import { IGroup } from '@app/shared/models/group';
 export class MerchandiseService {
   private merchandiseUrl = environment.API_URL + 'merchandise';
   private merchandiseChildGridUrl = environment.API_URL + 'Merchandise';
+  private organizationUrl = environment.API_URL + 'organization';
 
   //
   //
@@ -63,6 +69,8 @@ export class MerchandiseService {
   merchandiseCategories$!: Observable<IGroup[]>;
   merchandiseDivisions$!: Observable<IGroup[]>;
   merchandiseTypes$!: Observable<IGroup[]>;
+  /** Organization taxes — used as lookup for merchandise tax grid */
+  organizationTaxes$!: Observable<IOrganizationTax[]>;
 
   movements$!: Observable<IMerchandiseMovement[]>;
 
@@ -72,10 +80,20 @@ export class MerchandiseService {
   merchandiseSelected$!: Observable<IMerchandise>;
   merchandiseMovements$!: Observable<IMerchandiseMovement[]>;
   merchandiseUom$!: Observable<IMerchandiseUom[]>;
+  merchandiseCodes$!: Observable<IMerchandiseCode[]>;
+  merchandiseTaxes$!: Observable<IMerchandiseTax[]>;
+  merchandiseMedia$!: Observable<IMerchandiseMedia[]>;
+  merchandiseProfiles$!: Observable<IMerchandiseProfile[]>;
   merchandisePrices$!: Observable<IMerchandisePrice[]>;
   movementTypes$!: Observable<IGroup[]>;
+  codeTypes$!: Observable<IGroup[]>;
 
   private movementsRefreshSubject = new BehaviorSubject<number>(0);
+  private codesRefreshSubject = new BehaviorSubject<number>(0);
+  private taxesRefreshSubject = new BehaviorSubject<number>(0);
+  private mediaRefreshSubject = new BehaviorSubject<number>(0);
+  private profilesRefreshSubject = new BehaviorSubject<number>(0);
+  private orgTaxesRefreshSubject = new BehaviorSubject<number>(0);
 
   // Used by grid double-click to ensure the detail form loads.
   merchandiseIdSelected(merchandiseId: number): void {
@@ -198,6 +216,24 @@ export class MerchandiseService {
         shareReplay(1),
       );
 
+    this.organizationTaxes$ = this.orgTaxesRefreshSubject.pipe(
+      switchMap(() =>
+        this.http
+          .get<IApiResponse<IOrganizationTax[]>>(
+            `${this.organizationUrl}/taxes/${this.organizationId}`,
+          )
+          .pipe(
+            map((data) => data?.result ?? []),
+            catchError((err) => {
+              this.errorHandlerService.handleError(err);
+              // Keep merchandise tax grid usable even if lookup fails
+              return of([] as IOrganizationTax[]);
+            }),
+          ),
+      ),
+      shareReplay(1),
+    );
+
     this.merchandiseWithMovements$ = combineLatest([
       this.merchandiseSelectedAction$,
       this.movementsRefreshSubject,
@@ -235,11 +271,67 @@ export class MerchandiseService {
         shareReplay(1),
       );
 
+    this.codeTypes$ = this.http
+      .get<IApiResponse<IGroup[]>>(`${this.merchandiseUrl}/codetypes`)
+      .pipe(
+        map((data) => data.result ?? []),
+        catchError(this.errorHandlerService.handleError),
+        shareReplay(1),
+      );
+
     this.merchandiseUom$ = this.merchandiseSelectedAction$.pipe(
       switchMap((merchandiseId) =>
         !merchandiseId || merchandiseId <= 0
           ? of([])
           : this.getMerchandiseUom(merchandiseId),
+      ),
+      shareReplay(1),
+    );
+
+    this.merchandiseCodes$ = combineLatest([
+      this.merchandiseSelectedAction$,
+      this.codesRefreshSubject,
+    ]).pipe(
+      switchMap(([merchandiseId]) =>
+        !merchandiseId || merchandiseId <= 0
+          ? of([])
+          : this.getMerchandiseCodes(merchandiseId),
+      ),
+      shareReplay(1),
+    );
+
+    this.merchandiseTaxes$ = combineLatest([
+      this.merchandiseSelectedAction$,
+      this.taxesRefreshSubject,
+    ]).pipe(
+      switchMap(([merchandiseId]) =>
+        !merchandiseId || merchandiseId <= 0
+          ? of([])
+          : this.getMerchandiseTaxes(merchandiseId),
+      ),
+      shareReplay(1),
+    );
+
+    this.merchandiseMedia$ = combineLatest([
+      this.merchandiseSelectedAction$,
+      this.mediaRefreshSubject,
+    ]).pipe(
+      switchMap(([merchandiseId]) =>
+        !merchandiseId || merchandiseId <= 0
+          ? of([])
+          : this.getMerchandiseMedia(merchandiseId),
+      ),
+      shareReplay(1),
+    );
+
+    this.merchandiseProfiles$ = combineLatest([
+      this.merchandiseSelectedAction$,
+      this.profilesRefreshSubject,
+    ]).pipe(
+      switchMap(([merchandiseId]) =>
+        !merchandiseId || merchandiseId <= 0
+          ? of([])
+          : this.getMerchandiseProfiles(merchandiseId),
       ),
       shareReplay(1),
     );
@@ -343,33 +435,44 @@ export class MerchandiseService {
     }
 
     if (operation.action === 'add' || operation.action === 'update') {
-      return this.http
-        .post<IApiResponse<number>>(
-          this.merchandiseUrl,
-          operation.action === 'add' ? { ...merchandise, id: 0 } : merchandise,
-          {
-            headers: this.headers,
-          },
-        )
-        .pipe(
-          tap(() => {
-            this.toastService.showMyToast(
-              `${merchandise.description}, datos almacenados`,
-              toastType.success,
-            );
-          }),
-          // Return the original merchandise so it can replace the merchandise in the array
-          map((data) => {
-            const savedId = data?.result;
-            const nextItem: IMerchandise =
-              savedId !== undefined && savedId !== null
-                ? { ...merchandise, merchandiseId: savedId }
-                : merchandise;
+      const payload: IMerchandise = {
+        ...merchandise,
+        organizationId: merchandise.organizationId || this.organizationId,
+        merchandiseId:
+          operation.action === 'add' ? 0 : merchandise.merchandiseId,
+      };
 
-            return { item: nextItem, action: operation.action };
-          }),
-          catchError(this.errorHandlerService.handleError),
-        );
+      const request$ =
+        operation.action === 'add'
+          ? this.http.post<IApiResponse<number>>(
+              this.merchandiseUrl,
+              payload,
+              { headers: this.headers },
+            )
+          : this.http.put<IApiResponse<number>>(
+              this.merchandiseUrl,
+              payload,
+              { headers: this.headers },
+            );
+
+      return request$.pipe(
+        tap(() => {
+          this.toastService.showMyToast(
+            `${merchandise.name || merchandise.description}, datos almacenados`,
+            toastType.success,
+          );
+        }),
+        map((data) => {
+          const savedId = data?.result;
+          const nextItem: IMerchandise =
+            savedId !== undefined && savedId !== null && savedId > 0
+              ? { ...payload, merchandiseId: savedId }
+              : payload;
+
+          return { item: nextItem, action: operation.action };
+        }),
+        catchError(this.errorHandlerService.handleError),
+      );
     }
 
     // If there is no operation, return the merchandise
@@ -468,6 +571,359 @@ export class MerchandiseService {
       >(`${this.merchandiseChildGridUrl}/uom/${id}`)
       .pipe(
         map((data) => data.result ?? []),
+        catchError(this.errorHandlerService.handleError),
+      );
+  }
+
+  getMerchandiseCodes(id: number): Observable<IMerchandiseCode[]> {
+    return this.http
+      .get<
+        IApiResponse<IMerchandiseCode[]>
+      >(`${this.merchandiseChildGridUrl}/codes/${id}`, {
+        params: { organizationId: String(this.organizationId) },
+      })
+      .pipe(
+        map((data) => data.result ?? []),
+        catchError(this.errorHandlerService.handleError),
+      );
+  }
+
+  refreshCodes(): void {
+    this.codesRefreshSubject.next(this.codesRefreshSubject.value + 1);
+  }
+
+  addMerchandiseCode(item: IMerchandiseCode): Observable<number> {
+    const payload: IMerchandiseCode = {
+      ...item,
+      organizationId: item.organizationId ?? this.organizationId,
+    };
+    return this.http
+      .post<IApiResponse<number>>(
+        `${this.merchandiseChildGridUrl}/code`,
+        payload,
+        { headers: this.headers },
+      )
+      .pipe(
+        tap(() => {
+          this.toastService.showMyToast('Código almacenado', toastType.success);
+          this.refreshCodes();
+        }),
+        map((data) => data.result),
+        catchError(this.errorHandlerService.handleError),
+      );
+  }
+
+  updateMerchandiseCode(item: IMerchandiseCode): Observable<number> {
+    const payload: IMerchandiseCode = {
+      ...item,
+      organizationId: item.organizationId ?? this.organizationId,
+    };
+    return this.http
+      .put<IApiResponse<number>>(
+        `${this.merchandiseChildGridUrl}/code`,
+        payload,
+        { headers: this.headers },
+      )
+      .pipe(
+        tap(() => {
+          this.toastService.showMyToast('Código actualizado', toastType.success);
+          this.refreshCodes();
+        }),
+        map((data) => data.result),
+        catchError(this.errorHandlerService.handleError),
+      );
+  }
+
+  deleteMerchandiseCode(item: IMerchandiseCode): Observable<number> {
+    const code = encodeURIComponent(item.code ?? '');
+    const orgId = item.organizationId ?? this.organizationId;
+    return this.http
+      .delete<IApiResponse<number>>(
+        `${this.merchandiseChildGridUrl}/code/${item.merchandiseId}/${code}`,
+        {
+          headers: this.headers,
+          params: { organizationId: String(orgId) },
+        },
+      )
+      .pipe(
+        tap(() => {
+          this.toastService.showMyToast('Código eliminado', toastType.success);
+          this.refreshCodes();
+        }),
+        map((data) => data.result),
+        catchError(this.errorHandlerService.handleError),
+      );
+  }
+
+  getMerchandiseTaxes(id: number): Observable<IMerchandiseTax[]> {
+    return this.http
+      .get<IApiResponse<IMerchandiseTax[]>>(
+        `${this.merchandiseChildGridUrl}/taxes/${id}`,
+        {
+          params: { organizationId: String(this.organizationId) },
+        },
+      )
+      .pipe(
+        map((data) =>
+          (data.result ?? []).map((row) => {
+            const anyRow = row as IMerchandiseTax & { Rate?: number | null };
+            const raw = anyRow.rate ?? anyRow.Rate;
+            const rate = raw == null ? NaN : Number(raw);
+            return {
+              ...row,
+              rate: Number.isFinite(rate) ? rate : null,
+            };
+          }),
+        ),
+        catchError(this.errorHandlerService.handleError),
+      );
+  }
+
+  refreshTaxes(): void {
+    this.taxesRefreshSubject.next(this.taxesRefreshSubject.value + 1);
+  }
+
+  /** Reloads app_taxes so merchandise tax rates stay in sync with organization. */
+  refreshOrganizationTaxes(): void {
+    this.orgTaxesRefreshSubject.next(this.orgTaxesRefreshSubject.value + 1);
+  }
+
+  addMerchandiseTax(item: IMerchandiseTax): Observable<number> {
+    return this.http
+      .post<IApiResponse<number>>(
+        `${this.merchandiseChildGridUrl}/tax`,
+        item,
+        { headers: this.headers },
+      )
+      .pipe(
+        tap(() => {
+          this.toastService.showMyToast(
+            'Impuesto de mercancía almacenado',
+            toastType.success,
+          );
+          this.refreshTaxes();
+        }),
+        map((data) => data.result),
+        catchError(this.errorHandlerService.handleError),
+      );
+  }
+
+  updateMerchandiseTax(item: IMerchandiseTax): Observable<number> {
+    return this.http
+      .put<IApiResponse<number>>(
+        `${this.merchandiseChildGridUrl}/tax`,
+        item,
+        { headers: this.headers },
+      )
+      .pipe(
+        tap(() => {
+          this.toastService.showMyToast(
+            'Impuesto de mercancía actualizado',
+            toastType.success,
+          );
+          this.refreshTaxes();
+        }),
+        map((data) => data.result),
+        catchError(this.errorHandlerService.handleError),
+      );
+  }
+
+  deleteMerchandiseTax(item: IMerchandiseTax): Observable<number> {
+    const taxType = encodeURIComponent(item.taxType ?? '');
+    const rateType = encodeURIComponent(item.rateType ?? '');
+    const orgId = item.organizationId ?? this.organizationId;
+    return this.http
+      .delete<IApiResponse<number>>(
+        `${this.merchandiseChildGridUrl}/tax/${item.merchandiseId}/${taxType}/${rateType}`,
+        {
+          headers: this.headers,
+          params: { organizationId: String(orgId) },
+        },
+      )
+      .pipe(
+        tap(() => {
+          this.toastService.showMyToast(
+            'Impuesto de mercancía eliminado',
+            toastType.success,
+          );
+          this.refreshTaxes();
+        }),
+        map((data) => data.result),
+        catchError(this.errorHandlerService.handleError),
+      );
+  }
+
+  getMerchandiseMedia(id: number): Observable<IMerchandiseMedia[]> {
+    return this.http
+      .get<IApiResponse<IMerchandiseMedia[]>>(
+        `${this.merchandiseChildGridUrl}/media/${id}`,
+      )
+      .pipe(
+        map((data) => data.result ?? []),
+        catchError((err) => {
+          this.errorHandlerService.handleError(err);
+          return of([]);
+        }),
+      );
+  }
+
+  refreshMedia(): void {
+    this.mediaRefreshSubject.next(this.mediaRefreshSubject.value + 1);
+  }
+
+  addMerchandiseMedia(item: IMerchandiseMedia): Observable<number> {
+    return this.http
+      .post<IApiResponse<number>>(
+        `${this.merchandiseChildGridUrl}/media`,
+        item,
+        { headers: this.headers },
+      )
+      .pipe(
+        tap(() => {
+          this.toastService.showMyToast('Media almacenada', toastType.success);
+          this.refreshMedia();
+        }),
+        map((data) => data.result),
+        catchError(this.errorHandlerService.handleError),
+      );
+  }
+
+  updateMerchandiseMedia(item: IMerchandiseMedia): Observable<number> {
+    return this.http
+      .put<IApiResponse<number>>(
+        `${this.merchandiseChildGridUrl}/media`,
+        item,
+        { headers: this.headers },
+      )
+      .pipe(
+        tap(() => {
+          this.toastService.showMyToast('Media actualizada', toastType.success);
+          this.refreshMedia();
+        }),
+        map((data) => data.result),
+        catchError(this.errorHandlerService.handleError),
+      );
+  }
+
+  deleteMerchandiseMedia(item: IMerchandiseMedia): Observable<number> {
+    const fileName = encodeURIComponent(item.merchandiseFileName ?? '');
+    return this.http
+      .delete<IApiResponse<number>>(
+        `${this.merchandiseChildGridUrl}/media/${item.merchandiseId}/${fileName}`,
+        { headers: this.headers },
+      )
+      .pipe(
+        tap(() => {
+          this.toastService.showMyToast('Media eliminada', toastType.success);
+          this.refreshMedia();
+        }),
+        map((data) => data.result),
+        catchError(this.errorHandlerService.handleError),
+      );
+  }
+
+  getMerchandiseProfiles(id: number): Observable<IMerchandiseProfile[]> {
+    return this.http
+      .get<IApiResponse<IMerchandiseProfile[]>>(
+        `${this.merchandiseChildGridUrl}/profiles/${id}`,
+        {
+          params: { organizationId: String(this.organizationId) },
+        },
+      )
+      .pipe(
+        map((data) =>
+          (data.result ?? []).map((row) => ({
+            ...row,
+            deactivated: !!row.deactivated,
+            profileDate: row.profileDate ? new Date(row.profileDate) : null,
+          })),
+        ),
+        catchError((err) => {
+          this.errorHandlerService.handleError(err);
+          return of([]);
+        }),
+      );
+  }
+
+  refreshProfiles(): void {
+    this.profilesRefreshSubject.next(this.profilesRefreshSubject.value + 1);
+  }
+
+  addMerchandiseProfile(item: IMerchandiseProfile): Observable<number> {
+    const payload: IMerchandiseProfile = {
+      ...item,
+      organizationId: item.organizationId ?? this.organizationId,
+    };
+    return this.http
+      .post<IApiResponse<number>>(
+        `${this.merchandiseChildGridUrl}/profile`,
+        payload,
+        { headers: this.headers },
+      )
+      .pipe(
+        tap(() => {
+          this.toastService.showMyToast(
+            'Expediente almacenado',
+            toastType.success,
+          );
+          this.refreshProfiles();
+        }),
+        map((data) => data.result),
+        catchError(this.errorHandlerService.handleError),
+      );
+  }
+
+  updateMerchandiseProfile(item: IMerchandiseProfile): Observable<number> {
+    const payload: IMerchandiseProfile = {
+      ...item,
+      organizationId: item.organizationId ?? this.organizationId,
+    };
+    return this.http
+      .put<IApiResponse<number>>(
+        `${this.merchandiseChildGridUrl}/profile`,
+        payload,
+        { headers: this.headers },
+      )
+      .pipe(
+        tap(() => {
+          this.toastService.showMyToast(
+            'Expediente actualizado',
+            toastType.success,
+          );
+          this.refreshProfiles();
+        }),
+        map((data) => data.result),
+        catchError(this.errorHandlerService.handleError),
+      );
+  }
+
+  deleteMerchandiseProfile(item: IMerchandiseProfile): Observable<number> {
+    const orgId = item.organizationId ?? this.organizationId;
+    const profileDate =
+      item.profileDate instanceof Date
+        ? item.profileDate.toISOString().slice(0, 10)
+        : String(item.profileDate ?? '');
+    return this.http
+      .delete<IApiResponse<number>>(
+        `${this.merchandiseChildGridUrl}/profile/${item.merchandiseId}`,
+        {
+          headers: this.headers,
+          params: {
+            organizationId: String(orgId),
+            profileDate,
+            description: item.description ?? '',
+          },
+        },
+      )
+      .pipe(
+        tap(() => {
+          this.toastService.showMyToast(
+            'Expediente eliminado',
+            toastType.success,
+          );
+          this.refreshProfiles();
+        }),
+        map((data) => data.result),
         catchError(this.errorHandlerService.handleError),
       );
   }

@@ -14,6 +14,7 @@ import {
   ToolbarItems,
 } from '@syncfusion/ej2-angular-grids';
 import { NgForm } from '@angular/forms';
+import { withToolbarTitle } from '@shared/utils/grid-toolbar';
 import {
   Observable,
   Subject,
@@ -71,7 +72,7 @@ export class PhoneGridComponent implements OnInit, OnDestroy {
 
   phoneData: IPhone = this.createEmptyPhone();
 
-  toolbar: ToolbarItems[] = [];
+  toolbar = withToolbarTitle([], 'Teléfonos') as ToolbarItems[];
   editSettings: EditSettingsModel = {
     allowAdding: false,
     allowEditing: false,
@@ -198,7 +199,10 @@ export class PhoneGridComponent implements OnInit, OnDestroy {
 
   private applyEditState(): void {
     const enabled = this.gridEnabled;
-    this.toolbar = enabled ? ['Add', 'Edit', 'Delete'] : [];
+    this.toolbar = withToolbarTitle(
+      enabled ? ['Add', 'Edit', 'Delete'] : [],
+      'Teléfonos'
+    ) as ToolbarItems[];
     this.editSettings = {
       allowAdding: enabled,
       allowEditing: enabled,

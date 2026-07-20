@@ -12,6 +12,7 @@ import {
 } from '@syncfusion/ej2-angular-grids';
 import { AccountsService } from './accounts.service';
 import MiniToolbar from '@assets/json/minitoolbar.json';
+import { withToolbarTitle } from '@shared/utils/grid-toolbar';
 import { BehaviorSubject, catchError, combineLatest, EMPTY, map, tap } from 'rxjs';
 import { ChangeDetectionStrategy } from '@angular/core';
 import { IAccount } from './account';
@@ -64,7 +65,10 @@ export class AccountsComponent implements OnInit {
   //   })
   // );
 
-   toolbar: ToolbarItems[] | object = MiniToolbar;
+   toolbar = withToolbarTitle(
+     MiniToolbar as object[],
+     'Cuentas contables'
+   );
    searchSettings?: SearchSettingsModel;
 
    @ViewChild('grid') public grid: GridComponent | undefined;

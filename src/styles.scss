@@ -478,3 +478,76 @@ h6 {
 .e-spinner-pane .e-spinner-inner .llion-spinner {
   margin: 0 auto;
 }
+
+/* Grid toolbars: icons only (hide Add/Edit/Delete/… labels; keep identity title) */
+.e-grid .e-toolbar .e-toolbar-item:not(.e-grid-toolbar-title) .e-tbar-btn-text {
+  display: none;
+}
+
+/* Grid identity label on the right of the toolbar */
+.e-grid .e-toolbar {
+  overflow: visible !important;
+}
+
+.e-grid .e-toolbar .e-toolbar-items,
+.e-grid .e-toolbar .e-toolbar-items.e-tbar-pos,
+.e-grid .e-toolbar .e-toolbar-right {
+  overflow: visible !important;
+  height: 100% !important;
+}
+
+.e-grid .e-toolbar .e-toolbar-item.e-grid-toolbar-title {
+  position: relative;
+  margin-left: auto;
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+  height: 40px !important;
+  min-height: 40px !important;
+  align-self: stretch;
+  overflow: visible !important;
+
+  &::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 3px;
+    min-width: 3px;
+    height: 40px;
+    background-color: $llion-color-primary;
+    z-index: 1;
+  }
+
+  .e-tbar-btn {
+    border: none !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    cursor: default;
+    pointer-events: none;
+    height: 40px !important;
+    min-height: 40px !important;
+    margin: 0 !important;
+    padding: 0 10px 0 12px !important;
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    line-height: 1 !important;
+  }
+
+  .e-tbar-btn-text {
+    display: inline-block !important;
+    font-weight: 600;
+    font-size: 10px !important;
+    line-height: 1 !important;
+    color: $llion-color-font !important;
+    text-transform: none;
+    transform: translateY(1px);
+  }
+
+  .e-icons,
+  .e-btn-icon {
+    display: none !important;
+  }
+}

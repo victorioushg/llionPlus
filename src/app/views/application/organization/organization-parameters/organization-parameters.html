@@ -1,6 +1,5 @@
 <div class="wrapper" [class.parameters-grid-disabled]="!parametersGridEnabled">
   <div id="organization-parameters-grid">
-    <h6 class="detail-section-title">Parámetros y contadores</h6>
     <ejs-grid
       #parametersgrid
       [dataSource]="(parameters$ | async) || []"

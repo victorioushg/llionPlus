@@ -1,0 +1,24 @@
+@use 'variables' as *;
+@use '../child-grid-toolbar' as toolbar;
+
+:host {
+  display: block;
+  width: 100%;
+}
+
+.wrapper {
+  width: 100%;
+}
+
+#merchandise-media-grid,
+#merchandise-profile-grid {
+  width: 100%;
+}
+
+::ng-deep #merchandise-media-grid .e-grid .e-headercell .e-headercelldiv,
+::ng-deep #merchandise-profile-grid .e-grid .e-headercell .e-headercelldiv {
+  font-size: 13px;
+}
+
+@include toolbar.child-grid-toolbar('merchandise-media-grid');
+@include toolbar.child-grid-toolbar('merchandise-profile-grid');

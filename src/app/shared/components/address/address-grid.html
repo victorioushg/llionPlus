@@ -1,5 +1,4 @@
 <div id="address-grid" [class.wrapper]="!gridEnabled">
-  <h6 class="detail-section-title">Direcciones</h6>
   <ejs-grid
     #grid
     [dataSource]="(addresses$ | async) || []"

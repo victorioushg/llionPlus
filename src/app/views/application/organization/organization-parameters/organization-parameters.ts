@@ -23,6 +23,7 @@ import {
 import { OrganizationService } from '../organization.service';
 import { ToastService } from '@shared/services/toastService';
 import { toastType } from '@shared/enums/enums';
+import { withToolbarTitle } from '@shared/utils/grid-toolbar';
 
 @Component({
   selector: 'llion-organization-parameters',
@@ -56,7 +57,10 @@ export class OrganizationParametersComponent implements OnInit, OnDestroy {
 
   parameterData: IOrganizationParameter = this.createEmptyParameter();
 
-  parametersToolbar: ToolbarItems[] = [];
+  parametersToolbar = withToolbarTitle(
+    [],
+    'Parámetros y contadores'
+  ) as ToolbarItems[];
 
   parametersEditSettings: EditSettingsModel = {
     allowAdding: false,
@@ -183,7 +187,10 @@ export class OrganizationParametersComponent implements OnInit, OnDestroy {
   private applyOrganizationEditState(editing: boolean): void {
     const enabled = editing && this.selectedOrganizationId > 0;
     this.parametersGridEnabled = enabled;
-    this.parametersToolbar = enabled ? ['Add', 'Edit', 'Delete'] : [];
+    this.parametersToolbar = withToolbarTitle(
+      enabled ? ['Add', 'Edit', 'Delete'] : [],
+      'Parámetros y contadores'
+    ) as ToolbarItems[];
     this.parametersEditSettings = {
       allowAdding: enabled,
       allowEditing: enabled,

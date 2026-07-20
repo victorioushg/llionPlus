@@ -1,6 +1,5 @@
 <div class="wrapper">
   <div id="organization-exchanges-grid">
-    <h6 class="detail-section-title">Monedas y cambios</h6>
     <ejs-grid
       #exchangesgrid
       [dataSource]="(exchangeRates$ | async) || []"

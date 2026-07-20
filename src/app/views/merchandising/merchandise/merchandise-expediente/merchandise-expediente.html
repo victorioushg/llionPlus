@@ -1,0 +1,75 @@
+<div class="wrapper">
+  <div id="merchandise-profile-grid" *ngIf="showProfile">
+    <ejs-grid
+      #profilegrid
+      [dataSource]="(profilesData$ | async) || []"
+      [toolbar]="profileToolbar"
+      [editSettings]="editSettings"
+      [height]="gridHeight"
+      [width]="'100%'"
+      [allowTextWrap]="true"
+      [textWrapSettings]="{ wrapMode: 'Header' }"
+      (actionBegin)="profileActionBegin($event)"
+    >
+      <e-columns>
+        <e-column
+          field="profileDate"
+          headerText="Fecha"
+          type="date"
+          format="dd/MM/yyyy"
+          editType="datepickeredit"
+          width="22%"
+          [isPrimaryKey]="true"
+        ></e-column>
+        <e-column
+          field="description"
+          headerText="Descripción"
+          width="30%"
+          [isPrimaryKey]="true"
+        ></e-column>
+        <e-column field="cause" headerText="Causa" width="28%"></e-column>
+        <e-column
+          field="deactivated"
+          headerText="Inactivo"
+          type="boolean"
+          editType="booleanedit"
+          [displayAsCheckBox]="true"
+          textAlign="Center"
+          width="20%"
+        ></e-column>
+        <e-column field="merchandiseId" [visible]="false"></e-column>
+        <e-column field="organizationId" [visible]="false"></e-column>
+      </e-columns>
+    </ejs-grid>
+  </div>
+
+  <div id="merchandise-media-grid" *ngIf="showMedia">
+    <ejs-grid
+      #mediagrid
+      [dataSource]="(mediaData$ | async) || []"
+      [toolbar]="mediaToolbar"
+      [editSettings]="editSettings"
+      [height]="gridHeight"
+      [width]="'100%'"
+      [allowTextWrap]="true"
+      [textWrapSettings]="{ wrapMode: 'Header' }"
+      (actionBegin)="mediaActionBegin($event)"
+    >
+      <e-columns>
+        <e-column
+          field="merchandiseFileName"
+          headerText="Archivo"
+          width="55%"
+          [isPrimaryKey]="true"
+        ></e-column>
+        <e-column
+          field="comment"
+          headerText="Comentario"
+          width="45%"
+        ></e-column>
+        <e-column field="merchandiseId" [visible]="false"></e-column>
+        <e-column field="hasData" [visible]="false"></e-column>
+      </e-columns>
+    </ejs-grid>
+  </div>
+</div>

@@ -13,6 +13,7 @@ import {
 } from '@syncfusion/ej2-angular-grids';
 import { UserService } from './user.service';
 import MiniToolbar from '@assets/json/minitoolbar.json';
+import { withToolbarTitle } from '@shared/utils/grid-toolbar';
 import {
   BehaviorSubject,
   EMPTY,
@@ -50,7 +51,7 @@ export class UserComponent implements OnInit {
 
   users$!: Observable<IUser[]>;
 
-  toolbar: ToolbarItems[] | object = MiniToolbar;
+  toolbar = withToolbarTitle(MiniToolbar as object[], 'Usuarios');
   searchSettings?: SearchSettingsModel;
 
   @ViewChild('grid') public grid!: GridComponent;

@@ -25,4 +25,8 @@
   ::ng-deep ##{$grid-id} .e-grid .e-toolbar-items .e-toolbar-item.e-search-wrapper .e-search {
     background-color: $llion-color-primary-container;
   }
+
+  ::ng-deep ##{$grid-id} .e-toolbar .e-toolbar-item:not(.e-grid-toolbar-title) .e-tbar-btn-text {
+    display: none;
+  }
 }

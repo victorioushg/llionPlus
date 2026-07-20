@@ -1,6 +1,5 @@
 <div class="wrapper" [class.credits-grid-disabled]="!creditsGridEnabled">
   <div id="organization-credits-grid">
-    <h6 class="detail-section-title">Créditos y débitos</h6>
     <ejs-grid
       #creditsgrid
       [dataSource]="(credits$ | async) || []"

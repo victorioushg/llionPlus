@@ -5,22 +5,17 @@ import {
   OnInit,
   ViewChild,
 } from '@angular/core';
-import { of } from 'rxjs';
-import { map } from 'rxjs/operators';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MerchandiseService } from '../merchandise.service';
 
 import { DropDownListComponent } from '@syncfusion/ej2-angular-dropdowns';
 import {
   IMerchandise,
-  IMerchandiseBrand,
-  IMerchandiseCategory,
-  IMerchandiseDivision,
-  IMerchandiseType,
 } from '../merchandise';
 import {
   catchError,
   EMPTY,
+  map,
   Observable,
   Subject,
   takeUntil,
@@ -133,16 +128,21 @@ export class MerchandiseDetailComponent implements OnInit, OnDestroy {
         this.merchandise = merchandise;
 
         if (merchandise) {
-          this.merchandiseForm.patchValue({
-            merchandiseName: merchandise.name,
-            merchandiseAlternCode: merchandise.alternCode,
-            merchandiseBrands: merchandise.brandId,
-            merchandiseCategories: merchandise.groupId,
-            merchandisePresentation: merchandise.description,
-            merchandiseDivisions: merchandise.divisionId,
-            merchandiseTypes: merchandise.typeId,
-            merchandiseStock: merchandise.currentStock,
-            merchandiseAvailableStock: merchandise.availableStock,
+          this.merchandiseForm.reset({
+            merchandiseName: merchandise.name ?? '',
+            merchandiseAlternCode: merchandise.alternCode ?? '',
+            merchandiseBrands: merchandise.brandId ?? null,
+            merchandiseCategories: merchandise.groupId ?? null,
+            merchandisePresentation: merchandise.description ?? '',
+            merchandiseDivisions: merchandise.divisionId ?? null,
+            merchandiseTypes: merchandise.typeId ?? null,
+            merchandiseActive: !merchandise.deactivated,
+            merchandiseRegulated: !!merchandise.regulated,
+            merchandiseReturns: !!merchandise.acceptsReturns,
+            merchandiseAcceptRebates: !!merchandise.acceptsRebate,
+            merchandiseReturnsRate: merchandise.acceptsReturnsRate ?? 0,
+            merchandiseStock: merchandise.currentStock ?? 0,
+            merchandiseAvailableStock: merchandise.availableStock ?? 0,
           });
         }
       }),
@@ -216,13 +216,23 @@ export class MerchandiseDetailComponent implements OnInit, OnDestroy {
       brandId: formValue.merchandiseBrands ?? 0,
       typeId: formValue.merchandiseTypes ?? 0,
       divisionId: formValue.merchandiseDivisions ?? 0,
-      deactivated: !!formValue.merchandiseActive,
+      deactivated: !formValue.merchandiseActive,
       acceptsReturns: formValue.merchandiseReturns ?? false,
       acceptsReturnsRate: formValue.merchandiseReturnsRate ?? 0,
       currentStock: formValue.merchandiseStock ?? 0,
       availableStock: formValue.merchandiseAvailableStock ?? 0,
+      marketShare: this.merchandise?.marketShare ?? 0,
       regulated: formValue.merchandiseRegulated ?? false,
       acceptsRebate: formValue.merchandiseAcceptRebates ?? false,
+      height: this.merchandise?.height ?? 0,
+      width: this.merchandise?.width ?? 0,
+      depth: this.merchandise?.depth ?? 0,
+      accountId: this.merchandise?.accountId ?? 0,
+      classId: this.merchandise?.classId ?? 0,
+      parentId: this.merchandise?.parentId ?? 0,
+      organizationId:
+        this.merchandise?.organizationId ||
+        this.merchandiseService.currentOrganizationId,
     };
 
     if (merchandiseToSave.merchandiseId > 0) {
@@ -237,52 +247,6 @@ export class MerchandiseDetailComponent implements OnInit, OnDestroy {
   clearForm() {
     this.merchandiseForm.reset();
   }
-
-  // onCancelClick() {
-  //   this.disableForm();
-  //   if (this.merchandise.merchandiseId === 0) {
-  //     this.clearForm();
-  //   }
-  // }
-
-  // onSaveClick() {
-  //   const newOrg: IMerchandise = {
-  //     merchandiseId: this.merchandise ? this.merchandise.merchandiseId : 0,
-  //     alternCode: this.merchandiseForm.value.merchandiseAlternCode,
-  //     name: this.merchandiseForm.value.merchandiseName,
-  //     description: this.merchandiseForm.value.merchandisePresentation,
-  //     groupId: this.merchandiseForm.value.merchandiseCategories,
-  //     brandId: this.merchandiseForm.value.merchandiseBrands,
-  //     typeId: this.merchandiseForm.value.merchandiseTypes,
-  //     divisionId: this.merchandiseForm.value.merchandiseDivisions,
-  //     deactivated: this.merchandiseForm.value.merchandiseActive,
-  //     acceptsReturns: this.merchandiseForm.value.merchandiseReturns,
-  //     acceptsReturnsRate: this.merchandiseForm.value.merchandiseReturnsRate,
-  //     currentStock: this.merchandiseForm.value.merchandiseStock ?? 0,
-  //     availableStock: this.merchandiseForm.value.merchandiseAvailableStock ?? 0,
-  //     marketShare: 0,
-  //     regulated: this.merchandiseForm.value.merchandiseRegulated,
-  //     acceptsRebate: this.merchandiseForm.value.merchandiseAcceptRebates,
-  //     height: 0,
-  //     width: 0,
-  //     depth: 0,
-  //     createdOn: new Date(),
-  //     createddBy: '',
-  //     LastModifiedOn: new Date(),
-  //     accountId: 0,
-  //     classId: 0,
-  //     parentId: 0,
-  //     organizationId: 0,
-  //   };
-
-  //   if (this.merchandise) {
-  //     this.merchandiseService.updateMerchandise(newOrg);
-  //   } else {
-  //     this.merchandiseService.addMerchandise(newOrg);
-  //   }
-
-  //   this.disableForm();
-  // }
 
   disableForm() {
     this.merchandiseService.enableMerchandiseForm(false);

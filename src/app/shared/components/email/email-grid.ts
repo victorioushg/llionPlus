@@ -23,6 +23,7 @@ import {
   map,
   takeUntil,
 } from 'rxjs';
+import { withToolbarTitle } from '@shared/utils/grid-toolbar';
 import { IEmail } from './email';
 import { EmailService } from './email.service';
 import { ApplicationService } from '@shared/services/applicattionService';
@@ -50,7 +51,10 @@ export class EmailGridComponent implements OnInit, OnDestroy {
 
   emailData: IEmail = this.createEmptyEmail();
 
-  toolbar: ToolbarItems[] = [];
+  toolbar = withToolbarTitle(
+    [],
+    'Correos electrónicos'
+  ) as ToolbarItems[];
   editSettings: EditSettingsModel = {
     allowAdding: false,
     allowEditing: false,
@@ -171,7 +175,10 @@ export class EmailGridComponent implements OnInit, OnDestroy {
 
   private applyEditState(): void {
     const enabled = this.gridEnabled;
-    this.toolbar = enabled ? ['Add', 'Edit', 'Delete'] : [];
+    this.toolbar = withToolbarTitle(
+      enabled ? ['Add', 'Edit', 'Delete'] : [],
+      'Correos electrónicos'
+    ) as ToolbarItems[];
     this.editSettings = {
       allowAdding: enabled,
       allowEditing: enabled,
