@@ -14,7 +14,7 @@ import {
   ToolbarItems,
 } from '@syncfusion/ej2-angular-grids';
 import { NgForm } from '@angular/forms';
-import { Observable, Subject, combineLatest, take, takeUntil } from 'rxjs';
+import { Observable, Subject, take, takeUntil } from 'rxjs';
 import { IOrganizationCreditDebit } from '../organization';
 import { OrganizationService } from '../organization.service';
 import { ToastService } from '@shared/services/toastService';
@@ -71,14 +71,11 @@ export class OrganizationCreditsComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.credits$ = this.organizationService.organizationCredits$;
 
-    combineLatest([
-      this.organizationService.organizationContextIdAction$,
-      this.organizationService.enableOrganizationFormAction$,
-    ])
+    this.organizationService.organizationContextIdAction$
       .pipe(takeUntil(this.destroy$))
-      .subscribe(([organizationId, editing]) => {
+      .subscribe((organizationId) => {
         this.selectedOrganizationId = organizationId ?? 0;
-        this.applyOrganizationEditState(!!editing);
+        this.applyOrganizationEditState(this.selectedOrganizationId > 0);
         this.cdr.markForCheck();
       });
   }
@@ -101,7 +98,7 @@ export class OrganizationCreditsComponent implements OnInit, OnDestroy {
     if (needsOrganization && !this.creditsGridEnabled) {
       args.cancel = true;
       this.toastService.showMyToast(
-        'Debe agregar o editar una organización para gestionar créditos y débitos',
+        'Debe seleccionar una organización para gestionar créditos y débitos',
         toastType.warning
       );
       return;
@@ -178,8 +175,7 @@ export class OrganizationCreditsComponent implements OnInit, OnDestroy {
     }
   }
 
-  private applyOrganizationEditState(editing: boolean): void {
-    const enabled = editing && this.selectedOrganizationId > 0;
+  private applyOrganizationEditState(enabled: boolean): void {
     this.creditsGridEnabled = enabled;
     this.creditsToolbar = withToolbarTitle(
       enabled ? ['Add', 'Edit', 'Delete'] : [],

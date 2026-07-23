@@ -15,7 +15,6 @@ import {
   IOrganizationType,
 } from '../organization';
 import { catchError, EMPTY, Observable, Subject, tap } from 'rxjs';
-import { ApplicationService } from '@shared/services/applicattionService';
 
 @Component({
   selector: 'llion-organization-detail',
@@ -50,13 +49,14 @@ export class OrganizationDetailComponent implements OnInit {
 
   cfields: Object = { text: 'currency', value: 'alphabeticCode' };
   cvalue!: string;
+  /** Syncfusion dropdown search matches text anywhere in the item. */
+  filterType: 'Contains' = 'Contains';
 
   org!: IOrganization;
   organization$!: Observable<IOrganization>;
   enabled$!: Observable<boolean>;
 
   constructor(
-    private applicationService: ApplicationService,
     private formBuilder: FormBuilder,
     private organizationService: OrganizationService
   ) {}
@@ -144,10 +144,8 @@ export class OrganizationDetailComponent implements OnInit {
   }
 
   disableForm() {
+    // Only the organization form inputs / Accept-Cancel; other tabs stay usable.
     this.organizationService.enableOrganizationForm(false);
     this.organizationService.enableOrganizationGrid(false);
-    this.applicationService.enableAddressChildGrid(false);
-    this.applicationService.enableEmailChildGrid(false);
-    this.applicationService.enablePhoneChildGrid(false);
   }
 }

@@ -119,7 +119,7 @@ export class EmailGridComponent implements OnInit, OnDestroy {
     if (needsEditMode && !this.gridEnabled) {
       args.cancel = true;
       this.toastService.showMyToast(
-        'Debe editar la organización para gestionar correos',
+        'Debe seleccionar una organización para gestionar correos',
         toastType.warning
       );
       return;
@@ -130,6 +130,7 @@ export class EmailGridComponent implements OnInit, OnDestroy {
       this.emailData = {
         ...this.createEmptyEmail(),
         ...row,
+        emailId: Number(row.emailId) || 0,
         organizationId: this.organizationId,
         entityId: this.entityId || row.entityId || 0,
       };
@@ -140,12 +141,13 @@ export class EmailGridComponent implements OnInit, OnDestroy {
       if (this.emailForm?.valid) {
         const payload: IEmail = {
           ...this.emailData,
+          emailId: Number(this.emailData.emailId) || 0,
           organizationId: this.organizationId,
           entityId: this.entityId,
         };
         args.data = payload;
 
-        if (payload.emailId && payload.emailId > 0) {
+        if (payload.emailId > 0) {
           this.emailService.updateEmail(payload);
         } else {
           this.emailService.addEmail(payload);
@@ -156,9 +158,17 @@ export class EmailGridComponent implements OnInit, OnDestroy {
     }
 
     if (args.requestType === 'delete') {
-      const row = (args.data ?? {}) as IEmail;
-      if (row.emailId > 0) {
-        this.emailService.deleteEmail(row);
+      const raw = (args.data ?? {}) as IEmail | IEmail[];
+      const row = Array.isArray(raw) ? raw[0] : raw;
+      const emailId = Number(row?.emailId) || 0;
+      if (emailId > 0) {
+        this.emailService.deleteEmail({ ...row, emailId });
+      } else {
+        args.cancel = true;
+        this.toastService.showMyToast(
+          'Seleccione un correo para eliminar',
+          toastType.warning
+        );
       }
     }
   }
@@ -184,6 +194,7 @@ export class EmailGridComponent implements OnInit, OnDestroy {
       allowEditing: enabled,
       allowDeleting: enabled,
       mode: 'Dialog',
+      showDeleteConfirmDialog: true,
     };
 
     if (this.emailgrid) {

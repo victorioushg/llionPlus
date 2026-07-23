@@ -13,6 +13,7 @@ import {
   SaveEventArgs,
   ToolbarItems,
 } from '@syncfusion/ej2-angular-grids';
+import { ClickEventArgs } from '@syncfusion/ej2-navigations';
 import { NgForm } from '@angular/forms';
 import {
   Observable,
@@ -56,6 +57,7 @@ export class AddressGridComponent implements OnInit, OnDestroy {
   };
 
   addressData: IAddress = this.createEmptyAddress();
+  private addressTypes: IAddressType[] = [];
 
   toolbar = withToolbarTitle([], 'Direcciones') as ToolbarItems[];
   editSettings: EditSettingsModel = {
@@ -80,9 +82,15 @@ export class AddressGridComponent implements OnInit, OnDestroy {
 
     this.addresses$ = combineLatest([
       this.addressService.addressWithCRUD$,
+      this.addressTypes$,
       this.applicationService.enableAddressChildGridAction$,
     ]).pipe(
-      map(([addresses]) => addresses.filter(Boolean)),
+      map(([addresses, types]) => {
+        this.addressTypes = types ?? [];
+        return (addresses ?? [])
+          .filter(Boolean)
+          .map((row) => this.withTypeDescription(row));
+      }),
       catchError((err) => {
         this.toastService.showMyToast(err, toastType.error);
         return EMPTY;
@@ -123,7 +131,7 @@ export class AddressGridComponent implements OnInit, OnDestroy {
     if (needsEditMode && !this.gridEnabled) {
       args.cancel = true;
       this.toastService.showMyToast(
-        'Debe editar la organización para gestionar direcciones',
+        'Debe seleccionar una organización para gestionar direcciones',
         toastType.warning
       );
       return;
@@ -134,6 +142,11 @@ export class AddressGridComponent implements OnInit, OnDestroy {
       this.addressData = {
         ...this.createEmptyAddress(),
         ...row,
+        addressId: Number(row.addressId) || 0,
+        addressTypeId:
+          row.addressTypeId === null || row.addressTypeId === undefined
+            ? ''
+            : row.addressTypeId,
         organizationId: this.organizationId,
         entityId: this.entityId || row.entityId || 0,
       };
@@ -142,8 +155,11 @@ export class AddressGridComponent implements OnInit, OnDestroy {
 
     if (args.requestType === 'save') {
       if (this.addressForm?.valid) {
-        const payload: IAddress = {
+        const typeId = Number(this.addressData.addressTypeId) || 0;
+        const payload: IAddress = this.withTypeDescription({
           ...this.addressData,
+          addressId: Number(this.addressData.addressId) || 0,
+          addressTypeId: typeId,
           organizationId: this.organizationId,
           entityId: this.entityId,
           displayAddress: [
@@ -155,10 +171,10 @@ export class AddressGridComponent implements OnInit, OnDestroy {
           ]
             .filter(Boolean)
             .join('. '),
-        };
+        });
         args.data = payload;
 
-        if (payload.addressId && payload.addressId > 0) {
+        if (payload.addressId > 0) {
           this.addressService.updateAddress(payload);
         } else {
           this.addressService.addAddress(payload);
@@ -169,9 +185,20 @@ export class AddressGridComponent implements OnInit, OnDestroy {
     }
 
     if (args.requestType === 'delete') {
-      const row = (args.data ?? {}) as IAddress;
-      if (row.addressId > 0) {
-        this.addressService.deleteAddress(row);
+      const raw = (args.data ?? {}) as IAddress | IAddress[];
+      const row = Array.isArray(raw) ? raw[0] : raw;
+      const addressId = Number(row?.addressId) || 0;
+      if (addressId > 0) {
+        this.addressService.deleteAddress({
+          ...row,
+          addressId,
+        });
+      } else {
+        args.cancel = true;
+        this.toastService.showMyToast(
+          'No se puede eliminar una dirección sin identificador',
+          toastType.warning
+        );
       }
     }
   }
@@ -188,6 +215,53 @@ export class AddressGridComponent implements OnInit, OnDestroy {
     }
   }
 
+  onToolbarClick(args: ClickEventArgs): void {
+    const itemId = (args.item?.id ?? '').toString().toLowerCase();
+    if (!itemId.includes('delete')) {
+      return;
+    }
+
+    if (!this.gridEnabled) {
+      args.cancel = true;
+      this.toastService.showMyToast(
+        'Debe seleccionar una organización para gestionar direcciones',
+        toastType.warning
+      );
+      return;
+    }
+
+    const selected = this.grid?.getSelectedRecords?.() as IAddress[] | undefined;
+    const row = selected?.[0];
+    const addressId = Number(row?.addressId) || 0;
+    if (!row || addressId <= 0) {
+      args.cancel = true;
+      this.toastService.showMyToast(
+        'Seleccione una dirección para eliminar',
+        toastType.warning
+      );
+    }
+  }
+
+  private withTypeDescription(row: IAddress): IAddress {
+    const typeId = Number(row.addressTypeId);
+    const raw = row as IAddress & { TypeDescription?: string };
+    const fromApi = String(raw.typeDescription ?? raw.TypeDescription ?? '').trim();
+    const match = this.addressTypes.find(
+      (t) => Number(t.addressTypeId) === typeId
+    );
+    const description =
+      (fromApi && fromApi !== String(typeId) ? fromApi : '') ||
+      match?.typeDescription ||
+      '';
+
+    return {
+      ...row,
+      addressTypeId:
+        Number.isFinite(typeId) && typeId > 0 ? typeId : row.addressTypeId,
+      typeDescription: description,
+    };
+  }
+
   private applyEditState(): void {
     const enabled = this.gridEnabled;
     this.toolbar = withToolbarTitle(
@@ -199,6 +273,7 @@ export class AddressGridComponent implements OnInit, OnDestroy {
       allowEditing: enabled,
       allowDeleting: enabled,
       mode: 'Dialog',
+      showDeleteConfirmDialog: true,
     };
 
     if (this.grid) {
@@ -213,6 +288,7 @@ export class AddressGridComponent implements OnInit, OnDestroy {
       address1: '',
       address2: '',
       addressTypeId: '',
+      typeDescription: '',
       address3: '',
       city: '',
       county: '',

@@ -143,7 +143,7 @@ export class PhoneGridComponent implements OnInit, OnDestroy {
     if (needsEditMode && !this.gridEnabled) {
       args.cancel = true;
       this.toastService.showMyToast(
-        'Debe editar la organización para gestionar teléfonos',
+        'Debe seleccionar una organización para gestionar teléfonos',
         toastType.warning
       );
       return;
@@ -154,6 +154,7 @@ export class PhoneGridComponent implements OnInit, OnDestroy {
       this.phoneData = {
         ...this.createEmptyPhone(),
         ...row,
+        phoneId: Number(row.phoneId) || 0,
         organizationId: this.organizationId,
         entityId: this.entityId || row.entityId || 0,
       };
@@ -164,12 +165,13 @@ export class PhoneGridComponent implements OnInit, OnDestroy {
       if (this.phoneForm?.valid) {
         const payload: IPhone = {
           ...this.phoneData,
+          phoneId: Number(this.phoneData.phoneId) || 0,
           organizationId: this.organizationId,
           entityId: this.entityId,
         };
         args.data = payload;
 
-        if (payload.phoneId && payload.phoneId > 0) {
+        if (payload.phoneId > 0) {
           this.phoneService.updatePhone(payload);
         } else {
           this.phoneService.addPhone(payload);
@@ -180,9 +182,17 @@ export class PhoneGridComponent implements OnInit, OnDestroy {
     }
 
     if (args.requestType === 'delete') {
-      const row = (args.data ?? {}) as IPhone;
-      if (row.phoneId > 0) {
-        this.phoneService.deletePhone(row);
+      const raw = (args.data ?? {}) as IPhone | IPhone[];
+      const row = Array.isArray(raw) ? raw[0] : raw;
+      const phoneId = Number(row?.phoneId) || 0;
+      if (phoneId > 0) {
+        this.phoneService.deletePhone({ ...row, phoneId });
+      } else {
+        args.cancel = true;
+        this.toastService.showMyToast(
+          'Seleccione un teléfono para eliminar',
+          toastType.warning
+        );
       }
     }
   }
@@ -208,6 +218,7 @@ export class PhoneGridComponent implements OnInit, OnDestroy {
       allowEditing: enabled,
       allowDeleting: enabled,
       mode: 'Dialog',
+      showDeleteConfirmDialog: true,
     };
 
     if (this.phonegrid) {

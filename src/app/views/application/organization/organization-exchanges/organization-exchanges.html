@@ -5,6 +5,7 @@
       [dataSource]="(exchangeRates$ | async) || []"
       [toolbar]="exchangesToolbar"
       [editSettings]="exchangesEditSettings"
+      [searchSettings]="searchSettings"
       [cssClass]="exchangesGridEnabled ? '' : 'disablegrid'"
       [height]="exchangesGridHeight"
       [rowHeight]="exchangesGridRowHeight"

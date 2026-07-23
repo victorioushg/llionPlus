@@ -104,7 +104,10 @@ export class PhoneService {
           )
           .pipe(
             map((data: IApiResponse) => {
-              return data.result as IPhone[];
+              return ((data.result ?? []) as IPhone[]).map((row) => ({
+                ...row,
+                phoneId: Number(row.phoneId) || 0,
+              }));
             })
           );
       })
@@ -154,13 +157,17 @@ export class PhoneService {
   }
 
   savePhone(operation: Action<IPhone>): Observable<Action<IPhone>> {
-    const phone: IPhone = operation.item;
+    const phone: IPhone = {
+      ...operation.item,
+      phoneId: Number(operation.item.phoneId) || 0,
+    };
+
     if (operation.action === 'delete') {
-      const url = `${this.apiUrl}Phone/${phone.phoneId}`;
+      const url = `${this.apiUrl}phone/${phone.phoneId}`;
       return this.http
         .delete<IApiResponse<number>>(url, { headers: this.headers })
         .pipe(
-          tap((data) => {
+          tap(() => {
             this.toastService.showMyToast(
               `Teléfono ${operation.item.phoneNumber} eliminado`,
               toastType.success
@@ -179,32 +186,43 @@ export class PhoneService {
           { headers: this.headers }
         )
         .pipe(
-          tap((data) => {
+          tap(() => {
             this.toastService.showMyToast(
               `teléfono ${operation.item.phoneNumber} agregado`,
               toastType.success
             );
           }),
-          map(() => ({ item: phone, action: operation.action })),
+          map((data) => ({
+            item: { ...phone, phoneId: Number(data.result) || 0 },
+            action: operation.action,
+          })),
           catchError(this.handleError)
         );
     }
+
     if (operation.action === 'update') {
       return this.http
         .put<IApiResponse<number>>(`${this.apiUrl}phone`, phone, {
           headers: this.headers,
         })
         .pipe(
-          tap((data) => {
+          tap(() => {
             this.toastService.showMyToast(
               `teléfono ${operation.item.phoneNumber} actualizado`,
               toastType.success
             );
           }),
-          map(() => ({ item: phone, action: operation.action })),
+          map((data) => ({
+            item: {
+              ...phone,
+              phoneId: Number(data.result) || phone.phoneId,
+            },
+            action: operation.action,
+          })),
           catchError(this.handleError)
         );
     }
+
     return of(operation);
   }
 

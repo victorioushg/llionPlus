@@ -7,9 +7,12 @@
     [cssClass]="gridEnabled ? '' : 'disablegrid'"
     [height]="gridHeight"
     [width]="'100%'"
+    [allowSelection]="true"
+    [selectionSettings]="{ type: 'Single', mode: 'Row' }"
     clipMode="EllipsisWithTooltip"
     (actionBegin)="actionBegin($event)"
     (actionComplete)="actionComplete($event)"
+    (toolbarClick)="onToolbarClick($event)"
   >
     <e-columns>
       <e-column
@@ -18,10 +21,14 @@
         width="70%"
       ></e-column>
       <e-column
-        field="addressTypeId"
+        field="typeDescription"
         headerText="Tipo"
         width="30%"
-      ></e-column>
+      >
+        <ng-template #template let-data>
+          {{ data?.typeDescription || '' }}
+        </ng-template>
+      </e-column>
       <e-column
         field="addressId"
         [isPrimaryKey]="true"
@@ -83,6 +90,8 @@
               placeholder="tipo de dirección"
               floatLabelType="Always"
               [allowFiltering]="true"
+              [filterType]="'Contains'"
+              [showClearButton]="true"
               [required]="true"
             ></ejs-dropdownlist>
           </div>

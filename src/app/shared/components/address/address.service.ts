@@ -17,6 +17,7 @@ import {
   merge,
   of,
   scan,
+  shareReplay,
   switchMap,
   tap,
   throwError,
@@ -41,6 +42,7 @@ export class AddressService {
     address1: '',
     address2: '',
     addressTypeId: '',
+    typeDescription: '',
     address3: '',
     city: '',
     county: '',
@@ -48,8 +50,8 @@ export class AddressService {
     country: '',
     postalCode: '',
     displayAddress: '',
-    entityId: this.entityId,
-    organizationId: this.organizationId
+    entityId: 0,
+    organizationId: 0,
   };
 
   addressesByEntityId$!: Observable<IAddress[]>;
@@ -65,27 +67,6 @@ export class AddressService {
 
   headers = new HttpHeaders({ 'Content-Type': 'application/json' });
 
-  modifyAddress(
-    addresses: IAddress[],
-    operation: Action<IAddress>
-  ): IAddress[] {
-    operation.item.displayAddress = `${operation.item.address1} ${operation.item.address2}. ${operation.item.city}. ${operation.item.county}. ${operation.item.state}`;
-    if (operation.action === 'add') {
-      return [...addresses, operation.item];
-    } else if (operation.action === 'update') {
-      return addresses.map((address) =>
-        address.addressId === operation.item.addressId
-          ? operation.item
-          : address
-      );
-    } else if (operation.action === 'delete') {
-      return addresses.filter(
-        (address) => address.addressId !== operation.item.addressId
-      );
-    }
-    return [...addresses];
-  }
-
   constructor(
     private http: HttpClient,
     private applicationService: ApplicationService,
@@ -96,12 +77,9 @@ export class AddressService {
   }
 
   private initializeObservables(): void {
-
-    this.applicationService.organizationIdSelected$.subscribe(
-      (result) => {
-        this.organizationId = result;
-      },
-    );
+    this.applicationService.organizationIdSelected$.subscribe((result) => {
+      this.organizationId = result;
+    });
 
     this.addressesByEntityId$ = combineLatest([
       this.applicationService.entitySelectedAction$,
@@ -118,7 +96,17 @@ export class AddressService {
           )
           .pipe(
             map((data: IApiResponse) => {
-              return data.result as IAddress[];
+              const rows = (data.result ?? []) as Array<
+                IAddress & { TypeDescription?: string; AddressTypeId?: number }
+              >;
+              return rows.map((row) => ({
+                ...row,
+                addressId: Number(row.addressId) || 0,
+                addressTypeId:
+                  row.addressTypeId ?? row.AddressTypeId ?? row.addressTypeId,
+                typeDescription:
+                  row.typeDescription ?? row.TypeDescription ?? '',
+              })) as IAddress[];
             })
           );
       })
@@ -127,19 +115,31 @@ export class AddressService {
     this.addressTypes$ = this.http
       .get<IApiResponse<IAddressType[]>>(`${this.apiUrl}addressestypes`)
       .pipe(
-        map((data) => data.result),
-        catchError(this.handleError)
+        map((data) => {
+          const rows = (data.result ?? []) as Array<
+            IAddressType & {
+              AddressTypeId?: number;
+              TypeDescription?: string;
+            }
+          >;
+          return rows.map((row) => ({
+            addressTypeId: row.addressTypeId ?? row.AddressTypeId ?? 0,
+            typeDescription: row.typeDescription ?? row.TypeDescription ?? '',
+          }));
+        }),
+        catchError((err) => this.handleError(err)),
+        shareReplay(1)
       );
 
     this.addressWithCRUD$ = merge(
       this.addressesByEntityId$,
       this.addressModifiedAction$.pipe(
-        concatMap((operation) => this.saveAddress(operation))
+        concatMap((operation) => this.persistAddress(operation))
       )
     ).pipe(
       scan(
         (acc, value) =>
-          value instanceof Array ? [...value] : this.modifyAddress(acc, value),
+          value instanceof Array ? [...value] : this.applyLocalChange(acc, value),
         [] as IAddress[]
       )
     );
@@ -166,14 +166,62 @@ export class AddressService {
     });
   }
 
-  saveAddress(operation: Action<IAddress>): Observable<Action<IAddress>> {
-    const address: IAddress = operation.item;
+  addressSelected(address: IAddress): void {
+    this.addressSelectedSource.next(address);
+  }
+
+  private applyLocalChange(
+    addresses: IAddress[],
+    operation: Action<IAddress>
+  ): IAddress[] {
+    operation.item.displayAddress = `${operation.item.address1} ${operation.item.address2}. ${operation.item.city}. ${operation.item.county}. ${operation.item.state}`;
+
+    if (operation.action === 'add') {
+      const withoutZeroDup = addresses.filter(
+        (address) =>
+          !(
+            (!address.addressId || address.addressId === 0) &&
+            address.address1 === operation.item.address1 &&
+            address.postalCode === operation.item.postalCode
+          )
+      );
+      return [...withoutZeroDup, operation.item];
+    }
+
+    if (operation.action === 'update') {
+      return addresses.map((address) =>
+        address.addressId === operation.item.addressId
+          ? operation.item
+          : address
+      );
+    }
+
     if (operation.action === 'delete') {
-      const url = `${this.apiUrl}address/${address.addressId}`;
+      return addresses.filter(
+        (address) => address.addressId !== operation.item.addressId
+      );
+    }
+
+    return [...addresses];
+  }
+
+  private persistAddress(
+    operation: Action<IAddress>
+  ): Observable<Action<IAddress>> {
+    const address: IAddress = {
+      ...operation.item,
+      addressTypeId: Number(operation.item.addressTypeId) || 0,
+      addressId: Number(operation.item.addressId) || 0,
+    };
+
+    if (operation.action === 'delete') {
       return this.http
-        .delete<IApiResponse<number>>(url, { headers: this.headers })
+        .delete<IApiResponse<number>>(
+          `${this.apiUrl}address/${address.addressId}`,
+          { headers: this.headers }
+        )
         .pipe(
-          tap((data) => {
+          tap(() => {
             this.toastService.showMyToast(
               `dirección ${operation.item.displayAddress} eliminada`,
               toastType.success
@@ -192,37 +240,47 @@ export class AddressService {
           { headers: this.headers }
         )
         .pipe(
-          tap((data) => {
+          tap(() => {
             this.toastService.showMyToast(
               `dirección ${operation.item.displayAddress} agregada`,
               toastType.success
             );
           }),
-          map(() => ({ item: address, action: operation.action })),
-          catchError(this.handleError)
+          map((data) => ({
+            item: {
+              ...address,
+              addressId: Number(data.result) || 0,
+            },
+            action: operation.action,
+          })),
+          catchError((error: HttpErrorResponse) => this.handleError(error))
         );
     }
+
     if (operation.action === 'update') {
       return this.http
         .put<IApiResponse<number>>(`${this.apiUrl}address`, address, {
           headers: this.headers,
         })
         .pipe(
-          tap((data) => {
+          tap(() => {
             this.toastService.showMyToast(
               `dirección ${operation.item.displayAddress} actualizada`,
               toastType.success
             );
           }),
-          map(() => ({ item: address, action: operation.action })),
-          catchError(this.handleError)
+          map((data) => ({
+            item: {
+              ...address,
+              addressId: Number(data.result) || address.addressId,
+            },
+            action: operation.action,
+          })),
+          catchError((error: HttpErrorResponse) => this.handleError(error))
         );
     }
-    return of(operation);
-  }
 
-  addressSelected(address: IAddress) {
-    this.addressSelectedSource.next(address);
+    return of(operation);
   }
 
   private handleError(err: HttpErrorResponse) {

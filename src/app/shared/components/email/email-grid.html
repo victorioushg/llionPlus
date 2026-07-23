@@ -7,6 +7,8 @@
     [cssClass]="gridEnabled ? '' : 'disablegrid'"
     [height]="gridHeight"
     [width]="'100%'"
+    [allowSelection]="true"
+    [selectionSettings]="{ type: 'Single', mode: 'Row' }"
     clipMode="EllipsisWithTooltip"
     (actionBegin)="actionBegin($event)"
     (actionComplete)="actionComplete($event)"

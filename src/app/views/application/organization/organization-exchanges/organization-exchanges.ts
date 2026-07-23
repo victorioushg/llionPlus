@@ -14,7 +14,7 @@ import {
   ToolbarItems,
 } from '@syncfusion/ej2-angular-grids';
 import { NgForm } from '@angular/forms';
-import { Observable, Subject, combineLatest, take, takeUntil } from 'rxjs';
+import { Observable, Subject, take, takeUntil } from 'rxjs';
 import {
   ICurrency,
   IOrganizationExchangeRate,
@@ -49,7 +49,7 @@ export class OrganizationExchangesComponent implements OnInit, OnDestroy {
   exchangeData: IOrganizationExchangeRate = this.createEmptyExchange();
 
   exchangesToolbar = withToolbarTitle(
-    [],
+    ['Search'],
     'Monedas y cambios'
   ) as ToolbarItems[];
 
@@ -59,6 +59,7 @@ export class OrganizationExchangesComponent implements OnInit, OnDestroy {
     allowDeleting: false,
     mode: 'Dialog',
   };
+  searchSettings = { operator: 'contains' as const };
 
   private selectedOrganizationId = 0;
   private readonly destroy$ = new Subject<void>();
@@ -73,14 +74,11 @@ export class OrganizationExchangesComponent implements OnInit, OnDestroy {
     this.exchangeRates$ = this.organizationService.organizationExchangeRates$;
     this.currencies$ = this.organizationService.currencies$;
 
-    combineLatest([
-      this.organizationService.organizationContextIdAction$,
-      this.organizationService.enableOrganizationFormAction$,
-    ])
+    this.organizationService.organizationContextIdAction$
       .pipe(takeUntil(this.destroy$))
-      .subscribe(([organizationId, editing]) => {
+      .subscribe((organizationId) => {
         this.selectedOrganizationId = organizationId ?? 0;
-        this.applyOrganizationEditState(!!editing);
+        this.applyOrganizationEditState(this.selectedOrganizationId > 0);
         this.cdr.markForCheck();
       });
   }
@@ -100,7 +98,7 @@ export class OrganizationExchangesComponent implements OnInit, OnDestroy {
     if (needsOrganization && !this.exchangesGridEnabled) {
       args.cancel = true;
       this.toastService.showMyToast(
-        'Debe agregar o editar una organización para gestionar monedas y cambios',
+        'Debe seleccionar una organización para gestionar monedas y cambios',
         toastType.warning
       );
       return;
@@ -182,11 +180,10 @@ export class OrganizationExchangesComponent implements OnInit, OnDestroy {
     }
   }
 
-  private applyOrganizationEditState(editing: boolean): void {
-    const enabled = editing && this.selectedOrganizationId > 0;
+  private applyOrganizationEditState(enabled: boolean): void {
     this.exchangesGridEnabled = enabled;
     this.exchangesToolbar = withToolbarTitle(
-      enabled ? ['Add', 'Edit', 'Delete'] : [],
+      enabled ? ['Add', 'Edit', 'Delete', 'Search'] : ['Search'],
       'Monedas y cambios'
     ) as ToolbarItems[];
     this.exchangesEditSettings = {

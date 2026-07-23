@@ -82,7 +82,10 @@ export class EmailService {
           )
           .pipe(
             map((data: IApiResponse) => {
-              return data.result as IEmail[];
+              return ((data.result ?? []) as IEmail[]).map((row) => ({
+                ...row,
+                emailId: Number(row.emailId) || 0,
+              }));
             })
           );
       })
@@ -126,13 +129,17 @@ export class EmailService {
   }
 
   saveEmail(operation: Action<IEmail>): Observable<Action<IEmail>> {
-    const email: IEmail = operation.item;
+    const email: IEmail = {
+      ...operation.item,
+      emailId: Number(operation.item.emailId) || 0,
+    };
+
     if (operation.action === 'delete') {
       const url = `${this.apiUrl}email/${email.emailId}`;
       return this.http
         .delete<IApiResponse<number>>(url, { headers: this.headers })
         .pipe(
-          tap((data) => {
+          tap(() => {
             this.toastService.showMyToast(
               `email ${operation.item.emailAddress} ha sido eliminado`,
               toastType.success
@@ -151,32 +158,43 @@ export class EmailService {
           { headers: this.headers }
         )
         .pipe(
-          tap((data) => {
+          tap(() => {
             this.toastService.showMyToast(
               `email ${operation.item.emailAddress} agregado`,
               toastType.success
             );
           }),
-          map(() => ({ item: email, action: operation.action })),
+          map((data) => ({
+            item: { ...email, emailId: Number(data.result) || 0 },
+            action: operation.action,
+          })),
           catchError(this.handleError)
         );
     }
+
     if (operation.action === 'update') {
       return this.http
         .put<IApiResponse<number>>(`${this.apiUrl}email`, email, {
           headers: this.headers,
         })
         .pipe(
-          tap((data) => {
+          tap(() => {
             this.toastService.showMyToast(
               `email ${operation.item.emailAddress} actualizado`,
               toastType.success
             );
           }),
-          map(() => ({ item: email, action: operation.action })),
+          map((data) => ({
+            item: {
+              ...email,
+              emailId: Number(data.result) || email.emailId,
+            },
+            action: operation.action,
+          })),
           catchError(this.handleError)
         );
     }
+
     return of(operation);
   }
 

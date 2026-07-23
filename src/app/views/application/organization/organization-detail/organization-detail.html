@@ -44,6 +44,9 @@
             [value]="org.currency"
             [fields]="cfields"
             [enabled]="enabled$ | async"
+            [allowFiltering]="true"
+            [showClearButton]="true"
+            [filterType]="filterType"
             floatLabelType="Always"
             placeholder="Moneda para Transacciones"
           ></ejs-dropdownlist>
@@ -59,6 +62,9 @@
           [value]="org.organizationType"
           [fields]="ofields"
           [enabled]="enabled$ | async"
+          [allowFiltering]="true"
+          [showClearButton]="true"
+          [filterType]="filterType"
           floatLabelType="Always"
           placeholder="tipo de organización"
         ></ejs-dropdownlist>
@@ -72,6 +78,9 @@
           [value]="org.assosiationType"
           [fields]="afields"
           [enabled]="enabled$ | async"
+          [allowFiltering]="true"
+          [showClearButton]="true"
+          [filterType]="filterType"
           floatLabelType="Always"
           placeholder="tipo de asociación"
         ></ejs-dropdownlist>

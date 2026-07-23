@@ -14,7 +14,7 @@ import {
   ToolbarItems,
 } from '@syncfusion/ej2-angular-grids';
 import { NgForm } from '@angular/forms';
-import { Observable, Subject, combineLatest, take, takeUntil } from 'rxjs';
+import { Observable, Subject, take, takeUntil } from 'rxjs';
 import { IAppEntity } from '@shared/models/entity';
 import { IOrganizationTax } from '../organization';
 import { OrganizationService } from '../organization.service';
@@ -79,14 +79,11 @@ export class OrganizationTaxesComponent implements OnInit, OnDestroy {
         this.cdr.markForCheck();
       });
 
-    combineLatest([
-      this.organizationService.organizationContextIdAction$,
-      this.organizationService.enableOrganizationFormAction$,
-    ])
+    this.organizationService.organizationContextIdAction$
       .pipe(takeUntil(this.destroy$))
-      .subscribe(([organizationId, editing]) => {
+      .subscribe((organizationId) => {
         this.selectedOrganizationId = organizationId ?? 0;
-        this.applyOrganizationEditState(!!editing);
+        this.applyOrganizationEditState(this.selectedOrganizationId > 0);
         this.cdr.markForCheck();
       });
   }
@@ -106,7 +103,7 @@ export class OrganizationTaxesComponent implements OnInit, OnDestroy {
     if (needsOrganization && !this.taxesGridEnabled) {
       args.cancel = true;
       this.toastService.showMyToast(
-        'Debe agregar o editar una organización para gestionar impuestos',
+        'Debe seleccionar una organización para gestionar impuestos',
         toastType.warning
       );
       return;
@@ -196,8 +193,7 @@ export class OrganizationTaxesComponent implements OnInit, OnDestroy {
     }
   }
 
-  private applyOrganizationEditState(editing: boolean): void {
-    const enabled = editing && this.selectedOrganizationId > 0;
+  private applyOrganizationEditState(enabled: boolean): void {
     this.taxesGridEnabled = enabled;
     this.taxesToolbar = withToolbarTitle(
       enabled ? ['Add', 'Edit', 'Delete'] : [],

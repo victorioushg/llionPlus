@@ -14,7 +14,7 @@ import {
   ToolbarItems,
 } from '@syncfusion/ej2-angular-grids';
 import { NgForm } from '@angular/forms';
-import { Observable, Subject, combineLatest, take, takeUntil } from 'rxjs';
+import { Observable, Subject, take, takeUntil } from 'rxjs';
 import {
   IOrganizationParameter,
   IOrigin,
@@ -83,14 +83,11 @@ export class OrganizationParametersComponent implements OnInit, OnDestroy {
     this.parameterTypes$ = this.organizationService.parameterTypes$;
     this.origins$ = this.organizationService.origins$;
 
-    combineLatest([
-      this.organizationService.organizationContextIdAction$,
-      this.organizationService.enableOrganizationFormAction$,
-    ])
+    this.organizationService.organizationContextIdAction$
       .pipe(takeUntil(this.destroy$))
-      .subscribe(([organizationId, editing]) => {
+      .subscribe((organizationId) => {
         this.selectedOrganizationId = organizationId ?? 0;
-        this.applyOrganizationEditState(!!editing);
+        this.applyOrganizationEditState(this.selectedOrganizationId > 0);
         this.cdr.markForCheck();
       });
   }
@@ -110,7 +107,7 @@ export class OrganizationParametersComponent implements OnInit, OnDestroy {
     if (needsOrganization && !this.parametersGridEnabled) {
       args.cancel = true;
       this.toastService.showMyToast(
-        'Debe agregar o editar una organización para gestionar parámetros',
+        'Debe seleccionar una organización para gestionar parámetros',
         toastType.warning
       );
       return;
@@ -184,8 +181,7 @@ export class OrganizationParametersComponent implements OnInit, OnDestroy {
     }
   }
 
-  private applyOrganizationEditState(editing: boolean): void {
-    const enabled = editing && this.selectedOrganizationId > 0;
+  private applyOrganizationEditState(enabled: boolean): void {
     this.parametersGridEnabled = enabled;
     this.parametersToolbar = withToolbarTitle(
       enabled ? ['Add', 'Edit', 'Delete'] : [],

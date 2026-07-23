@@ -1,7 +1,7 @@
 export interface IAddress {
-  
   addressId: number;
-  addressTypeId: string;
+  addressTypeId: number | string;
+  typeDescription?: string | null;
   address1: string;
   address2: string;
   address3: string;
@@ -10,13 +10,13 @@ export interface IAddress {
   state: string;
   country: string;
   postalCode: string;
-  displayAddress: string;  
-  entityId: number; 
-  organizationId:number;  
-
+  displayAddress: string;
+  entityId: number;
+  organizationId: number;
 }
 
 export interface IAddressType {
-  addressTypeId: string;
+  addressTypeId: number | string;
   typeDescription: string;
 }
+
