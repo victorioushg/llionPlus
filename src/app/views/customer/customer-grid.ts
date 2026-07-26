@@ -34,39 +34,42 @@ import {
 } from 'rxjs';
 import MiniToolbar from '@assets/json/minitoolbar.json';
 import { withToolbarTitle } from '@shared/utils/grid-toolbar';
+import { ApplicationService } from '@shared/services/applicattionService';
 import { ToastService } from '@shared/services/toastService';
 import { toastType } from '@shared/enums/enums';
-import { AccountsService } from './accounts.service';
-import { IAccount } from './account';
+import { CustomerService } from './customer.service';
+import { ICustomer } from './customer';
 
 @Component({
   selector: 'llion-content',
-  templateUrl: './accounts-grid.html',
-  styleUrls: ['./accounts-grid.scss'],
+  templateUrl: './customer-grid.html',
+  styleUrls: ['./customer-grid.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: false,
 })
-export class AccountsComponent implements OnInit, AfterViewInit, OnDestroy {
+export class CustomerComponent implements OnInit, AfterViewInit, OnDestroy {
   commands!: CommandModel[];
-  toolbar = withToolbarTitle(MiniToolbar as object[], 'Cuentas contables');
+  toolbar = withToolbarTitle(MiniToolbar as object[], 'Clientes');
   searchSettings?: SearchSettingsModel;
 
-  accounts$!: Observable<IAccount[]>;
+  customers$!: Observable<ICustomer[]>;
   enabled$!: Observable<boolean>;
   disabledGrid$!: Observable<boolean>;
+  entityTypeId = 0;
 
-  headerText: { text: string }[] = [{ text: 'cuenta' }];
+  headerText: { text: string }[] = [{ text: 'cliente' }];
 
   @ViewChild('grid') grid!: GridComponent;
   @ViewChild('tabs') tabObj?: TabComponent;
 
   private readonly searchStringSubject = new BehaviorSubject<string>('');
-  private readonly selectedAccountSubject =
-    new BehaviorSubject<IAccount | null>(null);
+  private readonly selectedCustomerSubject =
+    new BehaviorSubject<ICustomer | null>(null);
   private readonly destroy$ = new Subject<void>();
 
   constructor(
-    private accountsService: AccountsService,
+    private applicationService: ApplicationService,
+    private customerService: CustomerService,
     private toastService: ToastService
   ) {}
 
@@ -77,7 +80,14 @@ export class AccountsComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    this.clearAccountSelection();
+    this.clearCustomerSelection();
+
+    this.applicationService
+      .getEntityId('Customer')
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((entityId) => {
+        this.entityTypeId = entityId ?? 0;
+      });
 
     this.commands = [
       {
@@ -87,18 +97,16 @@ export class AccountsComponent implements OnInit, AfterViewInit, OnDestroy {
     ];
     this.searchSettings = { operator: 'contains' };
 
-    this.accounts$ = combineLatest([
-      this.accountsService.accountWithCRUD$,
+    this.customers$ = combineLatest([
+      this.customerService.customerWithCRUD$,
       this.searchStringSubject.asObservable().pipe(startWith('')),
     ]).pipe(
-      map(([accounts, searchStr]) =>
-        accounts.filter((account) => {
-          const needle = searchStr.toLocaleLowerCase();
-          return (
-            (account.description ?? '').toLocaleLowerCase().includes(needle) ||
-            (account.code ?? '').toLocaleLowerCase().includes(needle)
-          );
-        })
+      map(([customers, searchStr]) =>
+        customers.filter((customer) =>
+          (customer.description ?? '')
+            .toLocaleLowerCase()
+            .includes(searchStr.toLocaleLowerCase())
+        )
       ),
       catchError((err) => {
         this.toastService.showMyToast(err, toastType.error);
@@ -106,22 +114,22 @@ export class AccountsComponent implements OnInit, AfterViewInit, OnDestroy {
       })
     );
 
-    this.enabled$ = this.accountsService.enableAccountGridAction$.pipe(
+    this.enabled$ = this.customerService.enableCustomerGridAction$.pipe(
       shareReplay(1)
     );
     this.disabledGrid$ = this.enabled$.pipe(shareReplay(1));
 
-    this.accountsService.enableAccountFormAction$
+    this.customerService.enableCustomerFormAction$
       .pipe(takeUntil(this.destroy$))
       .subscribe((editing) => {
-        this.accountsService.enableAccountGrid(!!editing);
+        this.customerService.enableCustomerGrid(!!editing);
       });
   }
 
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
-    this.clearAccountSelection();
+    this.clearCustomerSelection();
   }
 
   onToolbarClick(args: ClickEventArgs): void {
@@ -140,8 +148,8 @@ export class AccountsComponent implements OnInit, AfterViewInit, OnDestroy {
         : target.id.split('_').pop();
 
     if (targetId === 'add') {
-      this.clearAccountSelection();
-      this.setAccountFormEditing(true);
+      this.clearCustomerSelection();
+      this.setCustomerFormEditing(true);
       args.cancel = true;
     } else if (targetId === 'searchbutton') {
       this.search();
@@ -153,14 +161,14 @@ export class AccountsComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   onRecordDoubleClick(args: RecordDoubleClickEventArgs): void {
-    const account = (args.rowData ??
-      this.selectedAccountSubject.value) as IAccount | null;
-    if (account?.accountId) {
-      this.selectAccount(account);
-      this.setAccountFormEditing(true);
+    const customer = (args.rowData ??
+      this.selectedCustomerSubject.value) as ICustomer | null;
+    if (customer?.customerId) {
+      this.selectCustomer(customer);
+      this.setCustomerFormEditing(true);
     } else {
       this.toastService.showMyToast(
-        'Debe seleccionar una cuenta...',
+        'Debe seleccionar un cliente...',
         toastType.error
       );
     }
@@ -174,40 +182,54 @@ export class AccountsComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   commandClick(args: CommandClickEventArgs): void {
-    const selected = this.selectedAccountSubject.value;
+    const selected = this.selectedCustomerSubject.value;
     if (args.target?.title === 'Delete' && selected) {
-      this.accountsService.deleteAccount(selected);
-      this.clearAccountSelection();
+      this.customerService.deleteCustomer(selected);
+      this.clearCustomerSelection();
     }
   }
 
   onRowSelected(args: RowSelectEventArgs): void {
-    const account = (args.data ? args.data : null) as IAccount | null;
-    if (!account?.accountId) {
+    const customer = (args.data ? args.data : null) as ICustomer | null;
+    if (!customer?.customerId) {
       return;
     }
-    const previousId = this.selectedAccountSubject.value?.accountId ?? 0;
-    this.selectAccount(account);
-    if (previousId !== account.accountId) {
-      this.setAccountFormEditing(false);
+    const previousId = this.selectedCustomerSubject.value?.customerId ?? 0;
+    this.selectCustomer(customer);
+    if (previousId !== customer.customerId) {
+      this.setCustomerFormEditing(false);
     }
   }
 
   onRowDeselected(_args: RowDeselectEventArgs): void {}
 
-  private selectAccount(account: IAccount): void {
-    this.selectedAccountSubject.next(account);
-    this.accountsService.setAccountContext(account.accountId);
+  private selectCustomer(customer: ICustomer): void {
+    this.selectedCustomerSubject.next(customer);
+    this.customerService.setCustomerContext(customer.customerId);
+    // Same contact key pattern as organization: entity type + owner id
+    if (this.entityTypeId > 0) {
+      this.applicationService.entitySelected(this.entityTypeId);
+    }
+    this.applicationService.organizationIdSelected(customer.customerId);
+    this.enableContactChildGrids(true);
   }
 
-  private clearAccountSelection(): void {
-    this.setAccountFormEditing(false);
-    this.selectedAccountSubject.next(null);
-    this.accountsService.setAccountContext(0);
+  private clearCustomerSelection(): void {
+    this.setCustomerFormEditing(false);
+    this.enableContactChildGrids(false);
+    this.selectedCustomerSubject.next(null);
+    this.customerService.setCustomerContext(0);
+    this.applicationService.organizationIdSelected(0);
   }
 
-  private setAccountFormEditing(editing: boolean): void {
-    this.accountsService.enableAccountForm(editing);
+  private setCustomerFormEditing(editing: boolean): void {
+    this.customerService.enableCustomerForm(editing);
+  }
+
+  private enableContactChildGrids(enable: boolean): void {
+    this.applicationService.enableAddressChildGrid(enable);
+    this.applicationService.enableEmailChildGrid(enable);
+    this.applicationService.enablePhoneChildGrid(enable);
   }
 
   private search(clear: boolean = false): void {

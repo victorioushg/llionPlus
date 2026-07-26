@@ -25,10 +25,7 @@ import { DatePickerModule } from '@syncfusion/ej2-angular-calendars';
 import { enableRipple } from '@syncfusion/ej2-base';
 
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-
-import { AddressGridComponent } from '@shared/components/address/address-grid';
-import { EmailGridComponent } from '@shared/components/email/email-grid';
-import { PhoneGridComponent } from '@shared/components/phones/phone-grid';
+import { ContactGridsModule } from '@shared/components/contact-grids.module';
 
 enableRipple(true);
 
@@ -41,9 +38,6 @@ enableRipple(true);
     OrganizationExchangesComponent,
     OrganizationParametersComponent,
     OrganizationCreditsComponent,
-    AddressGridComponent,
-    EmailGridComponent, 
-    PhoneGridComponent
   ],
   imports: [
     CommonModule,
@@ -62,6 +56,7 @@ enableRipple(true);
     ButtonModule,
     FormsModule,
     ReactiveFormsModule,
+    ContactGridsModule,
   ],
 
   schemas: [CUSTOM_ELEMENTS_SCHEMA], 

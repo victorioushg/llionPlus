@@ -1,8 +1,8 @@
 export interface IAccount {
   accountId: number;
-  accountCode: string;
+  code: string;
   description: string;
-  level: number;
-  outcomeAccount: number;
-  organization: number;
+  level?: number | null;
+  mark?: boolean | null;
+  organizationId: number;
 }

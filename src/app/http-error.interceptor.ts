@@ -1,38 +1,31 @@
 import {
-  HttpEvent,
-  HttpInterceptor,
-  HttpHandler,
-  HttpRequest,
-  HttpResponse,
   HttpErrorResponse,
+  HttpEvent,
+  HttpHandler,
+  HttpInterceptor,
+  HttpRequest,
 } from '@angular/common/http';
-import { Observable, throwError } from 'rxjs';
-import { retry, catchError } from 'rxjs/operators';
-import { ToastService } from './shared/services/toastService';
-import { toastType } from './shared/enums/enums';
 import { Injectable } from '@angular/core';
+import { Observable, throwError } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 
+/**
+ * Passes HttpErrorResponse through so feature services / ErrorHandlerService
+ * can read status and message. Do not convert errors to plain strings here.
+ */
 @Injectable()
 export class HttpErrorInterceptor implements HttpInterceptor {
   intercept(
-    request: HttpRequest<any>,
+    request: HttpRequest<unknown>,
     next: HttpHandler
-  ): Observable<HttpEvent<any>> {
+  ): Observable<HttpEvent<unknown>> {
     return next.handle(request).pipe(
-      retry(1),
-      catchError((error: HttpErrorResponse) => {
-        let errorMessage = '';
-        if (error.error instanceof ErrorEvent) {
-          // client-side error
-          errorMessage = `Error: ${error.error.message}`;
-        } else {
-          // server-side error
-          errorMessage = `Error Code: ${error.status}\nMessage: ${error.message}`;
+      catchError((error: unknown) => {
+        if (error instanceof HttpErrorResponse) {
+          return throwError(() => error);
         }
-        // this.toastService.showMyToast(errorMessage, toastType.error);
-        return throwError(errorMessage);
+        return throwError(() => error);
       })
     );
   }
-  constructor(private toastService: ToastService) {}
 }

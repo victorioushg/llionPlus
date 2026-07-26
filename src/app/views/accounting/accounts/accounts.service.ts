@@ -1,210 +1,235 @@
-import { Injectable, NgZone } from '@angular/core';
-import { IAccount }  from './account';
+import { Injectable } from '@angular/core';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { environment } from '@environments/environment';
 import {
-  HttpClient,
-  HttpErrorResponse,
-  HttpHeaders,
-} from '@angular/common/http';
+  BehaviorSubject,
+  Observable,
+  Subject,
+  combineLatest,
+  merge,
+  of,
+} from 'rxjs';
 import {
   catchError,
   concatMap,
   map,
   scan,
-  shareReplay,
   switchMap,
-  take,
   tap,
 } from 'rxjs/operators';
-import {
-  BehaviorSubject,
-  combineLatest,
-  merge,
-  Observable,
-  of,
-  Subject,
-  throwError,
-} from 'rxjs';
-import { IApiResponse } from '@app/shared/models/api-response';
-import { ApplicationService } from '@app/shared/services/applicattionService';
-import { ToastService } from '@app/shared/services/toastService';
-import { toastType } from '@app/shared/enums/enums';
-import { Action } from '@app/shared/models/edit-action';
+import { IApiResponse } from '@shared/models/api-response';
+import { ApplicationService } from '@shared/services/applicattionService';
+import { ToastService } from '@shared/services/toastService';
+import { ErrorHandlerService } from '@shared/services/errorHandlerService';
+import { toastType } from '@shared/enums/enums';
+import { Action } from '@shared/models/edit-action';
+import { IAccount } from './account';
 
 @Injectable({
   providedIn: 'root',
 })
 export class AccountsService {
-  private apiUrl = environment.API_URL + 'application';
+  private readonly accountUrl = environment.API_URL + 'accounts';
+  private readonly headers = new HttpHeaders({
+    'Content-Type': 'application/json',
+  });
 
-  // private emptyUser: Observable<IUser> = of({
-  //   userId: 0,
-  //   userName: '',
-  //   email: '',
-  //   phoneNumber: '',
-  //   deactivated: 0,
-  //   firstName: '',
-  //   lastName: '',
-  //   displayName: '',
-  // }).pipe(take(1));
+  private readonly emptyAccount: IAccount = {
+    accountId: 0,
+    code: '',
+    description: '',
+    level: null,
+    mark: false,
+    organizationId: 0,
+  };
 
-  // users$ = this.http.get<IApiResponse<IUser[]>>(this.apiUrl + '/users').pipe(
-  //   map((data) => data.result),
-  //   catchError(this.handleError)
-  // );
+  private readonly accountContextIdSource = new BehaviorSubject<number>(0);
+  accountContextIdAction$ = this.accountContextIdSource.asObservable();
 
-  // private userSelectedSubject = new BehaviorSubject<number>(0);
-  // userSelectedAction$ = this.userSelectedSubject.asObservable();
+  private readonly accountModifiedSubject = new Subject<Action<IAccount>>();
+  private readonly accountModifiedAction$ =
+    this.accountModifiedSubject.asObservable();
 
-  // userSelected$ = combineLatest([this.users$, this.userSelectedAction$]).pipe(
-  //   switchMap(([users, selectedUserId]) => {
-  //     if (selectedUserId > 0) {
-  //       return this.getUser(selectedUserId);
-  //     } else {
-  //       return this.emptyUser;
-  //     }
-  //   }),
-  //   shareReplay(1)
-  // );
+  private readonly enabledAccountGridSource = new BehaviorSubject<boolean>(
+    false
+  );
+  enableAccountGridAction$ = this.enabledAccountGridSource.asObservable();
 
-  // private userModifiedSubject = new Subject<Action<IUser>>();
-  // userModifiedAction$ = this.userModifiedSubject.asObservable();
+  private readonly enabledAccountFormSource = new BehaviorSubject<boolean>(
+    false
+  );
+  enableAccountFormAction$ = this.enabledAccountFormSource.asObservable();
 
-  // userWithCRUD$ = merge(
-  //   this.users$,
-  //   this.userModifiedAction$.pipe(
-  //     concatMap((operation) => this.saveUser(operation))
-  //   )
-  // ).pipe(
-  //   scan(
-  //     (acc, value) =>
-  //       value instanceof Array ? [...value] : this.modifyUsers(acc, value),
-  //     [] as IUser[]
-  //   ),
-  //   shareReplay(1)
-  // );
-
-  // headers = new HttpHeaders({ 'Content-Type': 'application/json' });
-
-  // modifyUsers(users: IUser[], operation: Action<IUser>): IUser[] {
-  //   if (operation.action === 'add') {
-  //     // Return a new array with the added organization pushed to it
-  //     return [...users, operation.item];
-  //   } else if (operation.action === 'update') {
-  //     // Return a new array with the updated organization replaced
-  //     return users.map((user) =>
-  //       user.userId === operation.item.userId ? operation.item : user
-  //     );
-  //   } else if (operation.action === 'delete') {
-  //     // Filter out the deleted organization
-  //     return users.filter((user) => user.userId !== operation.item.userId);
-  //   }
-  //   return [...users];
-  // }
+  accounts$!: Observable<IAccount[]>;
+  accountSelected$!: Observable<IAccount>;
+  accountWithCRUD$!: Observable<IAccount[]>;
 
   constructor(
     private http: HttpClient,
     private applicationService: ApplicationService,
     private toastService: ToastService,
-    private ngZone: NgZone
-  ) {}
+    private errorHandlerService: ErrorHandlerService
+  ) {
+    this.initializeObservables();
+  }
 
-  // addUser(newUser: IUser): void {
-  //   this.userModifiedSubject.next({
-  //     item: newUser,
-  //     action: 'add',
-  //   });
-  // }
+  setAccountContext(accountId: number): void {
+    this.accountContextIdSource.next(accountId ?? 0);
+  }
 
-  // deleteUser(selectedUser: IUser): void {
-  //   this.userModifiedSubject.next({
-  //     item: selectedUser,
-  //     action: 'delete',
-  //   });
-  // }
+  enableAccountGrid(enabled: boolean): void {
+    this.enabledAccountGridSource.next(enabled);
+  }
 
-  // updateUser(selectedUser: IUser): void {
-  //   this.userModifiedSubject.next({
-  //     item: selectedUser,
-  //     action: 'update',
-  //   });
-  // }
+  enableAccountForm(enabled: boolean): void {
+    this.enabledAccountFormSource.next(enabled);
+  }
 
-  // saveUser(
-  //   operation: Action<IUser>
-  // ): Observable<Action<IUser>> {
-  //   const user: IUser = operation.item;
+  addAccount(account: IAccount): void {
+    this.accountModifiedSubject.next({ item: account, action: 'add' });
+  }
 
-  //   if (operation.action === 'delete') {
-  //     const url = `${this.apiUrl}/${user.userId}`;
-  //     return this.http
-  //       .delete<IApiResponse<number>>(url, { headers: this.headers })
-  //       .pipe(
-  //         tap((data) => {
-  //           this.toastService.showMyToast(
-  //             `${user.displayName}, datos eliminados`,
-  //             toastType.success
-  //           );
-  //         }),
+  updateAccount(account: IAccount): void {
+    this.accountModifiedSubject.next({ item: account, action: 'update' });
+  }
 
-  //         map(() => ({ item: user, action: operation.action })),
-  //         catchError((error: HttpErrorResponse) => this.handleError(error))
-  //       );
-  //   }
-  //   if (operation.action === 'add') {
-  //     return this.http
-  //       .post<IApiResponse<number>>( `${this.apiUrl}/user`, { ...user, id: 0 }, { headers: this.headers, } )
-  //       .pipe(
-  //         tap((data) => {
-  //           this.toastService.showMyToast(
-  //             `${user.displayName}, datos almacenados`,
-  //             toastType.success
-  //           );
-  //         }),
-  //         map(() => ({ item: user, action: operation.action })),
-  //         catchError(this.handleError)
-  //       );
-  //   }
+  deleteAccount(account: IAccount): void {
+    this.accountModifiedSubject.next({ item: account, action: 'delete' });
+  }
 
-  //   if (operation.action === 'update') {
-  //     return this.http
-  //       .put<IApiResponse<number>>( `${this.apiUrl}/user`, user, { headers: this.headers, }
-  //       )
-  //       .pipe(
-  //         tap((data) => {
-  //           this.toastService.showMyToast(
-  //             `${user.displayName}, datos almacenados`,
-  //             toastType.success
-  //           );
-  //         }),
-  //         map(() => ({ item: user, action: operation.action })),
-  //         catchError(this.handleError)
-  //       );
-  //   }
+  private initializeObservables(): void {
+    this.accounts$ = this.applicationService.workingOrganization$.pipe(
+      switchMap((workingOrg) => {
+        const organizationId = workingOrg?.organizationId ?? 0;
+        if (organizationId <= 0) {
+          return of([] as IAccount[]);
+        }
+        return this.http
+          .get<IApiResponse<IAccount[]>>(
+            `${this.accountUrl}/${organizationId}/0`
+          )
+          .pipe(
+            map((data) =>
+              ((data.result ?? []) as IAccount[]).map((row) => ({
+                ...row,
+                accountId: Number(row.accountId) || 0,
+                organizationId: Number(row.organizationId) || organizationId,
+                mark: !!row.mark,
+              }))
+            ),
+            catchError(this.errorHandlerService.handleError)
+          );
+      })
+    );
 
-  //   return of(operation);
-  // }
+    this.accountSelected$ = combineLatest([
+      this.accounts$,
+      this.accountContextIdAction$,
+    ]).pipe(
+      map(([accounts, accountId]) => {
+        if (!accountId || accountId <= 0) {
+          const organizationId =
+            this.applicationService.workingOrganization?.organizationId ?? 0;
+          return { ...this.emptyAccount, organizationId };
+        }
+        return (
+          accounts.find((a) => a.accountId === accountId) ?? {
+            ...this.emptyAccount,
+            organizationId:
+              this.applicationService.workingOrganization?.organizationId ?? 0,
+          }
+        );
+      })
+    );
 
-  // selectedUserChanged(selectedUserId: number): void {
-  //   this.userSelectedSubject.next(selectedUserId);
-  // }
+    this.accountWithCRUD$ = merge(
+      this.accounts$,
+      this.accountModifiedAction$.pipe(
+        concatMap((operation) => this.saveAccount(operation))
+      )
+    ).pipe(
+      scan(
+        (acc, value) =>
+          value instanceof Array ? [...value] : this.modifyAccounts(acc, value),
+        [] as IAccount[]
+      )
+    );
+  }
 
-  // getUser(id: number): Observable<IUser | undefined> {
-  //   return this.http.get<IApiResponse<IUser>>(`${this.apiUrl}/${id}`).pipe(
-  //     map((data) => data.result),
-  //     catchError(this.handleError)
-  //   );
-  // }
-
-  private handleError(err: HttpErrorResponse) {
-    let errorMessage = '';
-    if (err.error instanceof ErrorEvent) {
-      errorMessage = `An Error ocurred: ${err.error.message} `;
-    } else {
-      errorMessage = `Server returned cod ${err.status}, error message is : ${err.message} `;
+  private modifyAccounts(
+    accounts: IAccount[],
+    operation: Action<IAccount>
+  ): IAccount[] {
+    if (operation.action === 'add') {
+      return [...accounts, operation.item];
     }
-    console.error(errorMessage);
-    this.toastService.showMyToast(errorMessage, toastType.error);
-    return throwError(errorMessage);
+    if (operation.action === 'update') {
+      return accounts.map((account) =>
+        account.accountId === operation.item.accountId
+          ? operation.item
+          : account
+      );
+    }
+    if (operation.action === 'delete') {
+      return accounts.filter(
+        (account) => account.accountId !== operation.item.accountId
+      );
+    }
+    return [...accounts];
+  }
+
+  private saveAccount(
+    operation: Action<IAccount>
+  ): Observable<Action<IAccount>> {
+    const account: IAccount = {
+      ...operation.item,
+      accountId: Number(operation.item.accountId) || 0,
+    };
+
+    if (operation.action === 'delete') {
+      return this.http
+        .delete<IApiResponse<number>>(
+          `${this.accountUrl}/${account.accountId}`,
+          { headers: this.headers }
+        )
+        .pipe(
+          tap(() =>
+            this.toastService.showMyToast(
+              `${account.description}, datos eliminados`,
+              toastType.success
+            )
+          ),
+          map(() => ({ item: account, action: operation.action })),
+          catchError(this.errorHandlerService.handleError)
+        );
+    }
+
+    const request$ =
+      operation.action === 'add'
+        ? this.http.post<IApiResponse<number>>(
+            this.accountUrl,
+            { ...account, accountId: 0 },
+            { headers: this.headers }
+          )
+        : this.http.put<IApiResponse<number>>(this.accountUrl, account, {
+            headers: this.headers,
+          });
+
+    return request$.pipe(
+      tap(() =>
+        this.toastService.showMyToast(
+          `${account.description}, datos almacenados`,
+          toastType.success
+        )
+      ),
+      map((data) => ({
+        item: {
+          ...account,
+          accountId: Number(data.result) || account.accountId,
+        },
+        action: operation.action,
+      })),
+      catchError(this.errorHandlerService.handleError)
+    );
   }
 }

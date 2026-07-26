@@ -9,16 +9,18 @@ import {
   NumericTextBoxModule,
   TextBoxModule,
 } from '@syncfusion/ej2-angular-inputs';
+import { DropDownListModule } from '@syncfusion/ej2-angular-dropdowns';
 import { ButtonModule, SwitchModule } from '@syncfusion/ej2-angular-buttons';
 import { enableRipple } from '@syncfusion/ej2-base';
+import { ContactGridsModule } from '@shared/components/contact-grids.module';
 import { routes } from './_routes';
-import { AccountsComponent } from './accounts-grid';
-import { AccountDetailComponent } from './account-detail/account-detail';
+import { TreasuryComponent } from './treasury-grid';
+import { TreasuryDetailComponent } from './treasury-detail/treasury-detail';
 
 enableRipple(true);
 
 @NgModule({
-  declarations: [AccountsComponent, AccountDetailComponent],
+  declarations: [TreasuryComponent, TreasuryDetailComponent],
   imports: [
     CommonModule,
     RouterModule.forChild(routes),
@@ -28,11 +30,13 @@ enableRipple(true);
     GridAllModule,
     TextBoxModule,
     NumericTextBoxModule,
+    DropDownListModule,
     SwitchModule,
     ButtonModule,
     FormsModule,
     ReactiveFormsModule,
+    ContactGridsModule,
   ],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })
-export class AccountsModule {}
+export class TreasuryModule {}

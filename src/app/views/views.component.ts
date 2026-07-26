@@ -178,6 +178,21 @@ export class ViewsComponent implements OnInit {
       case '02-02':
         this.router.navigate(['/accounting/classes']);
         break;
+      case '03-01':
+        this.router.navigate(['/treasury/banks']);
+        break;
+      case '03-02':
+        this.router.navigate(['/treasury/cashboxes']);
+        break;
+      case '04-01':
+        this.router.navigate(['/employee']);
+        break;
+      case '05-01':
+        this.router.navigate(['/provider']);
+        break;
+      case '06-01':
+        this.router.navigate(['/customer']);
+        break;
       case '08-01':
         this.router.navigate(['/merchandising/merchandise']);
         break;

@@ -34,39 +34,42 @@ import {
 } from 'rxjs';
 import MiniToolbar from '@assets/json/minitoolbar.json';
 import { withToolbarTitle } from '@shared/utils/grid-toolbar';
+import { ApplicationService } from '@shared/services/applicattionService';
 import { ToastService } from '@shared/services/toastService';
 import { toastType } from '@shared/enums/enums';
-import { AccountsService } from './accounts.service';
-import { IAccount } from './account';
+import { ProviderService } from './provider.service';
+import { IProvider } from './provider';
 
 @Component({
   selector: 'llion-content',
-  templateUrl: './accounts-grid.html',
-  styleUrls: ['./accounts-grid.scss'],
+  templateUrl: './provider-grid.html',
+  styleUrls: ['./provider-grid.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: false,
 })
-export class AccountsComponent implements OnInit, AfterViewInit, OnDestroy {
+export class ProviderComponent implements OnInit, AfterViewInit, OnDestroy {
   commands!: CommandModel[];
-  toolbar = withToolbarTitle(MiniToolbar as object[], 'Cuentas contables');
+  toolbar = withToolbarTitle(MiniToolbar as object[], 'Proveedores');
   searchSettings?: SearchSettingsModel;
 
-  accounts$!: Observable<IAccount[]>;
+  providers$!: Observable<IProvider[]>;
   enabled$!: Observable<boolean>;
   disabledGrid$!: Observable<boolean>;
+  entityTypeId = 0;
 
-  headerText: { text: string }[] = [{ text: 'cuenta' }];
+  headerText: { text: string }[] = [{ text: 'proveedor' }];
 
   @ViewChild('grid') grid!: GridComponent;
   @ViewChild('tabs') tabObj?: TabComponent;
 
   private readonly searchStringSubject = new BehaviorSubject<string>('');
-  private readonly selectedAccountSubject =
-    new BehaviorSubject<IAccount | null>(null);
+  private readonly selectedProviderSubject =
+    new BehaviorSubject<IProvider | null>(null);
   private readonly destroy$ = new Subject<void>();
 
   constructor(
-    private accountsService: AccountsService,
+    private applicationService: ApplicationService,
+    private providerService: ProviderService,
     private toastService: ToastService
   ) {}
 
@@ -77,7 +80,14 @@ export class AccountsComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    this.clearAccountSelection();
+    this.clearProviderSelection();
+
+    this.applicationService
+      .getEntityId('Provider')
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((entityId) => {
+        this.entityTypeId = entityId ?? 0;
+      });
 
     this.commands = [
       {
@@ -87,18 +97,16 @@ export class AccountsComponent implements OnInit, AfterViewInit, OnDestroy {
     ];
     this.searchSettings = { operator: 'contains' };
 
-    this.accounts$ = combineLatest([
-      this.accountsService.accountWithCRUD$,
+    this.providers$ = combineLatest([
+      this.providerService.providerWithCRUD$,
       this.searchStringSubject.asObservable().pipe(startWith('')),
     ]).pipe(
-      map(([accounts, searchStr]) =>
-        accounts.filter((account) => {
-          const needle = searchStr.toLocaleLowerCase();
-          return (
-            (account.description ?? '').toLocaleLowerCase().includes(needle) ||
-            (account.code ?? '').toLocaleLowerCase().includes(needle)
-          );
-        })
+      map(([providers, searchStr]) =>
+        providers.filter((provider) =>
+          (provider.description ?? '')
+            .toLocaleLowerCase()
+            .includes(searchStr.toLocaleLowerCase())
+        )
       ),
       catchError((err) => {
         this.toastService.showMyToast(err, toastType.error);
@@ -106,22 +114,22 @@ export class AccountsComponent implements OnInit, AfterViewInit, OnDestroy {
       })
     );
 
-    this.enabled$ = this.accountsService.enableAccountGridAction$.pipe(
+    this.enabled$ = this.providerService.enableProviderGridAction$.pipe(
       shareReplay(1)
     );
     this.disabledGrid$ = this.enabled$.pipe(shareReplay(1));
 
-    this.accountsService.enableAccountFormAction$
+    this.providerService.enableProviderFormAction$
       .pipe(takeUntil(this.destroy$))
       .subscribe((editing) => {
-        this.accountsService.enableAccountGrid(!!editing);
+        this.providerService.enableProviderGrid(!!editing);
       });
   }
 
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
-    this.clearAccountSelection();
+    this.clearProviderSelection();
   }
 
   onToolbarClick(args: ClickEventArgs): void {
@@ -140,8 +148,8 @@ export class AccountsComponent implements OnInit, AfterViewInit, OnDestroy {
         : target.id.split('_').pop();
 
     if (targetId === 'add') {
-      this.clearAccountSelection();
-      this.setAccountFormEditing(true);
+      this.clearProviderSelection();
+      this.setProviderFormEditing(true);
       args.cancel = true;
     } else if (targetId === 'searchbutton') {
       this.search();
@@ -153,14 +161,14 @@ export class AccountsComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   onRecordDoubleClick(args: RecordDoubleClickEventArgs): void {
-    const account = (args.rowData ??
-      this.selectedAccountSubject.value) as IAccount | null;
-    if (account?.accountId) {
-      this.selectAccount(account);
-      this.setAccountFormEditing(true);
+    const provider = (args.rowData ??
+      this.selectedProviderSubject.value) as IProvider | null;
+    if (provider?.providerId) {
+      this.selectProvider(provider);
+      this.setProviderFormEditing(true);
     } else {
       this.toastService.showMyToast(
-        'Debe seleccionar una cuenta...',
+        'Debe seleccionar un proveedor...',
         toastType.error
       );
     }
@@ -174,40 +182,54 @@ export class AccountsComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   commandClick(args: CommandClickEventArgs): void {
-    const selected = this.selectedAccountSubject.value;
+    const selected = this.selectedProviderSubject.value;
     if (args.target?.title === 'Delete' && selected) {
-      this.accountsService.deleteAccount(selected);
-      this.clearAccountSelection();
+      this.providerService.deleteProvider(selected);
+      this.clearProviderSelection();
     }
   }
 
   onRowSelected(args: RowSelectEventArgs): void {
-    const account = (args.data ? args.data : null) as IAccount | null;
-    if (!account?.accountId) {
+    const provider = (args.data ? args.data : null) as IProvider | null;
+    if (!provider?.providerId) {
       return;
     }
-    const previousId = this.selectedAccountSubject.value?.accountId ?? 0;
-    this.selectAccount(account);
-    if (previousId !== account.accountId) {
-      this.setAccountFormEditing(false);
+    const previousId = this.selectedProviderSubject.value?.providerId ?? 0;
+    this.selectProvider(provider);
+    if (previousId !== provider.providerId) {
+      this.setProviderFormEditing(false);
     }
   }
 
   onRowDeselected(_args: RowDeselectEventArgs): void {}
 
-  private selectAccount(account: IAccount): void {
-    this.selectedAccountSubject.next(account);
-    this.accountsService.setAccountContext(account.accountId);
+  private selectProvider(provider: IProvider): void {
+    this.selectedProviderSubject.next(provider);
+    this.providerService.setProviderContext(provider.providerId);
+    // Same contact key pattern as organization: entity type + owner id
+    if (this.entityTypeId > 0) {
+      this.applicationService.entitySelected(this.entityTypeId);
+    }
+    this.applicationService.organizationIdSelected(provider.providerId);
+    this.enableContactChildGrids(true);
   }
 
-  private clearAccountSelection(): void {
-    this.setAccountFormEditing(false);
-    this.selectedAccountSubject.next(null);
-    this.accountsService.setAccountContext(0);
+  private clearProviderSelection(): void {
+    this.setProviderFormEditing(false);
+    this.enableContactChildGrids(false);
+    this.selectedProviderSubject.next(null);
+    this.providerService.setProviderContext(0);
+    this.applicationService.organizationIdSelected(0);
   }
 
-  private setAccountFormEditing(editing: boolean): void {
-    this.accountsService.enableAccountForm(editing);
+  private setProviderFormEditing(editing: boolean): void {
+    this.providerService.enableProviderForm(editing);
+  }
+
+  private enableContactChildGrids(enable: boolean): void {
+    this.applicationService.enableAddressChildGrid(enable);
+    this.applicationService.enableEmailChildGrid(enable);
+    this.applicationService.enablePhoneChildGrid(enable);
   }
 
   private search(clear: boolean = false): void {

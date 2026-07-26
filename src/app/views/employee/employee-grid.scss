@@ -8,7 +8,7 @@
   border-left: 7px solid $llion-color-white;
 }
 
-#accounts-grid .e-toolbar {
+#employee-grid .e-toolbar {
   background-color: $llion-color-primary-container;
 }
 
@@ -17,11 +17,11 @@
   border: 1px solid #5a70cc;
 }
 
-::ng-deep #accounts-grid .e-toolbar-item.e-search-wrapper {
+::ng-deep #employee-grid .e-toolbar-item.e-search-wrapper {
   padding-top: 7px;
 }
 
-::ng-deep #accounts-grid .e-grid .e-toolbar-items .e-toolbar-item.e-search-wrapper .e-search {
+::ng-deep #employee-grid .e-grid .e-toolbar-items .e-toolbar-item.e-search-wrapper .e-search {
   background-color: $llion-color-primary-container;
 }
 

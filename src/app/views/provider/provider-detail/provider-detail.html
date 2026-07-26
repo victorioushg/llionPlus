@@ -1,0 +1,148 @@
+<div class="wrapper-detail" *ngIf="provider$ | async as provider">
+  <form
+    id="provider-detail-form"
+    class="provider-detail-form"
+    [formGroup]="providerForm"
+  >
+    <div class="row">
+      <div class="col-md-8">
+        <ejs-textbox
+          placeholder="proveedor"
+          floatLabelType="Always"
+          formControlName="description"
+          [enabled]="enabled$ | async"
+        ></ejs-textbox>
+      </div>
+      <div class="col-md-4">
+        <ejs-textbox
+          placeholder="código"
+          floatLabelType="Always"
+          formControlName="alternCode"
+          [enabled]="enabled$ | async"
+        ></ejs-textbox>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-6">
+        <ejs-textbox
+          placeholder="Registro de Información Fiscal (RIF)"
+          floatLabelType="Always"
+          formControlName="taxRegistrationID"
+          [enabled]="enabled$ | async"
+        ></ejs-textbox>
+      </div>
+      <div class="col-md-6">
+        <ejs-textbox
+          placeholder="RIF alterno"
+          floatLabelType="Always"
+          formControlName="taxRegistrationID2"
+          [enabled]="enabled$ | async"
+        ></ejs-textbox>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-4">
+        <ejs-textbox
+          placeholder="código asignado"
+          floatLabelType="Always"
+          formControlName="providerAssignedCode"
+          [enabled]="enabled$ | async"
+        ></ejs-textbox>
+      </div>
+      <div class="col-md-4">
+        <ejs-numerictextbox
+          placeholder="límite de débito"
+          floatLabelType="Always"
+          formControlName="debitLimit"
+          [enabled]="enabled$ | async"
+          format="N2"
+        ></ejs-numerictextbox>
+      </div>
+      <div class="col-md-4">
+        <ejs-numerictextbox
+          placeholder="débito disponible"
+          floatLabelType="Always"
+          formControlName="debitAvailable"
+          [enabled]="enabled$ | async"
+          format="N2"
+        ></ejs-numerictextbox>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-12">
+        <ejs-textbox
+          placeholder="comentario"
+          floatLabelType="Always"
+          formControlName="comment"
+          [enabled]="enabled$ | async"
+          [multiline]="true"
+        ></ejs-textbox>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-12">
+        <llion-grid-address></llion-grid-address>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-12">
+        <llion-grid-phone></llion-grid-phone>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-12">
+        <llion-grid-email></llion-grid-email>
+      </div>
+    </div>
+    <br />
+    <div class="row">
+      <div class="col-md-6">
+        <ejs-datepicker
+          format="dd/MM/yyyy"
+          placeholder="Fecha ingreso"
+          floatLabelType="Always"
+          formControlName="createdON"
+          [enabled]="enabled$ | async"
+        ></ejs-datepicker>
+      </div>
+      <div class="col-md-6" style="margin-top: auto">
+        <table style="width: 100%">
+          <tr>
+            <td style="width: 50%">Proveedor activo</td>
+            <td style="width: 50%">
+              <ejs-switch
+                formControlName="deactivated"
+                [disabled]="!(enabled$ | async)"
+              ></ejs-switch>
+            </td>
+          </tr>
+        </table>
+      </div>
+    </div>
+    <br />
+    <div class="row">
+      <div class="col-md-6"></div>
+      <div class="col-md-6">
+        <div id="provider-form-buttons">
+          <button
+            ejs-button
+            (click)="onCancelClick()"
+            [disabled]="!(enabled$ | async)"
+            style="float: right"
+          >
+            Cancelar
+          </button>
+          <button
+            ejs-button
+            (click)="onSaveClick()"
+            cssClass="e-primary"
+            [disabled]="!(enabled$ | async)"
+            style="float: right"
+          >
+            Aceptar
+          </button>
+        </div>
+      </div>
+    </div>
+  </form>
+</div>

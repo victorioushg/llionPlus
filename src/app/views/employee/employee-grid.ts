@@ -34,39 +34,42 @@ import {
 } from 'rxjs';
 import MiniToolbar from '@assets/json/minitoolbar.json';
 import { withToolbarTitle } from '@shared/utils/grid-toolbar';
+import { ApplicationService } from '@shared/services/applicattionService';
 import { ToastService } from '@shared/services/toastService';
 import { toastType } from '@shared/enums/enums';
-import { AccountsService } from './accounts.service';
-import { IAccount } from './account';
+import { EmployeeService } from './employee.service';
+import { IEmployee } from './employee';
 
 @Component({
   selector: 'llion-content',
-  templateUrl: './accounts-grid.html',
-  styleUrls: ['./accounts-grid.scss'],
+  templateUrl: './employee-grid.html',
+  styleUrls: ['./employee-grid.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: false,
 })
-export class AccountsComponent implements OnInit, AfterViewInit, OnDestroy {
+export class EmployeeComponent implements OnInit, AfterViewInit, OnDestroy {
   commands!: CommandModel[];
-  toolbar = withToolbarTitle(MiniToolbar as object[], 'Cuentas contables');
+  toolbar = withToolbarTitle(MiniToolbar as object[], 'Trabajadores');
   searchSettings?: SearchSettingsModel;
 
-  accounts$!: Observable<IAccount[]>;
+  employees$!: Observable<IEmployee[]>;
   enabled$!: Observable<boolean>;
   disabledGrid$!: Observable<boolean>;
+  entityTypeId = 0;
 
-  headerText: { text: string }[] = [{ text: 'cuenta' }];
+  headerText: { text: string }[] = [{ text: 'trabajador' }];
 
   @ViewChild('grid') grid!: GridComponent;
   @ViewChild('tabs') tabObj?: TabComponent;
 
   private readonly searchStringSubject = new BehaviorSubject<string>('');
-  private readonly selectedAccountSubject =
-    new BehaviorSubject<IAccount | null>(null);
+  private readonly selectedEmployeeSubject =
+    new BehaviorSubject<IEmployee | null>(null);
   private readonly destroy$ = new Subject<void>();
 
   constructor(
-    private accountsService: AccountsService,
+    private applicationService: ApplicationService,
+    private employeeService: EmployeeService,
     private toastService: ToastService
   ) {}
 
@@ -77,7 +80,14 @@ export class AccountsComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    this.clearAccountSelection();
+    this.clearEmployeeSelection();
+
+    this.applicationService
+      .getEntityId('Human Resources')
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((entityId) => {
+        this.entityTypeId = entityId ?? 0;
+      });
 
     this.commands = [
       {
@@ -87,17 +97,15 @@ export class AccountsComponent implements OnInit, AfterViewInit, OnDestroy {
     ];
     this.searchSettings = { operator: 'contains' };
 
-    this.accounts$ = combineLatest([
-      this.accountsService.accountWithCRUD$,
+    this.employees$ = combineLatest([
+      this.employeeService.employeeWithCRUD$,
       this.searchStringSubject.asObservable().pipe(startWith('')),
     ]).pipe(
-      map(([accounts, searchStr]) =>
-        accounts.filter((account) => {
-          const needle = searchStr.toLocaleLowerCase();
-          return (
-            (account.description ?? '').toLocaleLowerCase().includes(needle) ||
-            (account.code ?? '').toLocaleLowerCase().includes(needle)
-          );
+      map(([employees, searchStr]) =>
+        employees.filter((employee) => {
+          const haystack =
+            `${employee.lastName ?? ''} ${employee.firstName ?? ''} ${employee.alternCode ?? ''} ${employee.identificationNumber ?? ''}`.toLocaleLowerCase();
+          return haystack.includes(searchStr.toLocaleLowerCase());
         })
       ),
       catchError((err) => {
@@ -106,22 +114,22 @@ export class AccountsComponent implements OnInit, AfterViewInit, OnDestroy {
       })
     );
 
-    this.enabled$ = this.accountsService.enableAccountGridAction$.pipe(
+    this.enabled$ = this.employeeService.enableEmployeeGridAction$.pipe(
       shareReplay(1)
     );
     this.disabledGrid$ = this.enabled$.pipe(shareReplay(1));
 
-    this.accountsService.enableAccountFormAction$
+    this.employeeService.enableEmployeeFormAction$
       .pipe(takeUntil(this.destroy$))
       .subscribe((editing) => {
-        this.accountsService.enableAccountGrid(!!editing);
+        this.employeeService.enableEmployeeGrid(!!editing);
       });
   }
 
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
-    this.clearAccountSelection();
+    this.clearEmployeeSelection();
   }
 
   onToolbarClick(args: ClickEventArgs): void {
@@ -140,8 +148,8 @@ export class AccountsComponent implements OnInit, AfterViewInit, OnDestroy {
         : target.id.split('_').pop();
 
     if (targetId === 'add') {
-      this.clearAccountSelection();
-      this.setAccountFormEditing(true);
+      this.clearEmployeeSelection();
+      this.setEmployeeFormEditing(true);
       args.cancel = true;
     } else if (targetId === 'searchbutton') {
       this.search();
@@ -153,14 +161,14 @@ export class AccountsComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   onRecordDoubleClick(args: RecordDoubleClickEventArgs): void {
-    const account = (args.rowData ??
-      this.selectedAccountSubject.value) as IAccount | null;
-    if (account?.accountId) {
-      this.selectAccount(account);
-      this.setAccountFormEditing(true);
+    const employee = (args.rowData ??
+      this.selectedEmployeeSubject.value) as IEmployee | null;
+    if (employee?.employeeId) {
+      this.selectEmployee(employee);
+      this.setEmployeeFormEditing(true);
     } else {
       this.toastService.showMyToast(
-        'Debe seleccionar una cuenta...',
+        'Debe seleccionar un trabajador...',
         toastType.error
       );
     }
@@ -174,40 +182,53 @@ export class AccountsComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   commandClick(args: CommandClickEventArgs): void {
-    const selected = this.selectedAccountSubject.value;
+    const selected = this.selectedEmployeeSubject.value;
     if (args.target?.title === 'Delete' && selected) {
-      this.accountsService.deleteAccount(selected);
-      this.clearAccountSelection();
+      this.employeeService.deleteEmployee(selected);
+      this.clearEmployeeSelection();
     }
   }
 
   onRowSelected(args: RowSelectEventArgs): void {
-    const account = (args.data ? args.data : null) as IAccount | null;
-    if (!account?.accountId) {
+    const employee = (args.data ? args.data : null) as IEmployee | null;
+    if (!employee?.employeeId) {
       return;
     }
-    const previousId = this.selectedAccountSubject.value?.accountId ?? 0;
-    this.selectAccount(account);
-    if (previousId !== account.accountId) {
-      this.setAccountFormEditing(false);
+    const previousId = this.selectedEmployeeSubject.value?.employeeId ?? 0;
+    this.selectEmployee(employee);
+    if (previousId !== employee.employeeId) {
+      this.setEmployeeFormEditing(false);
     }
   }
 
   onRowDeselected(_args: RowDeselectEventArgs): void {}
 
-  private selectAccount(account: IAccount): void {
-    this.selectedAccountSubject.next(account);
-    this.accountsService.setAccountContext(account.accountId);
+  private selectEmployee(employee: IEmployee): void {
+    this.selectedEmployeeSubject.next(employee);
+    this.employeeService.setEmployeeContext(employee.employeeId);
+    if (this.entityTypeId > 0) {
+      this.applicationService.entitySelected(this.entityTypeId);
+    }
+    this.applicationService.organizationIdSelected(employee.employeeId);
+    this.enableContactChildGrids(true);
   }
 
-  private clearAccountSelection(): void {
-    this.setAccountFormEditing(false);
-    this.selectedAccountSubject.next(null);
-    this.accountsService.setAccountContext(0);
+  private clearEmployeeSelection(): void {
+    this.setEmployeeFormEditing(false);
+    this.enableContactChildGrids(false);
+    this.selectedEmployeeSubject.next(null);
+    this.employeeService.setEmployeeContext(0);
+    this.applicationService.organizationIdSelected(0);
   }
 
-  private setAccountFormEditing(editing: boolean): void {
-    this.accountsService.enableAccountForm(editing);
+  private setEmployeeFormEditing(editing: boolean): void {
+    this.employeeService.enableEmployeeForm(editing);
+  }
+
+  private enableContactChildGrids(enable: boolean): void {
+    this.applicationService.enableAddressChildGrid(enable);
+    this.applicationService.enableEmailChildGrid(enable);
+    this.applicationService.enablePhoneChildGrid(enable);
   }
 
   private search(clear: boolean = false): void {

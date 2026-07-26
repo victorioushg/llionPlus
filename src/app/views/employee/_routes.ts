@@ -1,9 +1,9 @@
 import { Routes } from '@angular/router';
-import { AccountsComponent } from './accounts-grid';
+import { EmployeeComponent } from './employee-grid';
 
 export const routes: Routes = [
   {
     path: '',
-    component: AccountsComponent,
+    component: EmployeeComponent,
   },
 ];

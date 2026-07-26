@@ -1,0 +1,76 @@
+<div class="wrapper-detail" *ngIf="account$ | async as account">
+  <form
+    id="account-detail-form"
+    class="account-detail-form"
+    [formGroup]="accountForm"
+  >
+    <div class="row">
+      <div class="col-md-4">
+        <ejs-textbox
+          placeholder="código"
+          floatLabelType="Always"
+          formControlName="code"
+          [enabled]="enabled$ | async"
+        ></ejs-textbox>
+      </div>
+      <div class="col-md-8">
+        <ejs-textbox
+          placeholder="descripción"
+          floatLabelType="Always"
+          formControlName="description"
+          [enabled]="enabled$ | async"
+        ></ejs-textbox>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-4">
+        <ejs-numerictextbox
+          placeholder="nivel"
+          floatLabelType="Always"
+          formControlName="level"
+          [enabled]="enabled$ | async"
+          format="N0"
+          [decimals]="0"
+        ></ejs-numerictextbox>
+      </div>
+      <div class="col-md-8" style="margin-top: auto">
+        <table style="width: 100%">
+          <tr>
+            <td style="width: 50%">Marca / imputable</td>
+            <td style="width: 50%">
+              <ejs-switch
+                formControlName="mark"
+                [disabled]="!(enabled$ | async)"
+              ></ejs-switch>
+            </td>
+          </tr>
+        </table>
+      </div>
+    </div>
+    <br />
+    <div class="row">
+      <div class="col-md-6"></div>
+      <div class="col-md-6">
+        <div id="account-form-buttons">
+          <button
+            ejs-button
+            (click)="onCancelClick()"
+            [disabled]="!(enabled$ | async)"
+            style="float: right"
+          >
+            Cancelar
+          </button>
+          <button
+            ejs-button
+            (click)="onSaveClick()"
+            cssClass="e-primary"
+            [disabled]="!(enabled$ | async)"
+            style="float: right"
+          >
+            Aceptar
+          </button>
+        </div>
+      </div>
+    </div>
+  </form>
+</div>

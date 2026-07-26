@@ -1,0 +1,219 @@
+<div class="wrapper-detail" *ngIf="employee$ | async as employee">
+  <form
+    id="employee-detail-form"
+    class="employee-detail-form"
+    [formGroup]="employeeForm"
+  >
+    <div class="row">
+      <div class="col-md-5">
+        <ejs-textbox
+          placeholder="apellidos"
+          floatLabelType="Always"
+          formControlName="lastName"
+          [enabled]="enabled$ | async"
+        ></ejs-textbox>
+      </div>
+      <div class="col-md-5">
+        <ejs-textbox
+          placeholder="nombres"
+          floatLabelType="Always"
+          formControlName="firstName"
+          [enabled]="enabled$ | async"
+        ></ejs-textbox>
+      </div>
+      <div class="col-md-2">
+        <ejs-textbox
+          placeholder="código"
+          floatLabelType="Always"
+          formControlName="alternCode"
+          [enabled]="enabled$ | async"
+        ></ejs-textbox>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-4">
+        <ejs-textbox
+          placeholder="cédula / identificación"
+          floatLabelType="Always"
+          formControlName="identificationNumber"
+          [enabled]="enabled$ | async"
+        ></ejs-textbox>
+      </div>
+      <div class="col-md-4">
+        <ejs-textbox
+          placeholder="seguro social"
+          floatLabelType="Always"
+          formControlName="socialSecurityNumber"
+          [enabled]="enabled$ | async"
+        ></ejs-textbox>
+      </div>
+      <div class="col-md-4">
+        <ejs-dropdownlist
+          formControlName="gender"
+          [dataSource]="genderOptions"
+          [fields]="dropdownFields"
+          [enabled]="enabled$ | async"
+          [showClearButton]="true"
+          floatLabelType="Always"
+          placeholder="género"
+        ></ejs-dropdownlist>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-4">
+        <ejs-datepicker
+          format="dd/MM/yyyy"
+          placeholder="fecha de nacimiento"
+          floatLabelType="Always"
+          formControlName="dateOfBirth"
+          [enabled]="enabled$ | async"
+        ></ejs-datepicker>
+      </div>
+      <div class="col-md-4">
+        <ejs-dropdownlist
+          formControlName="maritalStatus"
+          [dataSource]="maritalStatusOptions"
+          [fields]="dropdownFields"
+          [enabled]="enabled$ | async"
+          [showClearButton]="true"
+          floatLabelType="Always"
+          placeholder="estado civil"
+        ></ejs-dropdownlist>
+      </div>
+      <div class="col-md-4">
+        <ejs-textbox
+          placeholder="profesión"
+          floatLabelType="Always"
+          formControlName="profession"
+          [enabled]="enabled$ | async"
+        ></ejs-textbox>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-4">
+        <ejs-dropdownlist
+          formControlName="status"
+          [dataSource]="statusOptions"
+          [fields]="dropdownFields"
+          [enabled]="enabled$ | async"
+          floatLabelType="Always"
+          placeholder="estatus"
+        ></ejs-dropdownlist>
+      </div>
+      <div class="col-md-4">
+        <ejs-dropdownlist
+          formControlName="payrollType"
+          [dataSource]="payrollTypeOptions"
+          [fields]="dropdownFields"
+          [enabled]="enabled$ | async"
+          [showClearButton]="true"
+          floatLabelType="Always"
+          placeholder="tipo de nómina"
+        ></ejs-dropdownlist>
+      </div>
+      <div class="col-md-4">
+        <ejs-dropdownlist
+          formControlName="paymentType"
+          [dataSource]="paymentTypeOptions"
+          [fields]="dropdownFields"
+          [enabled]="enabled$ | async"
+          [showClearButton]="true"
+          floatLabelType="Always"
+          placeholder="forma de pago"
+        ></ejs-dropdownlist>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-4">
+        <ejs-numerictextbox
+          placeholder="monto de pago"
+          floatLabelType="Always"
+          formControlName="paymentAmount"
+          [enabled]="enabled$ | async"
+          format="N2"
+        ></ejs-numerictextbox>
+      </div>
+      <div class="col-md-4">
+        <ejs-textbox
+          placeholder="banco"
+          floatLabelType="Always"
+          formControlName="bank"
+          [enabled]="enabled$ | async"
+        ></ejs-textbox>
+      </div>
+      <div class="col-md-4">
+        <ejs-textbox
+          placeholder="cuenta bancaria"
+          floatLabelType="Always"
+          formControlName="banckAccount"
+          [enabled]="enabled$ | async"
+        ></ejs-textbox>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-12">
+        <llion-grid-address></llion-grid-address>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-12">
+        <llion-grid-phone></llion-grid-phone>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-12">
+        <llion-grid-email></llion-grid-email>
+      </div>
+    </div>
+    <br />
+    <div class="row">
+      <div class="col-md-6">
+        <ejs-datepicker
+          format="dd/MM/yyyy"
+          placeholder="fecha de ingreso"
+          floatLabelType="Always"
+          formControlName="createdOn"
+          [enabled]="enabled$ | async"
+        ></ejs-datepicker>
+      </div>
+      <div class="col-md-6" style="margin-top: auto">
+        <table style="width: 100%">
+          <tr>
+            <td style="width: 50%">Trabajador activo</td>
+            <td style="width: 50%">
+              <ejs-switch
+                formControlName="deactivated"
+                [disabled]="!(enabled$ | async)"
+              ></ejs-switch>
+            </td>
+          </tr>
+        </table>
+      </div>
+    </div>
+    <br />
+    <div class="row">
+      <div class="col-md-6"></div>
+      <div class="col-md-6">
+        <div id="employee-form-buttons">
+          <button
+            ejs-button
+            (click)="onCancelClick()"
+            [disabled]="!(enabled$ | async)"
+            style="float: right"
+          >
+            Cancelar
+          </button>
+          <button
+            ejs-button
+            (click)="onSaveClick()"
+            cssClass="e-primary"
+            [disabled]="!(enabled$ | async)"
+            style="float: right"
+          >
+            Aceptar
+          </button>
+        </div>
+      </div>
+    </div>
+  </form>
+</div>

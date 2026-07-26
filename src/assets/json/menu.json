@@ -76,13 +76,13 @@
         "image": "../../assets/images/transparent-icon.png"
       },
       {
-        "nodeId": "03-02",
+        "nodeId": "04-02",
         "nodeText": "contratos",
         "image": "../../assets/images/transparent-icon.png"
       },
       {
-        "nodeId": "03-03",
-        "nodeText": "nómima",
+        "nodeId": "04-03",
+        "nodeText": "nómina",
         "image": "../../assets/images/transparent-icon.png"
       }
     ]

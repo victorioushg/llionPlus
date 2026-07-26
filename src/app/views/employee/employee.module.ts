@@ -10,15 +10,18 @@ import {
   TextBoxModule,
 } from '@syncfusion/ej2-angular-inputs';
 import { ButtonModule, SwitchModule } from '@syncfusion/ej2-angular-buttons';
+import { DatePickerModule } from '@syncfusion/ej2-angular-calendars';
+import { DropDownListModule } from '@syncfusion/ej2-angular-dropdowns';
 import { enableRipple } from '@syncfusion/ej2-base';
+import { ContactGridsModule } from '@shared/components/contact-grids.module';
 import { routes } from './_routes';
-import { AccountsComponent } from './accounts-grid';
-import { AccountDetailComponent } from './account-detail/account-detail';
+import { EmployeeComponent } from './employee-grid';
+import { EmployeeDetailComponent } from './employee-detail/employee-detail';
 
 enableRipple(true);
 
 @NgModule({
-  declarations: [AccountsComponent, AccountDetailComponent],
+  declarations: [EmployeeComponent, EmployeeDetailComponent],
   imports: [
     CommonModule,
     RouterModule.forChild(routes),
@@ -28,11 +31,14 @@ enableRipple(true);
     GridAllModule,
     TextBoxModule,
     NumericTextBoxModule,
+    DropDownListModule,
     SwitchModule,
+    DatePickerModule,
     ButtonModule,
     FormsModule,
     ReactiveFormsModule,
+    ContactGridsModule,
   ],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })
-export class AccountsModule {}
+export class EmployeeModule {}

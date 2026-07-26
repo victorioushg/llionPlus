@@ -1,10 +1,10 @@
 <div id="container" class="container">
   <div class="row">
     <div class="col-lg-4">
-      <div id="accounts-grid" [class.wrapper]="disabledGrid$ | async">
+      <div id="treasury-grid" [class.wrapper]="disabledGrid$ | async">
         <ejs-grid
           #grid
-          [dataSource]="accounts$ | async"
+          [dataSource]="treasuries$ | async"
           [allowFiltering]="enabled$ | async"
           [cssClass]="(disabledGrid$ | async) ? 'disablegrid' : ''"
           [toolbar]="toolbar"
@@ -18,14 +18,18 @@
         >
           <e-columns>
             <e-column width="50" [commands]="commands"></e-column>
-            <e-column field="code" headerText="código" width="100"></e-column>
             <e-column
-              field="description"
-              headerText="cuenta"
+              field="treasuryName"
+              headerText="nombre"
               width="200"
             ></e-column>
             <e-column
-              field="accountId"
+              field="alternCode"
+              headerText="código"
+              width="100"
+            ></e-column>
+            <e-column
+              field="treasuryId"
               [isPrimaryKey]="true"
               [visible]="false"
             ></e-column>
@@ -40,7 +44,7 @@
             <div class="row">
               <div class="col-lg-12">
                 <ng-template #content>
-                  <llion-account-detail></llion-account-detail>
+                  <llion-treasury-detail></llion-treasury-detail>
                 </ng-template>
               </div>
             </div>

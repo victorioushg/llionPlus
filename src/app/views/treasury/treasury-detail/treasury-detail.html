@@ -1,0 +1,116 @@
+<div class="wrapper-detail" *ngIf="treasury$ | async as treasury">
+  <form
+    id="treasury-detail-form"
+    class="treasury-detail-form"
+    [formGroup]="treasuryForm"
+  >
+    <div class="row">
+      <div class="col-md-8">
+        <ejs-textbox
+          placeholder="nombre"
+          floatLabelType="Always"
+          formControlName="treasuryName"
+          [enabled]="enabled$ | async"
+        ></ejs-textbox>
+      </div>
+      <div class="col-md-4">
+        <ejs-textbox
+          placeholder="código"
+          floatLabelType="Always"
+          formControlName="alternCode"
+          [enabled]="enabled$ | async"
+        ></ejs-textbox>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-6">
+        <ejs-textbox
+          placeholder="número de cuenta"
+          floatLabelType="Always"
+          formControlName="treasuryAccountNumber"
+          [enabled]="enabled$ | async"
+        ></ejs-textbox>
+      </div>
+      <div class="col-md-6">
+        <ejs-numerictextbox
+          placeholder="saldo actual"
+          floatLabelType="Always"
+          formControlName="actualBalance"
+          [enabled]="enabled$ | async"
+          format="N2"
+        ></ejs-numerictextbox>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-12">
+        <ejs-dropdownlist
+          formControlName="accountId"
+          [dataSource]="accounts$ | async"
+          [fields]="accountFields"
+          [enabled]="enabled$ | async"
+          [allowFiltering]="true"
+          [showClearButton]="true"
+          [filterType]="filterType"
+          floatLabelType="Always"
+          placeholder="cuenta contable"
+        ></ejs-dropdownlist>
+      </div>
+    </div>
+
+    <ng-container *ngIf="showAgencyContacts$ | async">
+      <div class="row">
+        <div class="col-md-12">
+          <llion-grid-address></llion-grid-address>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-md-12">
+          <llion-grid-phone></llion-grid-phone>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-md-12">
+          <llion-grid-email></llion-grid-email>
+        </div>
+      </div>
+    </ng-container>
+
+    <br />
+    <div class="row">
+      <div class="col-md-6" style="margin-top: auto">
+        <table style="width: 100%">
+          <tr>
+            <td style="width: 50%">Activo</td>
+            <td style="width: 50%">
+              <ejs-switch
+                formControlName="deactivated"
+                [disabled]="!(enabled$ | async)"
+              ></ejs-switch>
+            </td>
+          </tr>
+        </table>
+      </div>
+      <div class="col-md-6">
+        <div id="treasury-form-buttons">
+          <button
+            ejs-button
+            (click)="onCancelClick()"
+            [disabled]="!(enabled$ | async)"
+            style="float: right"
+          >
+            Cancelar
+          </button>
+          <button
+            ejs-button
+            (click)="onSaveClick()"
+            cssClass="e-primary"
+            [disabled]="!(enabled$ | async)"
+            style="float: right"
+          >
+            Aceptar
+          </button>
+        </div>
+      </div>
+    </div>
+  </form>
+</div>

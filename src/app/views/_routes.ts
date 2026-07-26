@@ -11,27 +11,20 @@ export const ROUTES: Routes = [
         redirectTo: '',
         pathMatch: 'full',
       },
-      // {
-      //   path: 'accounting/accounts',
-      //   loadChildren: () =>
-      //     import('@app/views/accounting/accounts/accounts.module').then(
-      //       (m) => m.AccountsModule
-      //     ),
-      // },
-      // {
-      //   path: 'accounting/classes',
-      //   loadChildren: () =>
-      //     import('@app/views/accounting/classes/classes.module').then(
-      //       (m) => m.ClassesModule
-      //     ),
-      // },
-      // {
-      //   path: 'control/parameters',
-      //   loadChildren: () =>
-      //     import(
-      //       '@app/views/control/parameters/parameters.module'
-      //     ).then((m) => m.ParametersModule),
-      // },
+      {
+        path: 'accounting/accounts',
+        loadChildren: () =>
+          import('@views/accounting/accounts/accounts.module').then(
+            (m) => m.AccountsModule
+          ),
+      },
+      {
+        path: 'treasury',
+        loadChildren: () =>
+          import('@views/treasury/treasury.module').then(
+            (m) => m.TreasuryModule
+          ),
+      },
       {
         path: 'merchandising/merchandise',
         loadChildren: () =>
@@ -44,6 +37,27 @@ export const ROUTES: Routes = [
         loadChildren: () =>
           import('@views/application/organization/organization.module').then(
             (m) => m.OrganizationModule
+          ),
+      },
+      {
+        path: 'customer',
+        loadChildren: () =>
+          import('@views/customer/customer.module').then(
+            (m) => m.CustomerModule
+          ),
+      },
+      {
+        path: 'provider',
+        loadChildren: () =>
+          import('@views/provider/provider.module').then(
+            (m) => m.ProviderModule
+          ),
+      },
+      {
+        path: 'employee',
+        loadChildren: () =>
+          import('@views/employee/employee.module').then(
+            (m) => m.EmployeeModule
           ),
       },
       {
