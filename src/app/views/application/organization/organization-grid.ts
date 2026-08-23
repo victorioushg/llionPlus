@@ -1,5 +1,7 @@
 import {
   AfterViewInit,
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
   Component,
   ElementRef,
   OnDestroy,
@@ -20,11 +22,13 @@ import {
 import { OrganizationService } from './organization.service';
 import MiniToolbar from '@assets/json/minitoolbar.json';
 import { withToolbarTitle } from '@shared/utils/grid-toolbar';
+import { contentGridHeight, applyGridHeightAboveFooter } from '@shared/utils/layout';
 import {
   BehaviorSubject,
   catchError,
   combineLatest,
   EMPTY,
+  fromEvent,
   map,
   Observable,
   shareReplay,
@@ -32,7 +36,7 @@ import {
   Subject,
   takeUntil,
 } from 'rxjs';
-import { ChangeDetectionStrategy } from '@angular/core';
+import { debounceTime } from 'rxjs/operators';
 import { IOrganization } from './organization';
 import { ToastService } from '@shared/services/toastService';
 import { toastType } from '@shared/enums/enums';
@@ -51,6 +55,7 @@ import { ApplicationService } from '@shared/services/applicattionService';
 })
 export class OrganizationComponent implements OnInit, AfterViewInit, OnDestroy {
   public commands!: CommandModel[];
+  screenHeight = contentGridHeight();
 
   private readonly searchStringSubject = new BehaviorSubject<string>('');
   readonly searchStringAction$ = this.searchStringSubject.asObservable();
@@ -84,7 +89,8 @@ export class OrganizationComponent implements OnInit, AfterViewInit, OnDestroy {
   constructor(
     private applicationService: ApplicationService,
     private organizationService: OrganizationService,
-    private toastService: ToastService
+    private toastService: ToastService,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngAfterViewInit(): void {
@@ -92,9 +98,16 @@ export class OrganizationComponent implements OnInit, AfterViewInit, OnDestroy {
       (this.tabObj as TabComponent).element.classList.add('e-fill');
       this.showAllTabs();
     }
+    this.updateGridHeight();
+    setTimeout(() => this.updateGridHeight(), 0);
   }
 
   ngOnInit(): void {
+    this.updateGridHeight();
+    fromEvent(window, 'resize')
+      .pipe(debounceTime(100), takeUntil(this.destroy$))
+      .subscribe(() => this.updateGridHeight());
+
     this.clearOrganizationSelection();
 
     this.commands = [
@@ -277,5 +290,10 @@ export class OrganizationComponent implements OnInit, AfterViewInit, OnDestroy {
       searchString.value = '';
     }
     this.searchStringSubject.next(searchString.value || '');
+  }
+
+  private updateGridHeight(): void {
+    this.screenHeight = applyGridHeightAboveFooter(this.grid);
+    this.cdr.markForCheck();
   }
 }

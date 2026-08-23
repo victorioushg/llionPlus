@@ -8,21 +8,22 @@
           [allowFiltering]="enabled$ | async"
           [cssClass]="(disabledGrid$ | async) ? 'disablegrid' : ''"
           [toolbar]="toolbar"
+          [height]="screenHeight"
           [searchSettings]="searchSettings"
           (actionBegin)="actionBegin($event)"
           (toolbarClick)="onToolbarClick($event)"
           (rowSelected)="onRowSelected($event)"
           (rowDeselected)="onRowDeselected($event)"
           (recordDoubleClick)="onRecordDoubleClick($event)"
-          (commandClick)="commandClick($event)"
         >
           <e-columns>
             <e-column width="50" [commands]="commands"></e-column>
-            <e-column field="code" headerText="código" width="100"></e-column>
+            <e-column field="code" headerText="código" width="90"></e-column>
+            <e-column field="name" headerText="nombre" width="180"></e-column>
             <e-column
-              field="description"
-              headerText="cuenta"
-              width="200"
+              field="accountType"
+              headerText="tipo"
+              width="120"
             ></e-column>
             <e-column
               field="accountId"

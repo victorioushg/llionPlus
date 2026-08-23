@@ -29,13 +29,16 @@ import {
   Subject,
   catchError,
   combineLatest,
+  fromEvent,
   map,
   shareReplay,
   startWith,
   takeUntil,
 } from 'rxjs';
+import { debounceTime } from 'rxjs/operators';
 import MiniToolbar from '@assets/json/minitoolbar.json';
-import { withToolbarTitle } from '@shared/utils/grid-toolbar';
+import { withToolbarTitle, bindGridSearchAsYouType } from '@shared/utils/grid-toolbar';
+import { contentGridHeight, applyGridHeightAboveFooter } from '@shared/utils/layout';
 import { ApplicationService } from '@shared/services/applicattionService';
 import { ToastService } from '@shared/services/toastService';
 import { toastType } from '@shared/enums/enums';
@@ -60,12 +63,16 @@ export class TreasuryComponent implements OnInit, AfterViewInit, OnDestroy {
   commands!: CommandModel[];
   toolbar = withToolbarTitle(MiniToolbar as object[], 'Tesorería');
   searchSettings?: SearchSettingsModel;
+  screenHeight = contentGridHeight();
 
   treasuries$!: Observable<ITreasury[]>;
   enabled$!: Observable<boolean>;
   disabledGrid$!: Observable<boolean>;
 
-  headerText: { text: string }[] = [{ text: 'tesorería' }];
+  headerText: { text: string }[] = [
+    { text: 'banco' },
+    { text: 'movimientos' },
+  ];
   treasuryType: string = TREASURY_TYPE_BANK;
 
   @ViewChild('grid') grid!: GridComponent;
@@ -88,9 +95,21 @@ export class TreasuryComponent implements OnInit, AfterViewInit, OnDestroy {
     if (this.tabObj) {
       (this.tabObj as TabComponent).element.classList.add('e-fill');
     }
+    this.updateGridHeight();
+    setTimeout(() => this.updateGridHeight(), 0);
+    bindGridSearchAsYouType(
+      () => this.grid,
+      (value) => this.searchStringSubject.next(value),
+      this.destroy$
+    );
   }
 
   ngOnInit(): void {
+    this.updateGridHeight();
+    fromEvent(window, 'resize')
+      .pipe(debounceTime(100), takeUntil(this.destroy$))
+      .subscribe(() => this.updateGridHeight());
+
     this.route.data.pipe(takeUntil(this.destroy$)).subscribe((data) => {
       this.treasuryType =
         data['treasuryType'] === TREASURY_TYPE_CASHBOX
@@ -104,6 +123,7 @@ export class TreasuryComponent implements OnInit, AfterViewInit, OnDestroy {
         {
           text: this.treasuryType === TREASURY_TYPE_CASHBOX ? 'caja' : 'banco',
         },
+        { text: 'movimientos' },
       ];
 
       this.treasuryService.setTreasuryTypeFilter(this.treasuryType);
@@ -124,15 +144,21 @@ export class TreasuryComponent implements OnInit, AfterViewInit, OnDestroy {
       this.searchStringSubject.asObservable().pipe(startWith('')),
     ]).pipe(
       map(([treasuries, searchStr]) =>
-        treasuries.filter((treasury) => {
-          const needle = searchStr.toLocaleLowerCase();
-          return (
-            (treasury.treasuryName ?? '')
-              .toLocaleLowerCase()
-              .includes(needle) ||
-            (treasury.alternCode ?? '').toLocaleLowerCase().includes(needle)
-          );
-        })
+        treasuries
+          .filter((treasury) => {
+            const needle = searchStr.toLocaleLowerCase();
+            return (
+              (treasury.treasuryName ?? '')
+                .toLocaleLowerCase()
+                .includes(needle) ||
+              (treasury.alternCode ?? '').toLocaleLowerCase().includes(needle)
+            );
+          })
+          .sort((a, b) =>
+            (a.treasuryName ?? '').localeCompare(b.treasuryName ?? '', 'es', {
+              sensitivity: 'base',
+            })
+          )
       ),
       catchError((err) => {
         this.toastService.showMyToast(err, toastType.error);
@@ -280,5 +306,10 @@ export class TreasuryComponent implements OnInit, AfterViewInit, OnDestroy {
       searchString.value = '';
     }
     this.searchStringSubject.next(searchString.value || '');
+  }
+
+  private updateGridHeight(): void {
+    this.screenHeight = applyGridHeightAboveFooter(this.grid);
+    this.cdr.markForCheck();
   }
 }

@@ -35,6 +35,7 @@ import {
   startWith,
   Subject,
   takeUntil,
+  tap,
 } from 'rxjs';
 import { debounceTime } from 'rxjs/operators';
 import { ChangeDetectionStrategy } from '@angular/core';
@@ -47,9 +48,12 @@ import {
   SelectEventArgs,
   TabComponent,
 } from '@syncfusion/ej2-angular-navigations';
-import { withToolbarTitle } from '@shared/utils/grid-toolbar';
+import { withToolbarTitle, bindGridSearchAsYouType } from '@shared/utils/grid-toolbar';
+import { applyGridHeightAboveFooter } from '@shared/utils/layout';
 import { MerchandiseExpedienteComponent } from './merchandise-expediente/merchandise-expediente';
 import { MerchandiseMovementComponent } from './merchandise-movements/merchandise-movement-grid';
+import { Router } from '@angular/router';
+import { SpinnerService } from '@shared/services/spinner.service';
 
 @Component({
   selector: 'llion-content',
@@ -61,6 +65,8 @@ import { MerchandiseMovementComponent } from './merchandise-movements/merchandis
 export class MerchandiseComponent implements OnInit, AfterViewInit, OnDestroy {
   public commands!: CommandModel[];
   public screenHeight!: number;
+  /** true when route is /merchandising/services */
+  isServiceCatalog = false;
 
   private readonly searchStringSubject = new BehaviorSubject<string>('');
   readonly searchStringAction$ = this.searchStringSubject.asObservable();
@@ -115,7 +121,8 @@ export class MerchandiseComponent implements OnInit, AfterViewInit, OnDestroy {
   disabledGrid$!: Observable<boolean>;
   formEnabled$!: Observable<boolean>;
 
-  // Controls when the view is revealed to avoid the Syncfusion render "noise".
+  // Controls when the merchandise list spinner is hidden.
+  listReady = false;
   isReady = false;
 
   headerText: { text: string }[] = [
@@ -130,8 +137,12 @@ export class MerchandiseComponent implements OnInit, AfterViewInit, OnDestroy {
   constructor(
     private merchandiseService: MerchandiseService,
     private toastService: ToastService,
-    private cdr: ChangeDetectorRef
-  ) {}
+    private cdr: ChangeDetectorRef,
+    private router: Router,
+    private spinnerService: SpinnerService
+  ) {
+    this.spinnerService.suppressGlobal();
+  }
 
   ngAfterViewInit(): void {
     if (this.tabObj) {
@@ -141,9 +152,15 @@ export class MerchandiseComponent implements OnInit, AfterViewInit, OnDestroy {
       this.markReady();
       this.updateGridHeights();
     }, 700);
+    bindGridSearchAsYouType(
+      () => this.grid,
+      (value) => this.searchStringSubject.next(value),
+      this.destroy$
+    );
   }
 
   ngOnDestroy(): void {
+    this.spinnerService.resumeGlobal();
     this.destroy$.next();
     this.destroy$.complete();
   }
@@ -155,7 +172,7 @@ export class MerchandiseComponent implements OnInit, AfterViewInit, OnDestroy {
       setTimeout(() => this.syncMovementBottom(), 50);
     }
 
-    if (this.selectedTabIndex === 5) {
+    if (this.selectedTabIndex === 5 && !this.isServiceCatalog) {
       setTimeout(() => {
         this.merchandiseService.refreshMedia();
         this.merchandiseService.refreshProfiles();
@@ -173,10 +190,7 @@ export class MerchandiseComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private updateGridHeights(): void {
-    this.screenHeight = Math.max(200, window.innerHeight - 230);
-    if (this.grid) {
-      this.grid.height = this.screenHeight;
-    }
+    this.screenHeight = applyGridHeightAboveFooter(this.grid);
     this.cdr.markForCheck();
 
     // Refine movimientos bottom against the live merchandise grid edge.
@@ -192,6 +206,36 @@ export class MerchandiseComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    this.isServiceCatalog = this.router.url.includes('/services');
+    this.merchandiseService.setCatalogMode(
+      this.isServiceCatalog ? 'service' : 'merchandise'
+    );
+
+    if (this.isServiceCatalog) {
+      this.toolbar = withToolbarTitle(
+        [
+          {
+            text: 'Add',
+            tooltipText: 'Add',
+            prefixIcon: 'e-add',
+            id: 'add',
+          },
+          'Search',
+        ],
+        'Servicios'
+      );
+      this.priceToolbar = withToolbarTitle(
+        ['Add', 'Edit', 'Delete', 'Update', 'Cancel'],
+        'Precios de servicio'
+      );
+      this.headerText = [
+        { text: 'servicio' },
+        { text: 'movimientos' },
+        { text: 'compras' },
+        { text: 'ventas' },
+      ];
+    }
+
     this.updateGridHeights();
     fromEvent(window, 'resize')
       .pipe(debounceTime(100), takeUntil(this.destroy$))
@@ -210,12 +254,28 @@ export class MerchandiseComponent implements OnInit, AfterViewInit, OnDestroy {
       this.searchStringAction$.pipe(startWith('')),
     ]).pipe(
       map(([merchandises, searchStr]) =>
-        merchandises.filter((m) =>
-          m.name.toLocaleLowerCase().includes(searchStr.toLocaleLowerCase())
-        )
+        merchandises
+          .filter((m) =>
+            (m.name ?? '')
+              .toLocaleLowerCase()
+              .includes(searchStr.toLocaleLowerCase())
+          )
+          .sort((a, b) =>
+            (a.name ?? '').localeCompare(b.name ?? '', 'es', {
+              sensitivity: 'base',
+            })
+          )
       ),
+      tap(() => {
+        if (!this.listReady) {
+          this.listReady = true;
+          this.cdr.markForCheck();
+        }
+      }),
       catchError((err) => {
+        this.listReady = true;
         this.toastService.showMyToast(err, toastType.error);
+        this.cdr.markForCheck();
         return EMPTY;
       })
     );
@@ -248,6 +308,8 @@ export class MerchandiseComponent implements OnInit, AfterViewInit, OnDestroy {
 
     if (targetId === 'add' || args.item?.text === 'Add') {
       this.selectedMerchandiseSubject.next(null);
+      // Force empty selection so the detail form resets even if id was already 0
+      this.merchandiseService.selectedMerchandiseChanged(-1);
       this.merchandiseService.selectedMerchandiseChanged(0);
       this.enableParentForm(true);
       args.cancel = true;
@@ -272,7 +334,9 @@ export class MerchandiseComponent implements OnInit, AfterViewInit, OnDestroy {
       this.cdr.markForCheck();
     } else {
       this.toastService.showMyToast(
-        'Debe seleccionar una mercancía...',
+        this.isServiceCatalog
+          ? 'Debe seleccionar un servicio...'
+          : 'Debe seleccionar una mercancía...',
         toastType.error
       );
     }
@@ -298,11 +362,15 @@ export class MerchandiseComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   onRowSelected(args: RowSelectEventArgs): void {
-    const merchandise = (args.data ? args.data : []) as IMerchandise;
+    const merchandise = (args.data ? args.data : null) as IMerchandise | null;
+    const merchandiseId = merchandise?.merchandiseId ?? 0;
+    if (!merchandise || merchandiseId <= 0) {
+      return;
+    }
+
     this.selectedMerchandiseSubject.next(merchandise);
-    this.merchandiseService.selectedMerchandiseChanged(
-      merchandise.merchandiseId
-    );
+    this.merchandiseService.selectedMerchandiseChanged(merchandiseId);
+    this.cdr.markForCheck();
   }
 
   onRowDeselected(_args: RowDeselectEventArgs): void {

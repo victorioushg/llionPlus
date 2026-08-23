@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient, HttpHeaders, HttpErrorResponse } from '@angular/common/http';
 import { environment } from '@environments/environment';
 import {
   BehaviorSubject,
@@ -14,6 +14,7 @@ import {
   concatMap,
   map,
   scan,
+  shareReplay,
   switchMap,
   tap,
 } from 'rxjs/operators';
@@ -23,7 +24,7 @@ import { ToastService } from '@shared/services/toastService';
 import { ErrorHandlerService } from '@shared/services/errorHandlerService';
 import { toastType } from '@shared/enums/enums';
 import { Action } from '@shared/models/edit-action';
-import { IProvider } from './provider';
+import { IProvider, IProviderMovement } from './provider';
 
 @Injectable({
   providedIn: 'root',
@@ -65,9 +66,19 @@ export class ProviderService {
   );
   enableProviderFormAction$ = this.enabledProviderFormSource.asObservable();
 
+  private readonly movementsRefreshSubject = new BehaviorSubject<number>(0);
+  private readonly movementsHistoricSubject = new BehaviorSubject<boolean>(
+    false
+  );
+
   providers$!: Observable<IProvider[]>;
   providerSelected$!: Observable<IProvider>;
   providerWithCRUD$!: Observable<IProvider[]>;
+  providerMovements$!: Observable<IProviderMovement[]>;
+
+  get currentOrganizationId(): number {
+    return this.applicationService.workingOrganization?.organizationId ?? 0;
+  }
 
   constructor(
     private http: HttpClient,
@@ -80,6 +91,7 @@ export class ProviderService {
 
   setProviderContext(providerId: number): void {
     this.providerContextIdSource.next(providerId ?? 0);
+    this.setMovementsHistoricView(false);
   }
 
   enableProviderGrid(enabled: boolean): void {
@@ -158,6 +170,171 @@ export class ProviderService {
         [] as IProvider[]
       )
     );
+
+    this.providerMovements$ = combineLatest([
+      this.providerContextIdAction$,
+      this.applicationService.workingOrganization$,
+      this.movementsRefreshSubject,
+      this.movementsHistoricSubject,
+    ]).pipe(
+      switchMap(([providerId, workingOrg, , historic]) => {
+        const organizationId = workingOrg?.organizationId ?? 0;
+        if (!providerId || providerId <= 0 || !organizationId) {
+          return of([] as IProviderMovement[]);
+        }
+        return this.getProviderMovements(providerId, organizationId, historic);
+      }),
+      shareReplay({ bufferSize: 1, refCount: true })
+    );
+  }
+
+  refreshMovements(): void {
+    this.movementsRefreshSubject.next(this.movementsRefreshSubject.value + 1);
+  }
+
+  setMovementsHistoricView(historic: boolean): void {
+    if (this.movementsHistoricSubject.value === !!historic) {
+      return;
+    }
+    this.movementsHistoricSubject.next(!!historic);
+  }
+
+  addMovement(item: IProviderMovement): Observable<number> {
+    return this.http
+      .post<IApiResponse<number>>(`${this.providerUrl}/movement`, item, {
+        headers: this.headers,
+      })
+      .pipe(
+        tap(() => {
+          this.toastService.showMyToast(
+            'Movimiento almacenado',
+            toastType.success
+          );
+          this.refreshMovements();
+        }),
+        map((data) => Number(data.result) || 0),
+        catchError((err) => this.errorHandlerService.handleError(err))
+      );
+  }
+
+  deleteMovement(movementId: number, providerId: number): Observable<number> {
+    return this.http
+      .delete<IApiResponse<number>>(
+        `${this.providerUrl}/movement/${movementId}/${providerId}`,
+        { headers: this.headers }
+      )
+      .pipe(
+        tap(() => {
+          this.toastService.showMyToast(
+            'Movimiento eliminado',
+            toastType.success
+          );
+          this.refreshMovements();
+        }),
+        map((data) => Number(data.result) || 0),
+        catchError((err) => this.errorHandlerService.handleError(err))
+      );
+  }
+
+  setMovementHistoric(
+    movementId: number,
+    providerId: number,
+    historic: number
+  ): Observable<number> {
+    const toHistoric = historic ? 1 : 0;
+    return this.http
+      .put<IApiResponse<number>>(
+        `${this.providerUrl}/movement/historic`,
+        { movementId, providerId, historic: toHistoric },
+        { headers: this.headers }
+      )
+      .pipe(
+        tap(() => {
+          this.toastService.showMyToast(
+            toHistoric
+              ? 'Movimiento subido a histórico'
+              : 'Movimiento bajado de histórico',
+            toastType.success
+          );
+          this.refreshMovements();
+        }),
+        map((data) => Number(data.result) || 0),
+        catchError((err) => this.errorHandlerService.handleError(err))
+      );
+  }
+
+  private getProviderMovements(
+    providerId: number,
+    organizationId: number,
+    historic: boolean
+  ): Observable<IProviderMovement[]> {
+    const path = historic
+      ? `${this.providerUrl}/movements/historic/${providerId}/${organizationId}`
+      : `${this.providerUrl}/movements/${providerId}/${organizationId}`;
+    return this.http
+      .get<IApiResponse<IProviderMovement[]>>(path)
+      .pipe(
+        map((data) =>
+          ((data.result ?? []) as IProviderMovement[]).map((row) =>
+            this.normalizeMovement(row)
+          )
+        ),
+        catchError((err) => {
+          if (err instanceof HttpErrorResponse && err.status === 404) {
+            return of([] as IProviderMovement[]);
+          }
+          return this.errorHandlerService.handleError(err);
+        })
+      );
+  }
+
+  private normalizeMovement(row: IProviderMovement): IProviderMovement {
+    const anyRow = row as unknown as Record<string, unknown>;
+    const raw = (key: string): unknown => anyRow[key];
+    const text = (...keys: string[]): string | null => {
+      for (const key of keys) {
+        const value = raw(key);
+        if (value !== undefined && value !== null && String(value).trim() !== '') {
+          return String(value);
+        }
+      }
+      return null;
+    };
+    const num = (...keys: string[]): number | null => {
+      for (const key of keys) {
+        const value = Number(raw(key));
+        if (!Number.isNaN(value) && raw(key) !== undefined && raw(key) !== null) {
+          return value;
+        }
+      }
+      return null;
+    };
+
+    const packed = text('reference', 'Reference') ?? '';
+    const packedParts = packed.includes('\u001f')
+      ? packed.split('\u001f')
+      : null;
+
+    return {
+      ...row,
+      reference: packedParts ? packedParts[0] || null : packed || null,
+      treasuryId: num('treasuryId', 'TreasuryId') ?? row.treasuryId ?? null,
+      treasuryName:
+        text('treasuryName', 'TreasuryName') || packedParts?.[3] || null,
+      treasuryType: text('treasuryType', 'TreasuryType'),
+      beneficiary:
+        text('beneficiary', 'Beneficiary') || packedParts?.[1] || null,
+      cancellationDocumentType:
+        text('cancellationDocumentType', 'CancellationDocumentType') ||
+        packedParts?.[2] ||
+        null,
+      paymentReceipt:
+        text('paymentReceipt', 'PaymentReceipt') ?? row.paymentReceipt,
+      paymentDocument:
+        text('paymentDocument', 'PaymentDocument') ?? row.paymentDocument,
+      historic: num('historic', 'Historic') ?? row.historic ?? 0,
+      creditDebit: num('creditDebit', 'CreditDebit') ?? row.creditDebit ?? 0,
+    };
   }
 
   private modifyProviders(

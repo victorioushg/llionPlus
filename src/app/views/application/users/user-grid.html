@@ -8,6 +8,7 @@
             [dataSource]="users$ | async"
             [allowFiltering]="enabled$ | async"
             [toolbar]="toolbar"
+            [height]="screenHeight"
             [searchSettings]="searchSettings"
             [selectionSettings]="selectionOptions"
             (actionBegin)="actionBegin($event)"

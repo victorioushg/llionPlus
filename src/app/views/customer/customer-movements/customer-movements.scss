@@ -1,0 +1,29 @@
+@use "variables" as *;
+
+#customer-movements-grid .e-toolbar {
+  background-color: $llion-color-primary-container;
+}
+
+.e-toolbar .e-toolbar-items .e-tbar-btn {
+  background: $llion-color-white;
+  border: 1px solid #5a70cc;
+}
+
+::ng-deep #customer-movements-grid .e-toolbar-item.e-search-wrapper {
+  padding-top: 7px;
+}
+
+::ng-deep
+  #customer-movements-grid
+  .e-grid
+  .e-toolbar-items
+  .e-toolbar-item.e-search-wrapper
+  .e-search {
+  background-color: $llion-color-primary-container;
+}
+
+#customer-movements-container.is-disabled,
+#customer-movements-container.is-disabled ::ng-deep .e-grid {
+  pointer-events: none;
+  opacity: 0.45;
+}

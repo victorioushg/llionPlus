@@ -33,6 +33,9 @@ import { IGroup } from '@app/shared/models/group';
   standalone: false,
 })
 export class MerchandiseDetailComponent implements OnInit, OnDestroy {
+  /** true when catalog is servicios */
+  isServiceCatalog = false;
+
   // Brands
   @ViewChild('brandTable') brandTable!: GroupTableComponent;
   public brandsData: any[] = [];
@@ -87,6 +90,23 @@ export class MerchandiseDetailComponent implements OnInit, OnDestroy {
   divisionfields: Object = { text: 'description', value: 'groupId' };
   typefields: Object = { text: 'description', value: 'groupId' };
 
+  /** Service type options (not a DB lookup) */
+  serviceTypes = [
+    { value: 'Normal', text: 'Normal' },
+    { value: 'ISLR', text: 'ISLR' },
+  ];
+  serviceTypeFields: Object = { text: 'text', value: 'value' };
+
+  /** Service unit options stored on mer_merchandise.UnidadServicio */
+  unidadServicioOptions = [
+    { value: 'Hora', text: 'Hora' },
+    { value: 'Unidad', text: 'Unidad' },
+    { value: 'Día', text: 'Día' },
+    { value: 'Mes', text: 'Mes' },
+    { value: 'Servicio', text: 'Servicio' },
+  ];
+  unidadServicioFields: Object = { text: 'text', value: 'value' };
+
   merchandise!: IMerchandise;
   merchandise$!: Observable<IMerchandise>;
   enabled$!: Observable<boolean | null>;
@@ -99,6 +119,8 @@ export class MerchandiseDetailComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit() {
+    this.isServiceCatalog = this.merchandiseService.isServiceCatalog;
+
     this.merchandiseForm = this.formBuilder.group({
       merchandiseName: ['', Validators.required],
       merchandiseBrands: [],
@@ -107,13 +129,15 @@ export class MerchandiseDetailComponent implements OnInit, OnDestroy {
       merchandiseTypes: [],
       merchandiseAlternCode: [],
       merchandisePresentation: [],
-      merchandiseActive: [{ value: false, disabled: true }],
+      merchandiseActive: [{ value: true, disabled: true }],
       merchandiseRegulated: [{ value: false, disabled: true }],
       merchandiseReturns: [{ value: false, disabled: true }],
       merchandiseAcceptRebates: [{ value: false, disabled: true }],
       merchandiseReturnsRate: [0],
       merchandiseStock: [0],
       merchandiseAvailableStock: [0],
+      serviceType: ['Normal'],
+      unidadServicio: ['Unidad'],
     });
 
     this.merchandiseBrands$ = this.merchandiseService.merchandiseBrands$;
@@ -136,13 +160,16 @@ export class MerchandiseDetailComponent implements OnInit, OnDestroy {
             merchandisePresentation: merchandise.description ?? '',
             merchandiseDivisions: merchandise.divisionId ?? null,
             merchandiseTypes: merchandise.typeId ?? null,
-            merchandiseActive: !merchandise.deactivated,
-            merchandiseRegulated: !!merchandise.regulated,
-            merchandiseReturns: !!merchandise.acceptsReturns,
-            merchandiseAcceptRebates: !!merchandise.acceptsRebate,
+            // Activo = opposite of Deactivated
+            merchandiseActive: !this.asBool(merchandise.deactivated),
+            merchandiseRegulated: this.asBool(merchandise.regulated),
+            merchandiseReturns: this.asBool(merchandise.acceptsReturns),
+            merchandiseAcceptRebates: this.asBool(merchandise.acceptsRebate),
             merchandiseReturnsRate: merchandise.acceptsReturnsRate ?? 0,
             merchandiseStock: merchandise.currentStock ?? 0,
             merchandiseAvailableStock: merchandise.availableStock ?? 0,
+            serviceType: this.normalizeServiceType(merchandise.serviceType),
+            unidadServicio: merchandise.unidadServicio || 'Unidad',
           });
         }
       }),
@@ -216,14 +243,14 @@ export class MerchandiseDetailComponent implements OnInit, OnDestroy {
       brandId: formValue.merchandiseBrands ?? 0,
       typeId: formValue.merchandiseTypes ?? 0,
       divisionId: formValue.merchandiseDivisions ?? 0,
-      deactivated: !formValue.merchandiseActive,
-      acceptsReturns: formValue.merchandiseReturns ?? false,
+      deactivated: !this.asBool(formValue.merchandiseActive),
+      acceptsReturns: this.asBool(formValue.merchandiseReturns),
       acceptsReturnsRate: formValue.merchandiseReturnsRate ?? 0,
       currentStock: formValue.merchandiseStock ?? 0,
       availableStock: formValue.merchandiseAvailableStock ?? 0,
       marketShare: this.merchandise?.marketShare ?? 0,
-      regulated: formValue.merchandiseRegulated ?? false,
-      acceptsRebate: formValue.merchandiseAcceptRebates ?? false,
+      regulated: this.asBool(formValue.merchandiseRegulated),
+      acceptsRebate: this.asBool(formValue.merchandiseAcceptRebates),
       height: this.merchandise?.height ?? 0,
       width: this.merchandise?.width ?? 0,
       depth: this.merchandise?.depth ?? 0,
@@ -233,6 +260,13 @@ export class MerchandiseDetailComponent implements OnInit, OnDestroy {
       organizationId:
         this.merchandise?.organizationId ||
         this.merchandiseService.currentOrganizationId,
+      service: this.merchandiseService.isServiceCatalog,
+      serviceType: this.merchandiseService.isServiceCatalog
+        ? formValue.serviceType || 'Normal'
+        : this.merchandise?.serviceType ?? null,
+      unidadServicio: this.merchandiseService.isServiceCatalog
+        ? formValue.unidadServicio || null
+        : this.merchandise?.unidadServicio ?? null,
     };
 
     if (merchandiseToSave.merchandiseId > 0) {
@@ -256,5 +290,18 @@ export class MerchandiseDetailComponent implements OnInit, OnDestroy {
     this.applicationService.enableAddressChildGrid(false);
     this.applicationService.enableEmailChildGrid(false);
     this.applicationService.enablePhoneChildGrid(false);
+  }
+
+  /** Normalize API/form flags (BIT, 0/1, boolean). */
+  private asBool(value: unknown): boolean {
+    return value === true || value === 1 || value === '1';
+  }
+
+  /** DB may store NORMAL/ISLR; dropdown values are Normal/ISLR. */
+  private normalizeServiceType(value: string | null | undefined): string {
+    const normalized = String(value ?? '')
+      .trim()
+      .toUpperCase();
+    return normalized === 'ISLR' ? 'ISLR' : 'Normal';
   }
 }

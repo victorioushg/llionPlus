@@ -1,0 +1,37 @@
+@use "variables" as *;
+
+#treasury-movements-grid .e-toolbar {
+  background-color: $llion-color-primary-container;
+}
+
+.e-toolbar .e-toolbar-items .e-tbar-btn {
+  background: $llion-color-white;
+  border: 1px solid #5a70cc;
+}
+
+::ng-deep #treasury-movements-grid .e-toolbar-item.e-search-wrapper {
+  padding-top: 7px;
+}
+
+::ng-deep
+  #treasury-movements-grid
+  .e-grid
+  .e-toolbar-items
+  .e-toolbar-item.e-search-wrapper
+  .e-search {
+  background-color: $llion-color-primary-container;
+}
+
+#treasury-movements-container.is-disabled,
+#treasury-movements-container.is-disabled ::ng-deep .e-grid {
+  pointer-events: none;
+  opacity: 0.45;
+}
+
+::ng-deep .movement-edit-dialog {
+  padding: 8px 4px 4px;
+
+  .row {
+    margin-bottom: 12px;
+  }
+}

@@ -4,6 +4,7 @@
 
 export const environment = {
   production: false,
+  version: '1.0.0',
   API_URL: 'https://localhost:44382/api/', // proxy will redirect to actual API
   // SIGNALR_URL: 'http://localhost:51475',
   // IMAGE_BASE_URL: 'http://localhost:4200/assets/images/',

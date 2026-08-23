@@ -13,17 +13,29 @@ import {
   EditSettingsModel,
   GridComponent,
   SaveEventArgs,
-  ToolbarItems,
 } from '@syncfusion/ej2-angular-grids';
+import { ChangeEventArgs } from '@syncfusion/ej2-angular-dropdowns';
 import { NgForm } from '@angular/forms';
-import { Observable, Subject, take, takeUntil } from 'rxjs';
+import { Observable, Subject, of, take, takeUntil } from 'rxjs';
 import { IMerchandiseMovement } from './merchandisemovement';
-import { IMerchandiseUom } from '../merchandise';
+import { IMerchandise, IMerchandiseUom } from '../merchandise';
 import { MerchandiseService } from '../merchandise.service';
 import { ToastService } from '@shared/services/toastService';
 import { toastType } from '@shared/enums/enums';
 import { withToolbarTitle } from '@shared/utils/grid-toolbar';
 import { IGroup } from '@shared/models/group';
+
+/** Selectable UOM: default first, then each equivalent (e.g. CAJ, UND). */
+export interface MovementUomOption {
+  code: string;
+  /** Absolute weight of 1 unit of this code. */
+  weight: number;
+  /**
+   * How many of this unit equal 1 default unit.
+   * Default = 1; for UND when 1 CAJ = 12 UND → 12.
+   */
+  unitsPerDefault: number;
+}
 
 @Component({
   selector: 'llion-merchandise-movements',
@@ -40,19 +52,20 @@ export class MerchandiseMovementComponent
 
   movements$!: Observable<IMerchandiseMovement[]>;
   movementTypes$!: Observable<IGroup[]>;
-  uoms$!: Observable<IMerchandiseUom[]>;
+  warehouses$!: Observable<IGroup[]>;
+  /** Lot numbers — empty until lot tracking is wired. */
+  lots$: Observable<{ lotNumber: string }[]> = of([]);
+  selectedMerchandise: IMerchandise | null = null;
+
+  /** Default UOM + equivalents for the dropdown. */
+  uomOptions: MovementUomOption[] = [];
 
   screenMovementsHeight = 320;
   readonly rowHeight = 36;
   readonly headerHeight = 32;
-  /** Syncfusion tab strip above this grid (merchandise list has no tab). */
   private readonly tabStripHeight = 42;
   gridEnabled = false;
 
-  /**
-   * Approximate height from the left merchandise grid content height.
-   * Final alignment is refined by alignBottomTo() after layout/resize.
-   */
   @Input() set contentHeight(value: number) {
     if (!value || value <= 0) {
       return;
@@ -62,7 +75,6 @@ export class MerchandiseMovementComponent
     );
   }
 
-  /** Match this grid's bottom edge to the merchandise grid bottom. */
   alignBottomTo(targetBottom: number): void {
     const el = this.grid?.element as HTMLElement | undefined;
     if (!el || !targetBottom) {
@@ -100,10 +112,25 @@ export class MerchandiseMovementComponent
     });
   }
 
-  movementTypeFields: Object = { text: 'description', value: 'description' };
-  uomFields: Object = { text: 'uom', value: 'uom' };
+  movementTypeFields: Object = {
+    text: 'description',
+    value: 'altern_GroupCode',
+  };
+  warehouseFields: Object = { text: 'description', value: 'groupId' };
+  uomFields: Object = { text: 'code', value: 'code' };
+  lotFields: Object = { text: 'lotNumber', value: 'lotNumber' };
 
   movementData: IMerchandiseMovement = this.createEmptyMovement();
+  private uomList: IMerchandiseUom[] = [];
+  private previousUomCode = '';
+
+  get merchandiseDisplayName(): string {
+    const m = this.selectedMerchandise;
+    if (!m) {
+      return '';
+    }
+    return (m.name || m.description || m.alternCode || '').trim();
+  }
 
   toolbar = withToolbarTitle(
     ['Add', 'Edit', 'Delete', 'Search'],
@@ -115,6 +142,9 @@ export class MerchandiseMovementComponent
     allowDeleting: true,
     mode: 'Dialog',
   };
+
+  /** Only inventory adjustments with this origin can be edited/deleted. */
+  private readonly editableOrigin = 'INC';
 
   private selectedMerchandiseId = 0;
   private organizationId = 1;
@@ -129,10 +159,26 @@ export class MerchandiseMovementComponent
   ngOnInit(): void {
     this.movements$ = this.merchandiseService.merchandiseMovements$;
     this.movementTypes$ = this.merchandiseService.movementTypes$;
-    this.uoms$ = this.merchandiseService.merchandiseUom$;
+    this.warehouses$ = this.merchandiseService.warehouses$;
     this.organizationId = this.merchandiseService.currentOrganizationId;
 
-    // Same UX as precios: allow CRUD when a merchandise is selected.
+    this.merchandiseService.merchandiseUom$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((rows) => {
+        this.uomList = rows ?? [];
+        this.rebuildUomOptions();
+        this.cdr.markForCheck();
+      });
+
+    this.merchandiseService.merchandiseSelected$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((merchandise) => {
+        this.selectedMerchandise = merchandise?.merchandiseId
+          ? merchandise
+          : null;
+        this.cdr.markForCheck();
+      });
+
     this.merchandiseService.merchandiseSelectedAction$
       .pipe(takeUntil(this.destroy$))
       .subscribe((merchandiseId) => {
@@ -152,6 +198,27 @@ export class MerchandiseMovementComponent
     this.destroy$.complete();
   }
 
+  onQuantityOrCostChange(): void {
+    this.recalculateTotals();
+  }
+
+  onUomChange(args: ChangeEventArgs): void {
+    const nextCode =
+      (args?.itemData as MovementUomOption | undefined)?.code ||
+      (typeof args?.value === 'string' ? args.value : '') ||
+      this.movementData.uom;
+
+    if (nextCode && this.previousUomCode && nextCode !== this.previousUomCode) {
+      this.convertUnitCost(this.previousUomCode, nextCode);
+    }
+
+    if (nextCode) {
+      this.movementData.uom = nextCode;
+      this.previousUomCode = nextCode;
+    }
+    this.recalculateTotals();
+  }
+
   actionBegin(args: SaveEventArgs): void {
     const needsSelection =
       args.requestType === 'beginEdit' ||
@@ -162,14 +229,51 @@ export class MerchandiseMovementComponent
     if (needsSelection && this.selectedMerchandiseId <= 0) {
       args.cancel = true;
       this.toastService.showMyToast(
-        'Debe seleccionar una mercancía para gestionar movimientos',
+        this.merchandiseService.isServiceCatalog
+          ? 'Debe seleccionar un servicio para gestionar movimientos'
+          : 'Debe seleccionar una mercancía para gestionar movimientos',
         toastType.warning
       );
       return;
     }
 
+    if (args.requestType === 'beginEdit') {
+      const row = (args.rowData ?? {}) as Partial<IMerchandiseMovement>;
+      if (!this.isEditableOrigin(row.origin)) {
+        args.cancel = true;
+        this.toastService.showMyToast(
+          `Solo se pueden editar movimientos con origen ${this.editableOrigin}`,
+          toastType.warning
+        );
+        return;
+      }
+    }
+
+    if (args.requestType === 'delete') {
+      const rows = this.asMovementRows(args.data);
+      if (rows.some((r) => !this.isEditableOrigin(r.origin))) {
+        args.cancel = true;
+        this.toastService.showMyToast(
+          `Solo se pueden eliminar movimientos con origen ${this.editableOrigin}`,
+          toastType.warning
+        );
+        return;
+      }
+    }
+
     if (args.requestType === 'beginEdit' || args.requestType === 'add') {
       const row = (args.rowData ?? {}) as Partial<IMerchandiseMovement>;
+      const isAdd = args.requestType === 'add';
+      const quantity = row.quantity ?? (isAdd ? 1 : null);
+      const totalCost = row.totalCost ?? null;
+      const unitCost =
+        quantity && quantity > 0 && totalCost != null
+          ? Number((totalCost / quantity).toFixed(2))
+          : 0;
+
+      this.rebuildUomOptions();
+      const defaultUom = this.uomOptions[0]?.code || '';
+
       this.movementData = {
         ...this.createEmptyMovement(),
         ...row,
@@ -179,17 +283,61 @@ export class MerchandiseMovementComponent
           ? new Date(row.movementDate)
           : new Date(),
         block_Date: row.block_Date ? new Date(row.block_Date) : null,
+        customer_Provider:
+          row.customer_Provider ?? row.customerProviderName ?? null,
+        quantity,
+        unitCost,
+        uom: row.uom || defaultUom,
+        warehouseId: row.warehouseId ?? 0,
+        lotNumber: row.lotNumber ?? null,
+        comment: row.comment ?? null,
+        documentNumber: isAdd ? '' : (row.documentNumber ?? ''),
+        origin: isAdd ? this.editableOrigin : (row.origin ?? this.editableOrigin),
       };
+      this.previousUomCode = this.movementData.uom || '';
+      this.recalculateTotals();
+
+      if (isAdd) {
+        this.merchandiseService
+          .getNextMovementDocumentNumber()
+          .pipe(take(1))
+          .subscribe({
+            next: (doc) => {
+              this.movementData = {
+                ...this.movementData,
+                documentNumber: doc,
+              };
+              this.cdr.markForCheck();
+            },
+          });
+      }
+
       this.cdr.markForCheck();
     }
 
     if (args.requestType === 'save') {
       if (this.movementForm?.valid) {
+        this.recalculateTotals();
         const payload: IMerchandiseMovement = {
           ...this.movementData,
           merchandiseId: this.selectedMerchandiseId,
           organizationId: this.organizationId,
+          origin: this.movementData.origin || this.editableOrigin,
         };
+
+        if (
+          payload.movementId &&
+          payload.movementId > 0 &&
+          !this.isEditableOrigin(payload.origin)
+        ) {
+          args.cancel = true;
+          this.toastService.showMyToast(
+            `Solo se pueden editar movimientos con origen ${this.editableOrigin}`,
+            toastType.warning
+          );
+          return;
+        }
+
         args.data = payload;
 
         const request$ =
@@ -208,28 +356,51 @@ export class MerchandiseMovementComponent
     }
 
     if (args.requestType === 'delete') {
-      const row = (args.data ?? {}) as IMerchandiseMovement;
-      if (row.movementId > 0 && row.merchandiseId > 0) {
-        this.merchandiseService
-          .deleteMovement(row.movementId, row.merchandiseId)
-          .pipe(take(1))
-          .subscribe({
-            error: () => {
-              args.cancel = true;
-            },
-          });
+      const rows = this.asMovementRows(args.data);
+      for (const row of rows) {
+        if (row.movementId > 0 && row.merchandiseId > 0) {
+          this.merchandiseService
+            .deleteMovement(row.movementId, row.merchandiseId)
+            .pipe(take(1))
+            .subscribe({
+              error: () => {
+                args.cancel = true;
+              },
+            });
+        }
       }
     }
   }
 
+  private isEditableOrigin(origin: string | null | undefined): boolean {
+    return (origin || '').trim().toUpperCase() === this.editableOrigin;
+  }
+
+  private asMovementRows(data: unknown): IMerchandiseMovement[] {
+    if (Array.isArray(data)) {
+      return data as IMerchandiseMovement[];
+    }
+    if (data && typeof data === 'object') {
+      return [data as IMerchandiseMovement];
+    }
+    return [];
+  }
+
   actionComplete(args: DialogEditEventArgs): void {
     if (args.requestType === 'beginEdit' || args.requestType === 'add') {
-      const dialog = args.dialog as { header?: string } | undefined;
+      const dialog = args.dialog as
+        | {
+            header?: string;
+            width?: string | number;
+            cssClass?: string;
+            element?: HTMLElement;
+          }
+        | undefined;
       if (dialog) {
-        dialog.header =
-          args.requestType === 'add'
-            ? 'Agregar movimiento'
-            : 'Editar movimiento';
+        dialog.header = 'Movimiento mercancía';
+        dialog.width = 560;
+        dialog.cssClass = 'movement-merchandise-dlg';
+        dialog.element?.classList.add('movement-merchandise-dlg');
       }
 
       setTimeout(() => {
@@ -240,6 +411,86 @@ export class MerchandiseMovementComponent
         field?.focus();
       });
     }
+  }
+
+  /**
+   * Builds dropdown as [default UOM, ...equivalents].
+   * Example: default CAJ + eq UND → ['CAJ','UND'].
+   */
+  private rebuildUomOptions(): void {
+    const rows = this.uomList ?? [];
+    const defaultRow =
+      rows.find((r) => r.defaultUnit) ||
+      rows.find((r) => !(r.uomEquivalent || '').trim()) ||
+      rows[0];
+
+    if (!defaultRow?.uom) {
+      this.uomOptions = [];
+      return;
+    }
+
+    const options: MovementUomOption[] = [
+      {
+        code: defaultRow.uom,
+        weight: Number(defaultRow.weight) || 0,
+        unitsPerDefault: 1,
+      },
+    ];
+
+    for (const row of rows) {
+      const eqCode = (row.uomEquivalent || '').trim();
+      if (!eqCode) {
+        continue;
+      }
+      const unitsPerDefault = Number(row.equivalence);
+      if (!(unitsPerDefault > 0)) {
+        continue;
+      }
+      if (options.some((o) => o.code === eqCode)) {
+        continue;
+      }
+      options.push({
+        code: eqCode,
+        weight: Number(row.weight) || 0,
+        unitsPerDefault,
+      });
+    }
+
+    this.uomOptions = options;
+  }
+
+  private findUomOption(code: string | null | undefined): MovementUomOption | undefined {
+    if (!code) {
+      return undefined;
+    }
+    return this.uomOptions.find((o) => o.code === code);
+  }
+
+  /** Keep the same value in default units when switching CAJ ↔ UND, etc. */
+  private convertUnitCost(fromCode: string, toCode: string): void {
+    const from = this.findUomOption(fromCode);
+    const to = this.findUomOption(toCode);
+    if (!from || !to || from.unitsPerDefault <= 0 || to.unitsPerDefault <= 0) {
+      return;
+    }
+    const current = Number(this.movementData.unitCost) || 0;
+    // cost_default = cost_selected * unitsPerDefault
+    const costDefault = current * from.unitsPerDefault;
+    this.movementData.unitCost = Number(
+      (costDefault / to.unitsPerDefault).toFixed(4)
+    );
+  }
+
+  private recalculateTotals(): void {
+    const qty = Number(this.movementData.quantity) || 0;
+    const unitCost = Number(this.movementData.unitCost) || 0;
+    const option = this.findUomOption(this.movementData.uom);
+    const unitWeight = option?.weight ?? 0;
+
+    // Cost and weight are for the selected UOM (already converted via equivalence).
+    this.movementData.totalCost = Number((qty * unitCost).toFixed(2));
+    this.movementData.weight = Number((qty * unitWeight).toFixed(3));
+    this.cdr.markForCheck();
   }
 
   private applyEditState(enabled: boolean): void {
@@ -255,7 +506,6 @@ export class MerchandiseMovementComponent
       mode: 'Dialog',
     };
 
-    // Defer until Syncfusion grid DOM exists (lazy tab).
     setTimeout(() => {
       if (!this.grid?.element) {
         return;
@@ -274,13 +524,14 @@ export class MerchandiseMovementComponent
       movementDate: new Date(),
       movementType: '',
       documentNumber: '',
-      quantity: null,
+      quantity: 1,
       uom: '',
       weight: null,
       organizationId: this.organizationId,
-      totalCost: null,
+      unitCost: 0,
+      totalCost: 0,
       totalCostWithDiscount: null,
-      origin: '',
+      origin: this.editableOrigin,
       documentOrigin: '',
       customer_Provider: null,
       totalSale: null,
@@ -291,6 +542,8 @@ export class MerchandiseMovementComponent
       classId: null,
       block_Date: null,
       createdBy: '',
+      lotNumber: null,
+      comment: null,
     };
   }
 }

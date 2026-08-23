@@ -6,8 +6,24 @@
   width: 100%;
 }
 
+:host(.codes-only-host) {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  height: 100%;
+  min-height: 0;
+}
+
 .wrapper {
   width: 100%;
+}
+
+.wrapper.codes-only {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  height: 100%;
+  min-height: 0;
 }
 
 #merchandise-uom-grid,
@@ -17,6 +33,27 @@
 
 .codes-row {
   margin-top: 16px;
+}
+
+.wrapper.codes-only .codes-row {
+  margin-top: 0;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.wrapper.codes-only #merchandise-codes-grid {
+  flex: 1;
+  min-height: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.wrapper.codes-only ::ng-deep #merchandise-codes-grid .e-grid {
+  flex: 1;
+  height: 100% !important;
 }
 
 ::ng-deep #merchandise-uom-grid .e-grid .e-headercell .e-headercelldiv,

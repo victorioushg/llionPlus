@@ -16,11 +16,16 @@ import { ContactGridsModule } from '@shared/components/contact-grids.module';
 import { routes } from './_routes';
 import { CustomerComponent } from './customer-grid';
 import { CustomerDetailComponent } from './customer-detail/customer-detail';
+import { CustomerMovementsComponent } from './customer-movements/customer-movements';
 
 enableRipple(true);
 
 @NgModule({
-  declarations: [CustomerComponent, CustomerDetailComponent],
+  declarations: [
+    CustomerComponent,
+    CustomerDetailComponent,
+    CustomerMovementsComponent,
+  ],
   imports: [
     CommonModule,
     RouterModule.forChild(routes),

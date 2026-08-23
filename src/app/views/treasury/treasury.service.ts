@@ -27,6 +27,7 @@ import { toastType } from '@shared/enums/enums';
 import { Action } from '@shared/models/edit-action';
 import {
   ITreasury,
+  ITreasuryMovement,
   TREASURY_TYPE_BANK,
   TREASURY_TYPE_CASHBOX,
 } from './treasury';
@@ -76,9 +77,20 @@ export class TreasuryService {
   );
   enableTreasuryFormAction$ = this.enabledTreasuryFormSource.asObservable();
 
+  private readonly movementsRefreshSubject = new BehaviorSubject<number>(0);
+
   treasuries$!: Observable<ITreasury[]>;
   treasurySelected$!: Observable<ITreasury>;
   treasuryWithCRUD$!: Observable<ITreasury[]>;
+  treasuryMovements$!: Observable<ITreasuryMovement[]>;
+
+  get currentOrganizationId(): number {
+    return this.applicationService.workingOrganization?.organizationId ?? 0;
+  }
+
+  get currentTreasuryType(): string | null {
+    return this.treasuryTypeFilterSource.value;
+  }
 
   constructor(
     private http: HttpClient,
@@ -91,6 +103,40 @@ export class TreasuryService {
 
   setTreasuryTypeFilter(treasuryType: string | null): void {
     this.treasuryTypeFilterSource.next(treasuryType);
+  }
+
+  /** Banks + cashboxes for an organization — independent of page type filter. */
+  getOrganizationTreasuries(organizationId: number): Observable<ITreasury[]> {
+    if (!organizationId || organizationId <= 0) {
+      return of([]);
+    }
+    return combineLatest([
+      this.getOrganizationTreasuriesByType(organizationId, TREASURY_TYPE_BANK),
+      this.getOrganizationTreasuriesByType(
+        organizationId,
+        TREASURY_TYPE_CASHBOX
+      ),
+    ]).pipe(map(([banks, cashboxes]) => [...banks, ...cashboxes]));
+  }
+
+  private getOrganizationTreasuriesByType(
+    organizationId: number,
+    type: string
+  ): Observable<ITreasury[]> {
+    const params = new HttpParams().set('treasuryType', type);
+    return this.http
+      .get<IApiResponse<ITreasury[]>>(
+        `${this.treasuryUrl}/${organizationId}/0`,
+        { params }
+      )
+      .pipe(
+        map((data) =>
+          ((data.result ?? []) as ITreasury[])
+            .map((row) => this.normalizeTreasury(row, organizationId, type))
+            .filter((row) => row.treasuryType === type)
+        ),
+        catchError((err) => this.errorHandlerService.handleError(err))
+      );
   }
 
   setTreasuryContext(treasuryId: number): void {
@@ -191,6 +237,94 @@ export class TreasuryService {
       ),
       shareReplay({ bufferSize: 1, refCount: true })
     );
+
+    this.treasuryMovements$ = combineLatest([
+      this.treasuryContextIdAction$,
+      this.applicationService.workingOrganization$,
+      this.movementsRefreshSubject,
+    ]).pipe(
+      switchMap(([treasuryId, workingOrg]) => {
+        const organizationId = workingOrg?.organizationId ?? 0;
+        if (!treasuryId || treasuryId <= 0 || !organizationId) {
+          return of([] as ITreasuryMovement[]);
+        }
+        return this.getTreasuryMovements(treasuryId, organizationId);
+      }),
+      shareReplay({ bufferSize: 1, refCount: true })
+    );
+  }
+
+  refreshMovements(): void {
+    this.movementsRefreshSubject.next(this.movementsRefreshSubject.value + 1);
+  }
+
+  addMovement(item: ITreasuryMovement): Observable<number> {
+    return this.http
+      .post<IApiResponse<number>>(`${this.treasuryUrl}/movement`, item, {
+        headers: this.headers,
+      })
+      .pipe(
+        tap(() => {
+          this.toastService.showMyToast(
+            'Movimiento almacenado',
+            toastType.success
+          );
+          this.refreshMovements();
+        }),
+        map((data) => Number(data.result) || 0),
+        catchError((err) => this.errorHandlerService.handleError(err))
+      );
+  }
+
+  updateMovement(item: ITreasuryMovement): Observable<number> {
+    return this.http
+      .put<IApiResponse<number>>(`${this.treasuryUrl}/movement`, item, {
+        headers: this.headers,
+      })
+      .pipe(
+        tap(() => {
+          this.toastService.showMyToast(
+            'Movimiento actualizado',
+            toastType.success
+          );
+          this.refreshMovements();
+        }),
+        map((data) => Number(data.result) || 0),
+        catchError((err) => this.errorHandlerService.handleError(err))
+      );
+  }
+
+  deleteMovement(movementId: number, treasuryId: number): Observable<number> {
+    return this.http
+      .delete<IApiResponse<number>>(
+        `${this.treasuryUrl}/movement/${movementId}/${treasuryId}`,
+        { headers: this.headers }
+      )
+      .pipe(
+        tap(() => {
+          this.toastService.showMyToast(
+            'Movimiento eliminado',
+            toastType.success
+          );
+          this.refreshMovements();
+        }),
+        map((data) => Number(data.result) || 0),
+        catchError((err) => this.errorHandlerService.handleError(err))
+      );
+  }
+
+  private getTreasuryMovements(
+    treasuryId: number,
+    organizationId: number
+  ): Observable<ITreasuryMovement[]> {
+    return this.http
+      .get<IApiResponse<ITreasuryMovement[]>>(
+        `${this.treasuryUrl}/movements/${treasuryId}/${organizationId}`
+      )
+      .pipe(
+        map((data) => data.result ?? []),
+        catchError((err) => this.errorHandlerService.handleError(err))
+      );
   }
 
   private normalizeTreasury(

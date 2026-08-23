@@ -88,7 +88,28 @@
 }
 
 #sidebar-treeview {
-  height: 100vh;
+  height: calc(100vh - 28px);
+}
+
+#app-footer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 1200;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 28px;
+  padding: 0 1rem;
+  background-color: $llion-color-primary-container;
+  border-top: 1px solid $llion-color-light-gray;
+  font-size: $llion-font-size-10;
+  color: $llion-color-font;
+}
+
+#main-content {
+  padding-bottom: calc(28px + 50px);
 }
 
 @media (max-width: 800px) {
@@ -165,7 +186,7 @@
 .e-treeview .e-list-text {
   color: $llion-color-font;
   font-size: $llion-font-size-12;
-  font-weight: normal ;
+  font-weight: 600;
   position: inherit;
   margin-right: auto;
 }
@@ -222,7 +243,8 @@
   margin-left: -25px;
 }
 .treeview-text {
-  padding-left: 15px; 
+  padding-left: 15px;
+  font-weight: 600;
 }
 
 

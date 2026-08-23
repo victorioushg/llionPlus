@@ -15,42 +15,233 @@
       </div>
       <div class="col-md-8">
         <ejs-textbox
-          placeholder="descripción"
+          placeholder="nombre"
           floatLabelType="Always"
-          formControlName="description"
+          formControlName="name"
           [enabled]="enabled$ | async"
         ></ejs-textbox>
       </div>
     </div>
+
+    <div class="row">
+      <div class="col-md-6">
+        <ejs-textbox
+          placeholder="nombre completo"
+          floatLabelType="Always"
+          formControlName="fullName"
+          [enabled]="enabled$ | async"
+        ></ejs-textbox>
+      </div>
+      <div class="col-md-6">
+        <ejs-dropdownlist
+          formControlName="parentId"
+          [dataSource]="parentAccounts$ | async"
+          [fields]="parentAccountFields"
+          [enabled]="enabled$ | async"
+          [allowFiltering]="true"
+          [showClearButton]="true"
+          floatLabelType="Always"
+          placeholder="cuenta padre"
+          (change)="onParentChange($event)"
+        ></ejs-dropdownlist>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col-md-12">
+        <ejs-textbox
+          placeholder="descripción"
+          floatLabelType="Always"
+          formControlName="desc"
+          [enabled]="enabled$ | async"
+          [multiline]="true"
+        ></ejs-textbox>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col-md-4">
+        <ejs-dropdownlist
+          formControlName="accountType"
+          [dataSource]="accountTypeOptions"
+          [fields]="dropdownFields"
+          [enabled]="enabled$ | async"
+          [allowFiltering]="true"
+          [showClearButton]="true"
+          floatLabelType="Always"
+          placeholder="tipo de cuenta"
+        ></ejs-dropdownlist>
+      </div>
+      <div class="col-md-4">
+        <ejs-dropdownlist
+          formControlName="specialAccountType"
+          [dataSource]="specialAccountTypeOptions"
+          [fields]="dropdownFields"
+          [enabled]="enabled$ | async"
+          [allowFiltering]="true"
+          [showClearButton]="true"
+          floatLabelType="Always"
+          placeholder="tipo especial"
+        ></ejs-dropdownlist>
+      </div>
+      <div class="col-md-4">
+        <ejs-dropdownlist
+          formControlName="cashFlowClassification"
+          [dataSource]="cashFlowClassificationOptions"
+          [fields]="dropdownFields"
+          [enabled]="enabled$ | async"
+          [allowFiltering]="true"
+          [showClearButton]="true"
+          floatLabelType="Always"
+          placeholder="flujo de efectivo"
+        ></ejs-dropdownlist>
+      </div>
+    </div>
+
     <div class="row">
       <div class="col-md-4">
         <ejs-numerictextbox
-          placeholder="nivel"
+          placeholder="saldo inicial"
           floatLabelType="Always"
-          formControlName="level"
+          formControlName="openBalance"
+          [enabled]="enabled$ | async"
+          format="N2"
+          [showSpinButton]="false"
+        ></ejs-numerictextbox>
+      </div>
+      <div class="col-md-4">
+        <ejs-datepicker
+          format="dd/MM/yyyy"
+          placeholder="fecha saldo inicial"
+          floatLabelType="Always"
+          formControlName="openBalanceDate"
+          [enabled]="enabled$ | async"
+        ></ejs-datepicker>
+      </div>
+      <div class="col-md-4">
+        <ejs-dropdownlist
+          cssClass="treasury-dropdown"
+          formControlName="treasureId"
+          [dataSource]="treasuries$ | async"
+          [fields]="treasuryFields"
+          [enabled]="enabled$ | async"
+          [allowFiltering]="true"
+          [showClearButton]="true"
+          floatLabelType="Always"
+          placeholder="tesorería"
+        ></ejs-dropdownlist>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col-md-6">
+        <ejs-numerictextbox
+          placeholder="saldo"
+          floatLabelType="Always"
+          formControlName="balance"
+          [enabled]="false"
+          format="N2"
+          [showSpinButton]="false"
+        ></ejs-numerictextbox>
+      </div>
+      <div class="col-md-6">
+        <ejs-numerictextbox
+          placeholder="saldo total"
+          floatLabelType="Always"
+          formControlName="totalBalance"
+          [enabled]="false"
+          format="N2"
+          [showSpinButton]="false"
+        ></ejs-numerictextbox>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col-md-4">
+        <ejs-textbox
+          placeholder="código impuesto ventas"
+          floatLabelType="Always"
+          formControlName="salesTaxCodeFullName"
+          [enabled]="enabled$ | async"
+        ></ejs-textbox>
+      </div>
+      <div class="col-md-4">
+        <ejs-numerictextbox
+          placeholder="línea fiscal"
+          floatLabelType="Always"
+          formControlName="taxLineId"
           [enabled]="enabled$ | async"
           format="N0"
           [decimals]="0"
+          [showSpinButton]="false"
         ></ejs-numerictextbox>
       </div>
-      <div class="col-md-8" style="margin-top: auto">
+      <div class="col-md-4">
+        <ejs-textbox
+          placeholder="nombre línea fiscal"
+          floatLabelType="Always"
+          formControlName="taxLineName"
+          [enabled]="enabled$ | async"
+        ></ejs-textbox>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col-md-4">
+        <ejs-numerictextbox
+          placeholder="código impuesto"
+          floatLabelType="Always"
+          formControlName="salesTaxCodeId"
+          [enabled]="enabled$ | async"
+          format="N0"
+          [decimals]="0"
+          [showSpinButton]="false"
+        ></ejs-numerictextbox>
+      </div>
+      <div class="col-md-8">
+        <ejs-dropdownlist
+          formControlName="currencyId"
+          [dataSource]="currencies$ | async"
+          [fields]="currencyFields"
+          [enabled]="enabled$ | async"
+          [allowFiltering]="true"
+          [showClearButton]="true"
+          floatLabelType="Always"
+          placeholder="moneda"
+          (change)="onCurrencyChange($event)"
+        ></ejs-dropdownlist>
+      </div>
+    </div>
+
+    <br />
+    <div class="row flags-row">
+      <div class="col-md-4" style="margin-top: auto">
         <table style="width: 100%">
           <tr>
-            <td style="width: 50%">Marca / imputable</td>
-            <td style="width: 50%">
+            <td style="width: 55%">Activo</td>
+            <td style="width: 45%">
               <ejs-switch
-                formControlName="mark"
+                formControlName="isActive"
                 [disabled]="!(enabled$ | async)"
               ></ejs-switch>
             </td>
           </tr>
         </table>
       </div>
-    </div>
-    <br />
-    <div class="row">
-      <div class="col-md-6"></div>
-      <div class="col-md-6">
+      <div class="col-md-4" style="margin-top: auto">
+        <table style="width: 100%">
+          <tr>
+            <td style="width: 55%">Impuesto</td>
+            <td style="width: 45%">
+              <ejs-switch
+                formControlName="isTaxAccount"
+                [disabled]="!(enabled$ | async)"
+              ></ejs-switch>
+            </td>
+          </tr>
+        </table>
+      </div>
+      <div class="col-md-4">
         <div id="account-form-buttons">
           <button
             ejs-button

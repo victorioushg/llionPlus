@@ -31,7 +31,7 @@ import {
   SwitchModule,
   CheckBoxModule,
 } from '@syncfusion/ej2-angular-buttons';
-import { DatePickerModule } from '@syncfusion/ej2-angular-calendars';
+import { DatePickerModule, DateTimePickerModule } from '@syncfusion/ej2-angular-calendars';
 import { enableRipple } from '@syncfusion/ej2-base';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 
@@ -59,6 +59,7 @@ enableRipple(true);
     DropDownListModule,
     SwitchModule,
     DatePickerModule,
+    DateTimePickerModule,
     ButtonModule,
     CheckBoxModule,
     FormsModule,

@@ -1,0 +1,286 @@
+<div
+  id="provider-movements-container"
+  [class.is-disabled]="!gridEnabled"
+>
+  <div id="provider-movements-grid">
+    <ejs-grid
+      #movementsgrid
+      [dataSource]="(movements$ | async) || []"
+      [allowFiltering]="false"
+      [allowSorting]="true"
+      [allowSelection]="true"
+      [selectionSettings]="selectionSettings"
+      [toolbar]="toolbar"
+      [editSettings]="editSettings"
+      [height]="screenHeight"
+      [searchSettings]="searchSettings"
+      [sortSettings]="sortSettings"
+      [rowHeight]="36"
+      clipMode="EllipsisWithTooltip"
+      (toolbarClick)="onToolbarClick($event)"
+      (actionBegin)="actionBegin($event)"
+      (actionComplete)="actionComplete($event)"
+    >
+      <e-columns>
+        <e-column
+          field="documentNumber"
+          headerText="Documento"
+          width="130"
+        ></e-column>
+        <e-column
+          field="movementDate"
+          headerText="Fecha"
+          type="date"
+          format="dd/MM/yyyy"
+          width="100"
+          textAlign="Center"
+        ></e-column>
+        <e-column
+          field="movementType"
+          headerText="Tipo"
+          width="70"
+          textAlign="Center"
+        ></e-column>
+        <e-column
+          field="amount"
+          headerText="Importe"
+          type="number"
+          format="N2"
+          width="110"
+          textAlign="Right"
+        ></e-column>
+        <e-column
+          field="paymentMethod"
+          headerText="Forma pago"
+          width="90"
+          textAlign="Center"
+        ></e-column>
+        <e-column
+          field="paymentDocument"
+          headerText="Documento de pago"
+          width="140"
+        ></e-column>
+        <e-column
+          field="treasuryName"
+          headerText="Nombre de Pago"
+          width="180"
+        ></e-column>
+        <e-column
+          field="beneficiary"
+          headerText="Beneficiario"
+          width="200"
+        ></e-column>
+        <e-column
+          field="cancellationDocumentType"
+          headerText="Tipo doc. cancelado"
+          width="140"
+          textAlign="Center"
+        ></e-column>
+        <e-column
+          field="paymentReceipt"
+          headerText="Comprobante de pago"
+          width="150"
+        ></e-column>
+        <e-column
+          field="reference"
+          headerText="Referencia"
+          width="130"
+        ></e-column>
+        <e-column
+          field="concept"
+          headerText="Concepto"
+          width="240"
+        ></e-column>
+        <e-column
+          field="origin"
+          headerText="Origen"
+          width="80"
+          textAlign="Center"
+        ></e-column>
+        <e-column
+          field="originDocument"
+          headerText="Número origen"
+          width="130"
+        ></e-column>
+        <e-column
+          field="movementId"
+          [isPrimaryKey]="true"
+          [visible]="false"
+        ></e-column>
+        <e-column field="providerId" [visible]="false"></e-column>
+        <e-column field="treasuryId" [visible]="false"></e-column>
+        <e-column field="treasuryType" [visible]="false"></e-column>
+        <e-column field="organizationId" [visible]="false"></e-column>
+      </e-columns>
+
+      <ng-template #editSettingsTemplate>
+        <div ngForm #movementForm="ngForm" class="movement-edit-dialog">
+          <input
+            type="hidden"
+            name="movementId"
+            [(ngModel)]="movementData.movementId"
+          />
+          <input
+            type="hidden"
+            name="providerId"
+            [(ngModel)]="movementData.providerId"
+          />
+          <input
+            type="hidden"
+            name="organizationId"
+            [(ngModel)]="movementData.organizationId"
+          />
+
+          <div class="row">
+            <div class="col-md-4">
+              <ejs-datepicker
+                id="movementDate"
+                name="movementDate"
+                [(ngModel)]="movementData.movementDate"
+                placeholder="Fecha"
+                floatLabelType="Always"
+                format="dd/MM/yyyy"
+                [required]="true"
+              ></ejs-datepicker>
+            </div>
+            <div class="col-md-4">
+              <ejs-textbox
+                id="documentNumber"
+                name="documentNumber"
+                [(ngModel)]="movementData.documentNumber"
+                placeholder="Documento"
+                floatLabelType="Always"
+                [required]="true"
+              ></ejs-textbox>
+            </div>
+            <div class="col-md-4">
+              <ejs-dropdownlist
+                id="movementType"
+                name="movementType"
+                [(ngModel)]="movementData.movementType"
+                [dataSource]="movementTypes"
+                [fields]="dropdownFields"
+                [allowFiltering]="true"
+                placeholder="Tipo"
+                floatLabelType="Always"
+                popupHeight="220px"
+                [required]="true"
+              ></ejs-dropdownlist>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-md-8">
+              <ejs-textbox
+                id="concept"
+                name="concept"
+                [(ngModel)]="movementData.concept"
+                placeholder="Concepto"
+                floatLabelType="Always"
+                multiline="true"
+              ></ejs-textbox>
+            </div>
+            <div class="col-md-4">
+              <ejs-numerictextbox
+                id="amount"
+                name="amount"
+                [(ngModel)]="movementData.amount"
+                placeholder="Importe"
+                floatLabelType="Always"
+                format="n2"
+                [decimals]="2"
+                [showSpinButton]="false"
+                [required]="true"
+              ></ejs-numerictextbox>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-md-4">
+              <ejs-dropdownlist
+                id="paymentMethod"
+                name="paymentMethod"
+                [(ngModel)]="movementData.paymentMethod"
+                [dataSource]="paymentMethods"
+                [fields]="dropdownFields"
+                [allowFiltering]="true"
+                placeholder="Forma de pago"
+                floatLabelType="Always"
+                popupHeight="180px"
+              ></ejs-dropdownlist>
+            </div>
+            <div class="col-md-4">
+              <ejs-textbox
+                id="paymentDocument"
+                name="paymentDocument"
+                [(ngModel)]="movementData.paymentDocument"
+                placeholder="Documento de pago"
+                floatLabelType="Always"
+              ></ejs-textbox>
+            </div>
+            <div class="col-md-4">
+              <ejs-textbox
+                id="paymentReceipt"
+                name="paymentReceipt"
+                [(ngModel)]="movementData.paymentReceipt"
+                placeholder="Comprobante"
+                floatLabelType="Always"
+              ></ejs-textbox>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-md-6">
+              <ejs-textbox
+                id="beneficiary"
+                name="beneficiary"
+                [(ngModel)]="movementData.beneficiary"
+                placeholder="Beneficiario"
+                floatLabelType="Always"
+              ></ejs-textbox>
+            </div>
+            <div class="col-md-3">
+              <ejs-textbox
+                id="cancellationDocumentType"
+                name="cancellationDocumentType"
+                [(ngModel)]="movementData.cancellationDocumentType"
+                placeholder="Tipo doc. cancelado"
+                floatLabelType="Always"
+              ></ejs-textbox>
+            </div>
+            <div class="col-md-3">
+              <ejs-textbox
+                id="reference"
+                name="reference"
+                [(ngModel)]="movementData.reference"
+                placeholder="Referencia"
+                floatLabelType="Always"
+              ></ejs-textbox>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-md-4">
+              <ejs-textbox
+                id="origin"
+                name="origin"
+                [(ngModel)]="movementData.origin"
+                placeholder="Origen"
+                floatLabelType="Always"
+              ></ejs-textbox>
+            </div>
+            <div class="col-md-4">
+              <ejs-textbox
+                id="originDocument"
+                name="originDocument"
+                [(ngModel)]="movementData.originDocument"
+                placeholder="Número origen"
+                floatLabelType="Always"
+              ></ejs-textbox>
+            </div>
+          </div>
+        </div>
+      </ng-template>
+    </ejs-grid>
+  </div>
+</div>

@@ -25,7 +25,7 @@ export class TreasuryDetailComponent implements OnInit {
   /** Agency address/phone/email — only for BAN (bancos). */
   showAgencyContacts$!: Observable<boolean>;
 
-  accountFields: Object = { text: 'description', value: 'accountId' };
+  accountFields: Object = { text: 'name', value: 'accountId' };
   filterType: 'Contains' = 'Contains';
 
   constructor(

@@ -41,6 +41,7 @@ export interface IAssosiationType {
 export interface ICurrency {
   currency: string;
   alphabeticCode: string;
+  numericCode?: number | null;
 }
 
 export interface IOrganizationTax {

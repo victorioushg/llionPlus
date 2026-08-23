@@ -14,6 +14,18 @@
   color: $llion-color-font;  
 }
 
+/* Global * color overrides Syncfusion tooltip (dark bg + light text). Restore contrast. */
+.e-tooltip-wrap,
+.e-tooltip-wrap .e-tip-content,
+.e-tooltip-wrap .e-tip-content * {
+  color: $llion-color-inverse-on-surface !important;
+}
+
+.e-tooltip-wrap.e-popup {
+  background-color: $llion-color-inverse-surface !important;
+  border-color: $llion-color-inverse-surface !important;
+}
+
 .container {
   max-width: 3440px !important;
   margin: 15px !important;

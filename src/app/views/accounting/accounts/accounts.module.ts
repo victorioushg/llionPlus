@@ -9,7 +9,12 @@ import {
   NumericTextBoxModule,
   TextBoxModule,
 } from '@syncfusion/ej2-angular-inputs';
-import { ButtonModule, SwitchModule } from '@syncfusion/ej2-angular-buttons';
+import { DropDownListModule } from '@syncfusion/ej2-angular-dropdowns';
+import {
+  ButtonModule,
+  SwitchModule,
+} from '@syncfusion/ej2-angular-buttons';
+import { DatePickerModule } from '@syncfusion/ej2-angular-calendars';
 import { enableRipple } from '@syncfusion/ej2-base';
 import { routes } from './_routes';
 import { AccountsComponent } from './accounts-grid';
@@ -28,6 +33,8 @@ enableRipple(true);
     GridAllModule,
     TextBoxModule,
     NumericTextBoxModule,
+    DropDownListModule,
+    DatePickerModule,
     SwitchModule,
     ButtonModule,
     FormsModule,

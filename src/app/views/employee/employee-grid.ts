@@ -1,6 +1,7 @@
 import {
   AfterViewInit,
   ChangeDetectionStrategy,
+  ChangeDetectorRef,
   Component,
   OnDestroy,
   OnInit,
@@ -27,13 +28,16 @@ import {
   Subject,
   catchError,
   combineLatest,
+  fromEvent,
   map,
   shareReplay,
   startWith,
   takeUntil,
 } from 'rxjs';
+import { debounceTime } from 'rxjs/operators';
 import MiniToolbar from '@assets/json/minitoolbar.json';
-import { withToolbarTitle } from '@shared/utils/grid-toolbar';
+import { withToolbarTitle, bindGridSearchAsYouType } from '@shared/utils/grid-toolbar';
+import { contentGridHeight, applyGridHeightAboveFooter } from '@shared/utils/layout';
 import { ApplicationService } from '@shared/services/applicattionService';
 import { ToastService } from '@shared/services/toastService';
 import { toastType } from '@shared/enums/enums';
@@ -51,6 +55,7 @@ export class EmployeeComponent implements OnInit, AfterViewInit, OnDestroy {
   commands!: CommandModel[];
   toolbar = withToolbarTitle(MiniToolbar as object[], 'Trabajadores');
   searchSettings?: SearchSettingsModel;
+  screenHeight = contentGridHeight();
 
   employees$!: Observable<IEmployee[]>;
   enabled$!: Observable<boolean>;
@@ -70,16 +75,29 @@ export class EmployeeComponent implements OnInit, AfterViewInit, OnDestroy {
   constructor(
     private applicationService: ApplicationService,
     private employeeService: EmployeeService,
-    private toastService: ToastService
+    private toastService: ToastService,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngAfterViewInit(): void {
     if (this.tabObj) {
       (this.tabObj as TabComponent).element.classList.add('e-fill');
     }
+    this.updateGridHeight();
+    setTimeout(() => this.updateGridHeight(), 0);
+    bindGridSearchAsYouType(
+      () => this.grid,
+      (value) => this.searchStringSubject.next(value),
+      this.destroy$
+    );
   }
 
   ngOnInit(): void {
+    this.updateGridHeight();
+    fromEvent(window, 'resize')
+      .pipe(debounceTime(100), takeUntil(this.destroy$))
+      .subscribe(() => this.updateGridHeight());
+
     this.clearEmployeeSelection();
 
     this.applicationService
@@ -247,5 +265,10 @@ export class EmployeeComponent implements OnInit, AfterViewInit, OnDestroy {
       searchString.value = '';
     }
     this.searchStringSubject.next(searchString.value || '');
+  }
+
+  private updateGridHeight(): void {
+    this.screenHeight = applyGridHeightAboveFooter(this.grid);
+    this.cdr.markForCheck();
   }
 }

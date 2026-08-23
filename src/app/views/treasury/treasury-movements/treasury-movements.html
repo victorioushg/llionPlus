@@ -1,0 +1,252 @@
+<div
+  id="treasury-movements-container"
+  [class.is-disabled]="!gridEnabled"
+>
+  <div id="treasury-movements-grid">
+    <ejs-grid
+      #movementsgrid
+      [dataSource]="(movements$ | async) || []"
+      [allowFiltering]="false"
+      [allowSorting]="true"
+      [toolbar]="toolbar"
+      [editSettings]="editSettings"
+      [height]="screenHeight"
+      [searchSettings]="searchSettings"
+      [sortSettings]="sortSettings"
+      [rowHeight]="36"
+      clipMode="EllipsisWithTooltip"
+      (toolbarClick)="onToolbarClick($event)"
+      (actionBegin)="actionBegin($event)"
+      (actionComplete)="actionComplete($event)"
+    >
+      <e-columns>
+        <e-column
+          field="movementDate"
+          headerText="Fecha"
+          type="date"
+          format="dd/MM/yyyy"
+          width="100"
+          textAlign="Center"
+        ></e-column>
+        <e-column
+          field="movementDocument"
+          headerText="Documento"
+          width="120"
+        ></e-column>
+        <e-column
+          field="movementType"
+          headerText="Tipo"
+          width="70"
+          textAlign="Center"
+        ></e-column>
+        <e-column
+          field="concept"
+          headerText="Concepto"
+          width="220"
+        ></e-column>
+        <e-column
+          field="amount"
+          headerText="Importe"
+          type="number"
+          format="N2"
+          width="110"
+          textAlign="Right"
+        ></e-column>
+        <e-column
+          field="origin"
+          headerText="Origen"
+          width="70"
+          textAlign="Center"
+        ></e-column>
+        <e-column
+          field="originDocument"
+          headerText="Doc. origen"
+          width="120"
+        ></e-column>
+        <e-column
+          field="beneficiary"
+          headerText="Beneficiario"
+          width="160"
+        ></e-column>
+        <e-column
+          field="reconciled"
+          headerText="Conciliado"
+          type="boolean"
+          [displayAsCheckBox]="true"
+          width="90"
+          textAlign="Center"
+        ></e-column>
+        <e-column
+          field="fiscalPeriod"
+          headerText="Ejercicio"
+          width="90"
+          textAlign="Center"
+        ></e-column>
+        <e-column
+          field="movementId"
+          [isPrimaryKey]="true"
+          [visible]="false"
+        ></e-column>
+        <e-column field="treasuryId" [visible]="false"></e-column>
+        <e-column field="organizationId" [visible]="false"></e-column>
+      </e-columns>
+
+      <ng-template #editSettingsTemplate>
+        <div ngForm #movementForm="ngForm" class="movement-edit-dialog">
+          <input
+            type="hidden"
+            name="movementId"
+            [(ngModel)]="movementData.movementId"
+          />
+          <input
+            type="hidden"
+            name="treasuryId"
+            [(ngModel)]="movementData.treasuryId"
+          />
+          <input
+            type="hidden"
+            name="organizationId"
+            [(ngModel)]="movementData.organizationId"
+          />
+
+          <div class="row">
+            <div class="col-md-4">
+              <ejs-datepicker
+                id="movementDate"
+                name="movementDate"
+                [(ngModel)]="movementData.movementDate"
+                placeholder="Fecha"
+                floatLabelType="Always"
+                format="dd/MM/yyyy"
+                [required]="true"
+              ></ejs-datepicker>
+            </div>
+            <div class="col-md-4">
+              <ejs-textbox
+                id="movementDocument"
+                name="movementDocument"
+                [(ngModel)]="movementData.movementDocument"
+                placeholder="Documento"
+                floatLabelType="Always"
+                [required]="true"
+              ></ejs-textbox>
+            </div>
+            <div class="col-md-4">
+              <ejs-dropdownlist
+                id="movementType"
+                name="movementType"
+                [(ngModel)]="movementData.movementType"
+                [dataSource]="movementTypes"
+                [fields]="movementTypeFields"
+                [allowFiltering]="true"
+                placeholder="Tipo"
+                floatLabelType="Always"
+                popupHeight="220px"
+                [required]="true"
+              ></ejs-dropdownlist>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-md-8">
+              <ejs-textbox
+                id="concept"
+                name="concept"
+                [(ngModel)]="movementData.concept"
+                placeholder="Concepto"
+                floatLabelType="Always"
+                multiline="true"
+              ></ejs-textbox>
+            </div>
+            <div class="col-md-4">
+              <ejs-numerictextbox
+                id="amount"
+                name="amount"
+                [(ngModel)]="movementData.amount"
+                placeholder="Importe"
+                floatLabelType="Always"
+                format="n2"
+                [decimals]="2"
+                [showSpinButton]="false"
+                [required]="true"
+              ></ejs-numerictextbox>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-md-4">
+              <ejs-textbox
+                id="origin"
+                name="origin"
+                [(ngModel)]="movementData.origin"
+                placeholder="Origen"
+                floatLabelType="Always"
+              ></ejs-textbox>
+            </div>
+            <div class="col-md-4">
+              <ejs-textbox
+                id="originDocument"
+                name="originDocument"
+                [(ngModel)]="movementData.originDocument"
+                placeholder="Doc. origen"
+                floatLabelType="Always"
+              ></ejs-textbox>
+            </div>
+            <div class="col-md-4">
+              <ejs-textbox
+                id="originType"
+                name="originType"
+                [(ngModel)]="movementData.originType"
+                placeholder="Tipo origen"
+                floatLabelType="Always"
+              ></ejs-textbox>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-md-6">
+              <ejs-textbox
+                id="beneficiary"
+                name="beneficiary"
+                [(ngModel)]="movementData.beneficiary"
+                placeholder="Beneficiario"
+                floatLabelType="Always"
+              ></ejs-textbox>
+            </div>
+            <div class="col-md-3">
+              <ejs-textbox
+                id="paymentReceipt"
+                name="paymentReceipt"
+                [(ngModel)]="movementData.paymentReceipt"
+                placeholder="Comprobante"
+                floatLabelType="Always"
+              ></ejs-textbox>
+            </div>
+            <div class="col-md-3">
+              <ejs-numerictextbox
+                id="fiscalPeriod"
+                name="fiscalPeriod"
+                [(ngModel)]="movementData.fiscalPeriod"
+                placeholder="Ejercicio"
+                floatLabelType="Always"
+                format="n0"
+                [decimals]="0"
+                [showSpinButton]="false"
+              ></ejs-numerictextbox>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-md-4">
+              <ejs-checkbox
+                name="reconciled"
+                [(ngModel)]="movementData.reconciled"
+                label="Conciliado"
+              ></ejs-checkbox>
+            </div>
+          </div>
+        </div>
+      </ng-template>
+    </ejs-grid>
+  </div>
+</div>

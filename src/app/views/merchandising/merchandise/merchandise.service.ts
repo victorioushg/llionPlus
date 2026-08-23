@@ -56,9 +56,57 @@ export class MerchandiseService {
 
   //
   //
-  emptyMerchandise: IMerchandise = {} as IMerchandise;
+  emptyMerchandise: IMerchandise = {
+    merchandiseId: 0,
+    alternCode: '',
+    name: '',
+    description: '',
+    groupId: 0,
+    brandId: 0,
+    typeId: 0,
+    divisionId: 0,
+    deactivated: false,
+    acceptsReturns: false,
+    acceptsReturnsRate: 0,
+    currentStock: 0,
+    availableStock: 0,
+    marketShare: 0,
+    regulated: false,
+    acceptsRebate: false,
+    height: 0,
+    width: 0,
+    depth: 0,
+    createdOn: new Date(),
+    createddBy: '',
+    LastModifiedOn: new Date(),
+    accountId: 0,
+    classId: 0,
+    parentId: 0,
+    organizationId: 1,
+    service: false,
+    serviceType: 'Normal',
+    unidadServicio: 'Unidad',
+  };
 
   private organizationId: number = 1;
+
+  /** merchandise = SKUs (Service=0); service = services (Service=1) */
+  private readonly catalogModeSubject = new BehaviorSubject<
+    'merchandise' | 'service'
+  >('merchandise');
+  readonly catalogMode$ = this.catalogModeSubject.asObservable();
+
+  get isServiceCatalog(): boolean {
+    return this.catalogModeSubject.value === 'service';
+  }
+
+  setCatalogMode(mode: 'merchandise' | 'service'): void {
+    if (this.catalogModeSubject.value === mode) {
+      return;
+    }
+    this.merchandiseSelectedSubject.next(0);
+    this.catalogModeSubject.next(mode);
+  }
 
   get currentOrganizationId(): number {
     return this.organizationId;
@@ -86,6 +134,7 @@ export class MerchandiseService {
   merchandiseProfiles$!: Observable<IMerchandiseProfile[]>;
   merchandisePrices$!: Observable<IMerchandisePrice[]>;
   movementTypes$!: Observable<IGroup[]>;
+  warehouses$!: Observable<IGroup[]>;
   codeTypes$!: Observable<IGroup[]>;
 
   private movementsRefreshSubject = new BehaviorSubject<number>(0);
@@ -167,16 +216,20 @@ export class MerchandiseService {
   }
 
   private initializeObservables(): void {
-    // Catalog
-    this.merchandises$ = this.http
-      .get<
-        IApiResponse<IMerchandise[]>
-      >(`${this.merchandiseUrl}/${this.organizationId}/0`)
-      .pipe(
-        map((data) => data.result),
-        catchError(this.errorHandlerService.handleError),
-        shareReplay(1),
-      );
+    // Catalog (merchandise or services depending on mode)
+    this.merchandises$ = this.catalogModeSubject.pipe(
+      switchMap((mode) => {
+        const listUrl =
+          mode === 'service'
+            ? `${this.merchandiseUrl}/services/${this.organizationId}/0`
+            : `${this.merchandiseUrl}/${this.organizationId}/0`;
+        return this.http.get<IApiResponse<IMerchandise[]>>(listUrl).pipe(
+          map((data) => data.result ?? []),
+          catchError(this.errorHandlerService.handleError),
+        );
+      }),
+      shareReplay(1),
+    );
 
     this.merchandiseBrands$ = this.http
       .get<IApiResponse<IGroup[]>>(
@@ -248,7 +301,9 @@ export class MerchandiseService {
 
         return forkJoin({
           merchandise: this.getMerchandise(merchandiseId),
-          movements: this.getMerchandiseMovements(merchandiseId),
+          movements: this.getMerchandiseMovements(merchandiseId).pipe(
+            catchError(() => of([] as IMerchandiseMovement[])),
+          ),
         });
       }),
       shareReplay(1),
@@ -266,10 +321,40 @@ export class MerchandiseService {
     this.movementTypes$ = this.http
       .get<IApiResponse<IGroup[]>>(`${this.merchandiseUrl}/movementtypes`)
       .pipe(
-        map((data) => data.result ?? []),
+        map((data) => this.normalizeGroups(data.result ?? [])),
         catchError(this.errorHandlerService.handleError),
         shareReplay(1),
       );
+
+    this.warehouses$ = this.applicationService.workingOrganization$.pipe(
+      switchMap((org) => {
+        const organizationId = org?.organizationId ?? this.organizationId ?? 0;
+        if (!organizationId || organizationId <= 0) {
+          return of([] as IGroup[]);
+        }
+        return this.http
+          .get<IApiResponse<IGroup[]>>(
+            `${this.merchandiseUrl}/warehouses/${organizationId}`
+          )
+          .pipe(
+            map((data) => this.normalizeGroups(data.result ?? [])),
+            catchError(() =>
+              this.http
+                .get<IApiResponse<IGroup[]>>(
+                  `${environment.API_URL}application/groups/Warehouse/3/${organizationId}`
+                )
+                .pipe(
+                  map((data) => this.normalizeGroups(data.result ?? [])),
+                  catchError((err) => {
+                    this.errorHandlerService.handleError(err);
+                    return of([] as IGroup[]);
+                  })
+                )
+            )
+          );
+      }),
+      shareReplay(1)
+    );
 
     this.codeTypes$ = this.http
       .get<IApiResponse<IGroup[]>>(`${this.merchandiseUrl}/codetypes`)
@@ -440,6 +525,7 @@ export class MerchandiseService {
         organizationId: merchandise.organizationId || this.organizationId,
         merchandiseId:
           operation.action === 'add' ? 0 : merchandise.merchandiseId,
+        service: this.isServiceCatalog,
       };
 
       const request$ =
@@ -484,14 +570,31 @@ export class MerchandiseService {
   }
 
   getMerchandise(id: number): Observable<IMerchandise> {
-    return this.http
-      .get<
-        IApiResponse<IMerchandise>
-      >(`${this.merchandiseUrl}/${this.organizationId}/${id}`)
-      .pipe(
-        map((data) => data.result),
-        catchError(this.errorHandlerService.handleError),
-      );
+    const url = this.isServiceCatalog
+      ? `${this.merchandiseUrl}/services/${this.organizationId}/${id}`
+      : `${this.merchandiseUrl}/${this.organizationId}/${id}`;
+
+    return this.http.get<IApiResponse<IMerchandise | IMerchandise[]>>(url).pipe(
+      map((data) => {
+        const result = data?.result;
+        const item = Array.isArray(result) ? result[0] : result;
+        return (
+          item ?? {
+            ...this.emptyMerchandise,
+            merchandiseId: id,
+            service: this.isServiceCatalog,
+          }
+        );
+      }),
+      catchError((error: HttpErrorResponse) => {
+        this.errorHandlerService.handleError(error);
+        return of({
+          ...this.emptyMerchandise,
+          merchandiseId: id,
+          service: this.isServiceCatalog,
+        });
+      }),
+    );
   }
 
   getMerchandiseMovements(id: number): Observable<IMerchandiseMovement[]> {
@@ -572,6 +675,39 @@ export class MerchandiseService {
       .pipe(
         map((data) => data.result ?? []),
         catchError(this.errorHandlerService.handleError),
+      );
+  }
+
+  /** Next INV document number from app_counter_next (increments counter). */
+  getNextMovementDocumentNumber(): Observable<string> {
+    const organizationId =
+      this.applicationService.workingOrganization?.organizationId ||
+      this.organizationId ||
+      0;
+    const toDoc = (data: IApiResponse<{ code: string }> | null | undefined) => {
+      const code = data?.result?.code ?? '';
+      return code ? `IN${code}` : '';
+    };
+    // Prefer merchandise route (same controller as warehouses); fall back to application.
+    return this.http
+      .get<IApiResponse<{ code: string }>>(
+        `${this.merchandiseChildGridUrl}/nextmovement/${organizationId}`,
+        { params: { pad: '8' } }
+      )
+      .pipe(
+        map(toDoc),
+        catchError(() =>
+          this.http
+            .get<IApiResponse<{ code: string }>>(
+              `${environment.API_URL}application/counter/next/INV/${organizationId}`,
+              { params: { pad: '8' } }
+            )
+            .pipe(map(toDoc))
+        ),
+        catchError((err) => {
+          this.errorHandlerService.handleError(err);
+          return of('');
+        })
       );
   }
 
@@ -698,7 +834,9 @@ export class MerchandiseService {
       .pipe(
         tap(() => {
           this.toastService.showMyToast(
-            'Impuesto de mercancía almacenado',
+            this.isServiceCatalog
+              ? 'Impuesto de servicio almacenado'
+              : 'Impuesto de mercancía almacenado',
             toastType.success,
           );
           this.refreshTaxes();
@@ -718,7 +856,9 @@ export class MerchandiseService {
       .pipe(
         tap(() => {
           this.toastService.showMyToast(
-            'Impuesto de mercancía actualizado',
+            this.isServiceCatalog
+              ? 'Impuesto de servicio actualizado'
+              : 'Impuesto de mercancía actualizado',
             toastType.success,
           );
           this.refreshTaxes();
@@ -743,7 +883,9 @@ export class MerchandiseService {
       .pipe(
         tap(() => {
           this.toastService.showMyToast(
-            'Impuesto de mercancía eliminado',
+            this.isServiceCatalog
+              ? 'Impuesto de servicio eliminado'
+              : 'Impuesto de mercancía eliminado',
             toastType.success,
           );
           this.refreshTaxes();
@@ -937,5 +1079,34 @@ export class MerchandiseService {
         map((data) => data.result ?? []),
         catchError(this.errorHandlerService.handleError),
       );
+  }
+
+  private normalizeGroups(rows: IGroup[]): IGroup[] {
+    return (rows ?? []).map((row) => {
+      const anyRow = row as IGroup & Record<string, unknown>;
+      return {
+        ...row,
+        groupId: Number(anyRow.groupId ?? anyRow['GroupId'] ?? 0),
+        description: String(
+          anyRow.description ?? anyRow['Description'] ?? ''
+        ),
+        altern_GroupCode: String(
+          anyRow.altern_GroupCode ??
+            anyRow['Altern_GroupCode'] ??
+            anyRow['altern_groupCode'] ??
+            ''
+        ),
+        parent_GroupCode: Number(
+          anyRow.parent_GroupCode ?? anyRow['Parent_GroupCode'] ?? 0
+        ),
+        groupModule: String(
+          anyRow.groupModule ?? anyRow['GroupModule'] ?? ''
+        ),
+        entityId: Number(anyRow.entityId ?? anyRow['EntityId'] ?? 0),
+        organizationId: Number(
+          anyRow.organizationId ?? anyRow['OrganizationId'] ?? 0
+        ),
+      };
+    });
   }
 }

@@ -1,5 +1,5 @@
 <div class="wrapper-detail" id="merchandise-detail-section" *ngIf="merchandise$ | async as mer">
-  <h6 class="detail-section-title">Mercancía</h6>
+  <h6 class="detail-section-title">{{ isServiceCatalog ? 'Servicio' : 'Mercancía' }}</h6>
   <form
     id="merchandise-detail-form"
     class="merchandise-detail-form"
@@ -9,196 +9,251 @@
       <div class="col-md-12">
         <ejs-textbox
           id="merchandise-txt"
-          placeholder="nombre or descripción"
+          placeholder="nombre o descripción"
           floatLabelType="Always"
           formControlName="merchandiseName"
           [enabled]="enabled$ | async"
         ></ejs-textbox>
       </div>
     </div>
-    <div class="row">
-      <div class="col-md-6">
-        <ejs-dropdownlist
-          id="merchandise-brands-ddl"
-          formControlName="merchandiseBrands"
-          #brands
-          [dataSource]="merchandiseBrands$ | async"
-          [fields]="brandfields"
-          [enabled]="enabled$ | async"
-          [allowFiltering]="true"
-          floatLabelType="Always"
-          placeholder="marca de mercancías"
-        >
-          <ng-template #footerTemplate>
-            <div class="dropdown-footer">
-              <button
-                ejs-button
-                type="button"
-                cssClass="e-primary"
-                (click)="openBrandsDialog($event)"
-              >
-                + nueva marca
-              </button>
-            </div>
-          </ng-template>
-        </ejs-dropdownlist>
-        <app-group-table
-          #brandTable
-          [dialogTitle]="'Marcas'"
-          [rowData]="(merchandiseBrands$ | async) ?? []"
-          [idField]="'groupId'"
-          [textField]="'description'"
-          [textHeader]="'Marcas de Mercancías'"
-          (dataChange)="onBrandsChanged($event)"
-        ></app-group-table>
+
+    <!-- ========== SERVICIO ========== -->
+    <ng-container *ngIf="isServiceCatalog">
+      <div class="row">
+        <div class="col-md-4">
+          <ejs-dropdownlist
+            id="service-type-ddl"
+            formControlName="serviceType"
+            [dataSource]="serviceTypes"
+            [fields]="serviceTypeFields"
+            [enabled]="enabled$ | async"
+            floatLabelType="Always"
+            placeholder="tipo de servicio"
+          ></ejs-dropdownlist>
+        </div>
+        <div class="col-md-4">
+          <ejs-dropdownlist
+            id="unidad-servicio-ddl"
+            formControlName="unidadServicio"
+            [dataSource]="unidadServicioOptions"
+            [fields]="unidadServicioFields"
+            [enabled]="enabled$ | async"
+            [allowFiltering]="true"
+            floatLabelType="Always"
+            placeholder="unidad de servicio"
+          ></ejs-dropdownlist>
+        </div>
+        <div class="col-md-4" style="margin-top: auto; padding-bottom: 8px">
+          <table style="width: 100%">
+            <tr>
+              <td style="width: 50%">Activo</td>
+              <td style="width: 50%">
+                <ejs-switch
+                  formControlName="merchandiseActive"
+                  [disabled]="!(enabled$ | async)"
+                ></ejs-switch>
+              </td>
+            </tr>
+          </table>
+        </div>
       </div>
-      <div class="col-md-6">
-        <ejs-dropdownlist
-          id="merchandise-categories-ddl"
-          formControlName="merchandiseCategories"
-          #categories
-          [dataSource]="merchandiseCategories$ | async"
-          [fields]="categoryfields"
-          [enabled]="enabled$ | async"
-          [allowFiltering]="true"
-          floatLabelType="Always"
-          placeholder="Grupo de mercancías"
-        ><ng-template #footerTemplate>
-            <div class="dropdown-footer">
-              <button
-                ejs-button
-                type="button"
-                cssClass="e-primary"
-                (click)="openCategoriesDialog($event)"
-              >
-                + Nuevo Grupo
-              </button>
-            </div>
-          </ng-template>
-        </ejs-dropdownlist>
-        <app-group-table
-          #categoryTable
-          [dialogTitle]="'Grupos'"
-          [rowData]="(merchandiseCategories$ | async) ?? []"
-          [idField]="'groupId'"
-          [textField]="'description'"
-          [textHeader]="'Grupos de Mercancías'"
-          (dataChange)="onCategoriesChanged($event)"
-        ></app-group-table>
+    </ng-container>
+
+    <!-- ========== MERCANCÍA ========== -->
+    <ng-container *ngIf="!isServiceCatalog">
+      <div class="row">
+        <div class="col-md-6">
+          <ejs-dropdownlist
+            id="merchandise-brands-ddl"
+            formControlName="merchandiseBrands"
+            #brands
+            [dataSource]="merchandiseBrands$ | async"
+            [fields]="brandfields"
+            [enabled]="enabled$ | async"
+            [allowFiltering]="true"
+            floatLabelType="Always"
+            placeholder="marca de mercancías"
+          >
+            <ng-template #footerTemplate>
+              <div class="dropdown-footer">
+                <button
+                  ejs-button
+                  type="button"
+                  cssClass="e-primary"
+                  (click)="openBrandsDialog($event)"
+                >
+                  + nueva marca
+                </button>
+              </div>
+            </ng-template>
+          </ejs-dropdownlist>
+          <app-group-table
+            #brandTable
+            [dialogTitle]="'Marcas'"
+            [rowData]="(merchandiseBrands$ | async) ?? []"
+            [idField]="'groupId'"
+            [textField]="'description'"
+            [textHeader]="'Marcas de Mercancías'"
+            (dataChange)="onBrandsChanged($event)"
+          ></app-group-table>
+        </div>
+        <div class="col-md-6">
+          <ejs-dropdownlist
+            id="merchandise-categories-ddl"
+            formControlName="merchandiseCategories"
+            #categories
+            [dataSource]="merchandiseCategories$ | async"
+            [fields]="categoryfields"
+            [enabled]="enabled$ | async"
+            [allowFiltering]="true"
+            floatLabelType="Always"
+            placeholder="Grupo de mercancías"
+          ><ng-template #footerTemplate>
+              <div class="dropdown-footer">
+                <button
+                  ejs-button
+                  type="button"
+                  cssClass="e-primary"
+                  (click)="openCategoriesDialog($event)"
+                >
+                  + Nuevo Grupo
+                </button>
+              </div>
+            </ng-template>
+          </ejs-dropdownlist>
+          <app-group-table
+            #categoryTable
+            [dialogTitle]="'Grupos'"
+            [rowData]="(merchandiseCategories$ | async) ?? []"
+            [idField]="'groupId'"
+            [textField]="'description'"
+            [textHeader]="'Grupos de Mercancías'"
+            (dataChange)="onCategoriesChanged($event)"
+          ></app-group-table>
+        </div>
       </div>
-    </div>
-    <div class="row">
-      <div class="col-md-6">
-        <ejs-textbox
-          id="merchandise-presentation-txt"
-          placeholder="presentación"
-          floatLabelType="Always"
-          formControlName="merchandisePresentation"
-          [enabled]="enabled$ | async"
-        ></ejs-textbox>
+      <div class="row">
+        <div class="col-md-6">
+          <ejs-textbox
+            id="merchandise-presentation-txt"
+            placeholder="presentación"
+            floatLabelType="Always"
+            formControlName="merchandisePresentation"
+            [enabled]="enabled$ | async"
+          ></ejs-textbox>
+        </div>
+        <div class="col-md-6">
+          <ejs-textbox
+            id="merchandise-alterno-txt"
+            placeholder="código alterno"
+            floatLabelType="Always"
+            formControlName="merchandiseAlternCode"
+            [enabled]="enabled$ | async"
+          ></ejs-textbox>
+        </div>
       </div>
-      <div class="col-md-6">
-        <ejs-textbox
-          id="merchandise-alterno-txt"
-          placeholder="código alterno"
-          floatLabelType="Always"
-          formControlName="merchandiseAlternCode"
-          [enabled]="enabled$ | async"
-        ></ejs-textbox>
+      <div class="row">
+        <div class="col-md-6">
+          <ejs-dropdownlist
+            id="merchandise-division-ddl"
+            formControlName="merchandiseDivisions"
+            #divisions
+            [dataSource]="merchandiseDivisions$ | async"
+            [fields]="divisionfields"
+            [enabled]="enabled$ | async"
+            [allowFiltering]="true"
+            floatLabelType="Always"
+            placeholder="Divisiones mercancías"
+          ></ejs-dropdownlist>
+        </div>
+        <div class="col-md-6">
+          <ejs-dropdownlist
+            id="merchandise-type-ddl"
+            formControlName="merchandiseTypes"
+            #types
+            [dataSource]="merchandiseTypes$ | async"
+            [fields]="typefields"
+            [enabled]="enabled$ | async"
+            [allowFiltering]="true"
+            floatLabelType="Always"
+            placeholder="Tipos de mercancías"
+          ></ejs-dropdownlist>
+        </div>
       </div>
-    </div>
-    <div class="row">
-      <div class="col-md-6">
-        <ejs-dropdownlist
-          id="merchandise-division-ddl"
-          formControlName="merchandiseDivisions"
-          #divisions
-          [dataSource]="merchandiseDivisions$ | async"
-          [fields]="divisionfields"
-          [enabled]="enabled$ | async"
-          [allowFiltering]="true"
-          floatLabelType="Always"
-          placeholder="Divisiones mercancías"
-        ></ejs-dropdownlist>
+      <div class="row">
+        <div class="col-md-3" style="margin-top: auto; padding-bottom: 8px">
+          <table style="width: 100%">
+            <tr>
+              <td style="width: 40%">Activo</td>
+              <td style="width: 60%">
+                <ejs-switch
+                  formControlName="merchandiseActive"
+                  [disabled]="!(enabled$ | async)"
+                ></ejs-switch>
+              </td>
+            </tr>
+          </table>
+        </div>
+        <div class="col-md-3">
+          <ejs-checkbox formControlName="merchandiseRegulated" label="Regulado">
+          </ejs-checkbox>
+        </div>
+        <div class="col-md-3">
+          <ejs-checkbox
+            formControlName="merchandiseReturns"
+            label="Acepta devoluciones"
+          >
+          </ejs-checkbox>
+        </div>
+        <div class="col-md-3">
+          <ejs-checkbox
+            formControlName="merchandiseAcceptRebates"
+            label="Acepta ofertas"
+          >
+          </ejs-checkbox>
+        </div>
       </div>
-      <div class="col-md-6">
-        <ejs-dropdownlist
-          id="merchandise-type-ddl"
-          formControlName="merchandiseTypes"
-          #types
-          [dataSource]="merchandiseTypes$ | async"
-          [fields]="typefields"
-          [enabled]="enabled$ | async"
-          [allowFiltering]="true"
-          floatLabelType="Always"
-          placeholder="Tipos de mercancías"
-        ></ejs-dropdownlist>
+      <br />
+      <div class="row">
+        <div class="col-md-3">
+          <ejs-numerictextbox
+            formControlName="merchandiseStock"
+            [validateDecimalOnType]="true"
+            [decimals]="3"
+            format="n3"
+            placeholder="Existencia actual"
+            floatLabelType="Always"
+            [showSpinButton]="false"
+            [enabled]="enabled$ | async"
+          ></ejs-numerictextbox>
+        </div>
+        <div class="col-md-3">
+          <ejs-numerictextbox
+            formControlName="merchandiseAvailableStock"
+            [validateDecimalOnType]="true"
+            [decimals]="3"
+            format="n3"
+            placeholder="Existencia disponible"
+            floatLabelType="Always"
+            [showSpinButton]="false"
+            [enabled]="enabled$ | async"
+          ></ejs-numerictextbox>
+        </div>
+        <div class="col-md-3">
+          <ejs-numerictextbox
+            placeholder="Tasa de devolución"
+            [validateDecimalOnType]="true"
+            [decimals]="3"
+            format="p2"
+            floatLabelType="Always"
+            formControlName="merchandiseReturnsRate"
+            [showSpinButton]="false"
+            [enabled]="enabled$ | async"
+          ></ejs-numerictextbox>
+        </div>
+        <div class="col-md-3"></div>
       </div>
-    </div>
-    <div class="row">
-      <div class="col-md-3">
-        <ejs-checkbox formControlName="merchandiseActive" label="Activo">
-        </ejs-checkbox>
-      </div>
-      <div class="col-md-3">
-        <ejs-checkbox formControlName="merchandiseRegulated" label="Regulado">
-        </ejs-checkbox>
-      </div>
-      <div class="col-md-3">
-        <ejs-checkbox
-          formControlName="merchandiseReturns"
-          label="Acepta devoluciones"
-        >
-        </ejs-checkbox>
-      </div>
-      <div class="col-md-3">
-        <ejs-checkbox
-          formControlName="merchandiseAcceptRebates"
-          label="Acepta ofertas"
-        >
-        </ejs-checkbox>
-      </div>
-    </div>
-    <br />
-    <div class="row">
-      <div class="col-md-3">
-        <ejs-numerictextbox
-          formControlName="merchandiseStock"
-          [validateDecimalOnType]="true"
-          [decimals]="3"
-          format="n3"
-          placeholder="Existencia actual"
-          floatLabelType="Always"
-          [showSpinButton]="false"
-          [enabled]="enabled$ | async"
-        ></ejs-numerictextbox>
-      </div>
-      <div class="col-md-3">
-        <ejs-numerictextbox
-          formControlName="merchandiseAvailableStock"
-          [validateDecimalOnType]="true"
-          [decimals]="3"
-          format="n3"
-          placeholder="Existencia disponible"
-          floatLabelType="Always"
-          [showSpinButton]="false"
-          [enabled]="enabled$ | async"
-        ></ejs-numerictextbox>
-      </div>
-      <div class="col-md-3">
-        <ejs-numerictextbox
-          placeholder="Tasa de devolución"
-          [validateDecimalOnType]="true"
-          [decimals]="3"
-          format="p2"
-          floatLabelType="Always"
-          formControlName="merchandiseReturnsRate"
-          [showSpinButton]="false"
-          [enabled]="enabled$ | async"
-        ></ejs-numerictextbox>
-      </div>
-      <div class="col-md-3"></div>
-    </div>
+    </ng-container>
   </form>
 
   <div class="row taxes-row">

@@ -1,5 +1,5 @@
-<div class="wrapper">
-  <div class="row">
+<div class="wrapper" [class.codes-only]="codesOnly">
+  <div class="row" *ngIf="!codesOnly">
     <div class="col-md-12">
       <div id="merchandise-uom-grid">
         <ejs-grid

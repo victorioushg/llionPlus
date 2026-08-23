@@ -48,6 +48,8 @@ export class ViewsComponent implements OnInit {
   cssClass = 'custom';
   enableDock: boolean = true;
   dockSize: string = '55px';
+  copyrightYear = new Date().getFullYear();
+  appVersion = environment.version;
 
   user: User = JSON.parse(
     localStorage.getItem('currentLlionUser') as string
@@ -195,6 +197,9 @@ export class ViewsComponent implements OnInit {
         break;
       case '08-01':
         this.router.navigate(['/merchandising/merchandise']);
+        break;
+      case '08-02':
+        this.router.navigate(['/merchandising/services']);
         break;
       case '10-01':
         this.router.navigate(['/control/parameters']);

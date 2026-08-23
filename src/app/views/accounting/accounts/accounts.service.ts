@@ -25,6 +25,18 @@ import { toastType } from '@shared/enums/enums';
 import { Action } from '@shared/models/edit-action';
 import { IAccount } from './account';
 
+/** Raw API row — supports both C# names and legacy Angular aliases. */
+type AccountApiRow = IAccount & {
+  accountNumber?: string | null;
+  bankNumber?: string | null;
+  parentFullName?: string | null;
+  description?: string | null;
+  currencyListId?: string | null;
+  level?: number | null;
+  Desc?: string | null;
+  ParentId_FullName?: string | null;
+};
+
 @Injectable({
   providedIn: 'root',
 })
@@ -37,9 +49,31 @@ export class AccountsService {
   private readonly emptyAccount: IAccount = {
     accountId: 0,
     code: '',
+    name: '',
+    fullName: '',
+    desc: '',
     description: '',
-    level: null,
+    parentId: null,
+    parentId_FullName: '',
+    parentFullName: '',
+    subLevel: 0,
     mark: false,
+    accountType: null,
+    specialAccountType: null,
+    cashFlowClassification: null,
+    openBalance: null,
+    openBalanceDate: null,
+    balance: null,
+    totalBalance: null,
+    isActive: true,
+    isTaxAccount: false,
+    treasureId: null,
+    taxLineId: null,
+    taxLineName: '',
+    salesTaxCodeId: null,
+    salesTaxCodeFullName: '',
+    currencyId: null,
+    currencyFullName: '',
     organizationId: 0,
   };
 
@@ -97,6 +131,91 @@ export class AccountsService {
     this.accountModifiedSubject.next({ item: account, action: 'delete' });
   }
 
+  /** Normalize API ↔ UI fields (Desc, ParentId_FullName, aliases). */
+  normalizeAccount(row: AccountApiRow, organizationId: number): IAccount {
+    const code = row.code ?? row.accountNumber ?? '';
+    const name = row.name ?? '';
+    const desc =
+      row.desc ?? row.Desc ?? row.description ?? '';
+    const parentFullName =
+      row.parentId_FullName ??
+      row.ParentId_FullName ??
+      row.parentFullName ??
+      '';
+
+    return {
+      ...row,
+      accountId: Number(row.accountId) || 0,
+      code,
+      name,
+      fullName: row.fullName ?? name,
+      desc,
+      description: desc || name,
+      parentId: row.parentId ?? null,
+      parentId_FullName: parentFullName,
+      parentFullName,
+      subLevel: row.subLevel ?? row.level ?? 0,
+      mark: !!row.mark,
+      accountType: row.accountType ?? null,
+      specialAccountType: row.specialAccountType ?? null,
+      cashFlowClassification: row.cashFlowClassification ?? null,
+      openBalance: row.openBalance ?? null,
+      openBalanceDate: row.openBalanceDate ?? null,
+      balance: row.balance ?? null,
+      totalBalance: row.totalBalance ?? null,
+      isActive: row.isActive ?? true,
+      isTaxAccount: !!row.isTaxAccount,
+      treasureId: row.treasureId ?? null,
+      taxLineId: row.taxLineId ?? null,
+      taxLineName: row.taxLineName ?? '',
+      salesTaxCodeId: row.salesTaxCodeId ?? null,
+      salesTaxCodeFullName: row.salesTaxCodeFullName ?? '',
+      currencyId: row.currencyId ?? null,
+      currencyFullName: row.currencyFullName ?? '',
+      organizationId: Number(row.organizationId) || organizationId,
+    };
+  }
+
+  /** Payload shaped for C# Account binding. */
+  toApiPayload(account: IAccount): Record<string, unknown> {
+    const parentFullName =
+      account.parentId_FullName ?? account.parentFullName ?? '';
+    const desc = account.desc ?? account.description ?? '';
+    const name = account.name ?? '';
+    const code = account.code ?? '';
+
+    return {
+      accountId: Number(account.accountId) || 0,
+      code,
+      name,
+      fullName: account.fullName || name,
+      isActive: account.isActive ?? true,
+      parentId: account.parentId ?? null,
+      parentId_FullName: parentFullName,
+      ParentId_FullName: parentFullName,
+      subLevel: account.subLevel ?? 0,
+      mark: account.mark ?? false,
+      accountType: account.accountType ?? null,
+      specialAccountType: account.specialAccountType ?? null,
+      isTaxAccount: account.isTaxAccount ?? false,
+      treasureId: account.treasureId ?? null,
+      desc,
+      Desc: desc,
+      balance: account.balance ?? null,
+      totalBalance: account.totalBalance ?? null,
+      openBalance: account.openBalance ?? null,
+      openBalanceDate: account.openBalanceDate ?? null,
+      cashFlowClassification: account.cashFlowClassification ?? null,
+      salesTaxCodeId: account.salesTaxCodeId ?? null,
+      salesTaxCodeFullName: account.salesTaxCodeFullName ?? '',
+      taxLineId: account.taxLineId ?? null,
+      taxLineName: account.taxLineName ?? '',
+      currencyFullName: account.currencyFullName ?? '',
+      currencyId: account.currencyId ?? null,
+      organizationId: account.organizationId,
+    };
+  }
+
   private initializeObservables(): void {
     this.accounts$ = this.applicationService.workingOrganization$.pipe(
       switchMap((workingOrg) => {
@@ -105,17 +224,14 @@ export class AccountsService {
           return of([] as IAccount[]);
         }
         return this.http
-          .get<IApiResponse<IAccount[]>>(
+          .get<IApiResponse<AccountApiRow[]>>(
             `${this.accountUrl}/${organizationId}/0`
           )
           .pipe(
             map((data) =>
-              ((data.result ?? []) as IAccount[]).map((row) => ({
-                ...row,
-                accountId: Number(row.accountId) || 0,
-                organizationId: Number(row.organizationId) || organizationId,
-                mark: !!row.mark,
-              }))
+              ((data.result ?? []) as AccountApiRow[]).map((row) =>
+                this.normalizeAccount(row, organizationId)
+              )
             ),
             catchError(this.errorHandlerService.handleError)
           );
@@ -181,10 +297,12 @@ export class AccountsService {
   private saveAccount(
     operation: Action<IAccount>
   ): Observable<Action<IAccount>> {
-    const account: IAccount = {
-      ...operation.item,
-      accountId: Number(operation.item.accountId) || 0,
-    };
+    const account = this.normalizeAccount(
+      operation.item,
+      operation.item.organizationId
+    );
+    const accountName = account.name || account.desc || account.code;
+    const payload = this.toApiPayload(account);
 
     if (operation.action === 'delete') {
       return this.http
@@ -195,7 +313,7 @@ export class AccountsService {
         .pipe(
           tap(() =>
             this.toastService.showMyToast(
-              `${account.description}, datos eliminados`,
+              `${accountName}, datos eliminados`,
               toastType.success
             )
           ),
@@ -208,17 +326,17 @@ export class AccountsService {
       operation.action === 'add'
         ? this.http.post<IApiResponse<number>>(
             this.accountUrl,
-            { ...account, accountId: 0 },
+            { ...payload, accountId: 0 },
             { headers: this.headers }
           )
-        : this.http.put<IApiResponse<number>>(this.accountUrl, account, {
+        : this.http.put<IApiResponse<number>>(this.accountUrl, payload, {
             headers: this.headers,
           });
 
     return request$.pipe(
       tap(() =>
         this.toastService.showMyToast(
-          `${account.description}, datos almacenados`,
+          `${accountName}, datos almacenados`,
           toastType.success
         )
       ),

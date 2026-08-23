@@ -10,11 +10,13 @@ export interface IMerchandiseMovement {
   uom: string;
   weight?: number | null;
   organizationId: number;
+  /** UI-only: unit cost used to compute totalCost */
+  unitCost?: number | null;
   totalCost?: number | null;
   totalCostWithDiscount?: number | null;
   origin?: string | null;
   documentOrigin?: string | null;
-  customer_Provider?: number | null;
+  customer_Provider?: number | string | null;
   totalSale?: number | null;
   totalSaleWithDiscount?: number | null;
   salesPersonId?: number | null;
@@ -27,6 +29,10 @@ export interface IMerchandiseMovement {
   historic?: boolean | null;
   parentID?: number | null;
   processed?: boolean | null;
+  /** UI-only lot picker (not persisted yet) */
+  lotNumber?: string | null;
+  /** Maps to mer_merchandise_movements.Comen */
+  comment?: string | null;
   /** Display-only from joins (GET) */
   salesPersonName?: string | null;
   customerProviderName?: string | null;

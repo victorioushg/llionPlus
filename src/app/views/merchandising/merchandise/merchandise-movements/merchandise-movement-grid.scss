@@ -12,6 +12,28 @@
   background-color: $llion-color-primary-container;
 }
 
+/* Same table width for header and body so columns stay aligned. */
+::ng-deep #merchandise-movement-grid #movement-grid {
+  width: 100%;
+
+  .e-gridheader .e-headercontent,
+  .e-gridcontent .e-content {
+    overflow-x: auto !important;
+  }
+
+  .e-gridheader .e-table,
+  .e-gridcontent .e-table {
+    table-layout: fixed;
+    min-width: 100%;
+  }
+
+  .e-rowcell {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
 .e-toolbar .e-toolbar-items .e-tbar-btn {
   background: $llion-color-white;
   border: 1px solid #5a70cc;
@@ -21,7 +43,12 @@
   padding-top: 7px;
 }
 
-::ng-deep #merchandise-movement-grid .e-grid .e-toolbar-items .e-toolbar-item.e-search-wrapper .e-search {
+::ng-deep
+  #merchandise-movement-grid
+  .e-grid
+  .e-toolbar-items
+  .e-toolbar-item.e-search-wrapper
+  .e-search {
   background-color: $llion-color-primary-container;
 }
 
@@ -31,16 +58,86 @@
   opacity: 0.45;
 }
 
-::ng-deep .movement-edit-dialog {
-  padding: 8px 4px 4px;
+/* Dialog header — primary + white subtitle-sized title */
+::ng-deep .e-dialog.movement-merchandise-dlg .e-dlg-header-content {
+  background-color: $llion-color-primary !important;
+  border-bottom: none !important;
+  padding: 10px 16px !important;
+}
 
-  .row {
-    margin-bottom: 12px;
+::ng-deep .e-dialog.movement-merchandise-dlg .e-dlg-header {
+  color: $llion-color-white !important;
+  font-size: $llion-font-size-14 !important;
+  font-weight: 600 !important;
+  line-height: 1.3 !important;
+}
+
+::ng-deep .e-dialog.movement-merchandise-dlg .e-icon-dlg-close {
+  color: $llion-color-white !important;
+}
+
+::ng-deep .movement-edit-dialog {
+  padding: 6px 8px 4px;
+  min-width: 480px;
+
+  .dlg-row {
+    display: grid;
+    grid-template-columns: 140px 1fr;
+    gap: 10px;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+
+  .dlg-row-top {
+    align-items: start;
+
+    .dlg-label {
+      padding-top: 8px;
+    }
+  }
+
+  .dlg-label {
+    margin: 0;
+    font-weight: 700;
+    color: $llion-color-font;
+    white-space: nowrap;
   }
 
   .e-float-input,
   .e-control-wrapper,
-  .e-dropdownlist {
+  .e-dropdownlist,
+  .e-datetimepicker,
+  .e-numerictextbox,
+  .e-textbox {
     width: 100%;
+  }
+
+  textarea.e-input,
+  .e-multi-line-input {
+    min-height: 52px;
+  }
+
+  .dlg-weight {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .dlg-weight-unit {
+    font-size: 11px;
+    color: $llion-color-dark-gray;
+    min-width: 28px;
+  }
+
+  /* Readonly fields stay readable (enabled=false washed out the text). */
+  ::ng-deep .dlg-readonly-field.e-input-group,
+  ::ng-deep .dlg-readonly-field .e-input,
+  ::ng-deep .e-control-wrapper.dlg-readonly-field .e-input {
+    background-color: #f3f4f6 !important;
+    color: $llion-color-font !important;
+    -webkit-text-fill-color: $llion-color-font !important;
+    opacity: 1 !important;
+    cursor: default;
   }
 }

@@ -8,6 +8,7 @@
           [allowFiltering]="enabled$ | async"
           [cssClass]="(disabledGrid$ | async) ? 'disablegrid' : ''"
           [toolbar]="toolbar"
+          [height]="screenHeight"
           [searchSettings]="searchSettings"
           (actionBegin)="actionBegin($event)"
           (toolbarClick)="onToolbarClick($event)"
@@ -38,16 +39,21 @@
       </div>
     </div>
     <div class="col-lg-8">
-      <ejs-tab id="tabs" #tabs>
+      <ejs-tab id="tabs" #tabs loadOn="Init">
         <e-tabitems>
           <e-tabitem [header]="headerText[0]">
-            <div class="row">
-              <div class="col-lg-12">
-                <ng-template #content>
+            <ng-template #content>
+              <div class="row">
+                <div class="col-lg-12">
                   <llion-customer-detail></llion-customer-detail>
-                </ng-template>
+                </div>
               </div>
-            </div>
+            </ng-template>
+          </e-tabitem>
+          <e-tabitem [header]="headerText[1]">
+            <ng-template #content>
+              <llion-customer-movements></llion-customer-movements>
+            </ng-template>
           </e-tabitem>
         </e-tabitems>
       </ejs-tab>

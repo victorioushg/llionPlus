@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient, HttpHeaders, HttpErrorResponse } from '@angular/common/http';
 import { environment } from '@environments/environment';
 import {
   BehaviorSubject,
@@ -14,6 +14,7 @@ import {
   concatMap,
   map,
   scan,
+  shareReplay,
   switchMap,
   tap,
 } from 'rxjs/operators';
@@ -23,7 +24,7 @@ import { ToastService } from '@shared/services/toastService';
 import { ErrorHandlerService } from '@shared/services/errorHandlerService';
 import { toastType } from '@shared/enums/enums';
 import { Action } from '@shared/models/edit-action';
-import { ICustomer } from './customer';
+import { ICustomer, ICustomerMovement } from './customer';
 
 @Injectable({
   providedIn: 'root',
@@ -64,9 +65,16 @@ export class CustomerService {
   );
   enableCustomerFormAction$ = this.enabledCustomerFormSource.asObservable();
 
+  private readonly movementsRefreshSubject = new BehaviorSubject<number>(0);
+
   customers$!: Observable<ICustomer[]>;
   customerSelected$!: Observable<ICustomer>;
   customerWithCRUD$!: Observable<ICustomer[]>;
+  customerMovements$!: Observable<ICustomerMovement[]>;
+
+  get currentOrganizationId(): number {
+    return this.applicationService.workingOrganization?.organizationId ?? 0;
+  }
 
   constructor(
     private http: HttpClient,
@@ -157,6 +165,44 @@ export class CustomerService {
         [] as ICustomer[]
       )
     );
+
+    this.customerMovements$ = combineLatest([
+      this.customerContextIdAction$,
+      this.applicationService.workingOrganization$,
+      this.movementsRefreshSubject,
+    ]).pipe(
+      switchMap(([customerId, workingOrg]) => {
+        const organizationId = workingOrg?.organizationId ?? 0;
+        if (!customerId || customerId <= 0 || !organizationId) {
+          return of([] as ICustomerMovement[]);
+        }
+        return this.getCustomerMovements(customerId, organizationId);
+      }),
+      shareReplay({ bufferSize: 1, refCount: true })
+    );
+  }
+
+  refreshMovements(): void {
+    this.movementsRefreshSubject.next(this.movementsRefreshSubject.value + 1);
+  }
+
+  private getCustomerMovements(
+    customerId: number,
+    organizationId: number
+  ): Observable<ICustomerMovement[]> {
+    return this.http
+      .get<IApiResponse<ICustomerMovement[]>>(
+        `${this.customerUrl}/movements/${customerId}/${organizationId}`
+      )
+      .pipe(
+        map((data) => data.result ?? []),
+        catchError((err) => {
+          if (err instanceof HttpErrorResponse && err.status === 404) {
+            return of([] as ICustomerMovement[]);
+          }
+          return this.errorHandlerService.handleError(err);
+        })
+      );
   }
 
   private modifyCustomers(

@@ -1,10 +1,10 @@
 <div id="container" class="container">
-  <div class="content-loading-overlay" *ngIf="!isReady">
-    <div class="content-spinner"></div>
-  </div>
-  <div class="row main-content" [class.is-hidden]="!isReady">
+  <div class="row main-content">
     <div class="col-lg-4">
       <div id="merchandise-grid" [class.wrapper]="disabledGrid$ | async">
+        <div class="grid-loading-overlay" *ngIf="!listReady">
+          <div class="content-spinner"></div>
+        </div>
         <ejs-grid
           #grid
           [dataSource]="merchandises$ | async"
@@ -13,6 +13,8 @@
           [toolbar]="toolbar"
           [height]="screenHeight"
           [searchSettings]="searchSettings"
+          [allowTextWrap]="false"
+          clipMode="EllipsisWithTooltip"
           (actionBegin)="actionBegin($event)"
           (toolbarClick)="onToolbarClick($event)"
           (rowSelected)="onRowSelected($event)"
@@ -22,16 +24,33 @@
           (dataBound)="onDataBound()"
         >
           <e-columns>
-            <e-column width="50" [commands]="commands"></e-column>
+            <e-column width="50" [commands]="commands" clipMode="Clip"></e-column>
             <e-column
               field="name"
               headerText="descripción"
               width="230"
+              clipMode="EllipsisWithTooltip"
             ></e-column>
             <e-column
               field="description"
               headerText="presentación"
               width="100"
+              [visible]="!isServiceCatalog"
+              clipMode="EllipsisWithTooltip"
+            ></e-column>
+            <e-column
+              field="serviceType"
+              headerText="tipo"
+              width="80"
+              [visible]="isServiceCatalog"
+              clipMode="EllipsisWithTooltip"
+            ></e-column>
+            <e-column
+              field="unidadServicio"
+              headerText="unidad"
+              width="90"
+              [visible]="isServiceCatalog"
+              clipMode="EllipsisWithTooltip"
             ></e-column>
             <e-column
               field="merchandiseId"
@@ -52,12 +71,17 @@
         <e-tabitems>
           <e-tabitem [header]="headerText[0]">
             <ng-template #content>
-              <div class="row detail-uom-row">
+              <div
+                class="row detail-uom-row"
+                [class.service-catalog-row]="isServiceCatalog"
+              >
                 <div class="col-lg-6 detail-column">
                   <llion-merchandise-detail></llion-merchandise-detail>
                 </div>
                 <div class="col-lg-6 uom-column">
-                  <llion-merchandise-detail-input></llion-merchandise-detail-input>
+                  <llion-merchandise-detail-input
+                    [codesOnly]="isServiceCatalog"
+                  ></llion-merchandise-detail-input>
                 </div>
               </div>
               <div class="row">
@@ -192,13 +216,13 @@
             </ng-template>
           </e-tabitem>
 
-          <e-tabitem [header]="headerText[4]">
+          <e-tabitem *ngIf="!isServiceCatalog" [header]="headerText[4]">
             <ng-template #content>
               <div class="tab-placeholder">Existencias (próximamente)</div>
             </ng-template>
           </e-tabitem>
 
-          <e-tabitem [header]="headerText[5]">
+          <e-tabitem *ngIf="!isServiceCatalog" [header]="headerText[5]">
             <ng-template #content>
               <div class="row">
                 <div class="col-lg-6">

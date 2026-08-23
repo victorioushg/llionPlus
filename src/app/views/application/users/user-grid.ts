@@ -1,7 +1,15 @@
-import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
+import {
+  AfterViewInit,
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+  Component,
+  ElementRef,
+  OnDestroy,
+  OnInit,
+  ViewChild,
+} from '@angular/core';
 import {
   GridComponent,
-  ToolbarItems,
   SearchEventArgs,
   RowSelectEventArgs,
   RowDeselectEventArgs,
@@ -14,17 +22,21 @@ import {
 import { UserService } from './user.service';
 import MiniToolbar from '@assets/json/minitoolbar.json';
 import { withToolbarTitle } from '@shared/utils/grid-toolbar';
+import { contentGridHeight, applyGridHeightAboveFooter } from '@shared/utils/layout';
 import {
   BehaviorSubject,
   EMPTY,
   Observable,
+  Subject,
   catchError,
   combineLatest,
+  fromEvent,
   map,
   startWith,
+  takeUntil,
   tap,
 } from 'rxjs';
-import { ChangeDetectionStrategy } from '@angular/core';
+import { debounceTime } from 'rxjs/operators';
 import { IUser } from './user';
 import { ToastService } from '@shared/services/toastService';
 import { toastType } from '@shared/enums/enums';
@@ -41,13 +53,14 @@ import { ApplicationService } from '@shared/services/applicattionService';
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: false,
 })
-export class UserComponent implements OnInit {
+export class UserComponent implements OnInit, AfterViewInit, OnDestroy {
   public commands: CommandModel[] | undefined;
-
   public selectionOptions?: SelectionSettingsModel;
+  screenHeight = contentGridHeight();
 
   private searchStringSubject = new BehaviorSubject<string>('');
   searchStringAction$ = this.searchStringSubject.asObservable();
+  private readonly destroy$ = new Subject<void>();
 
   users$!: Observable<IUser[]>;
 
@@ -64,25 +77,34 @@ export class UserComponent implements OnInit {
 
   headerText: Object[] = [
     { text: 'usuario' },
-    // { text: 'parámetros y contadores' },
-    // { text: 'impuestos y retenciones' },
-    // { text: 'créditos y débitos' },
   ];
 
-  /////
   constructor(
     private applicationService: ApplicationService,
     private userService: UserService,
-    private toastService: ToastService
+    private toastService: ToastService,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngAfterViewInit(): void {
     if (this.tabObj) {
       (this.tabObj as TabComponent).element.classList.add('e-fill');
     }
+    this.updateGridHeight();
+    setTimeout(() => this.updateGridHeight(), 0);
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   ngOnInit(): void {
+    this.updateGridHeight();
+    fromEvent(window, 'resize')
+      .pipe(debounceTime(100), takeUntil(this.destroy$))
+      .subscribe(() => this.updateGridHeight());
+
     this.commands = [
       {
         type: 'Delete',
@@ -112,7 +134,6 @@ export class UserComponent implements OnInit {
 
     this.enabled$ = this.userService.enableUserGridAction$.pipe(
       tap((enabled) => {
-        
         if (this.grid) {
           if (enabled) {
             this.grid.element.classList.add('disablegrid');
@@ -125,16 +146,13 @@ export class UserComponent implements OnInit {
       })
     );
 
-    this.applicationService
-      .getEntityId('User')
-      .subscribe((id) => {
-         this.applicationService.entitySelected(id);
-      });
-
+    this.applicationService.getEntityId('User').subscribe((id) => {
+      this.applicationService.entitySelected(id);
+    });
   }
 
   onToolbarClick(args: ClickEventArgs): void {
-    const target: HTMLElement = args.originalEvent.target as HTMLElement; //.closest('button'); // find clicked button
+    const target: HTMLElement = args.originalEvent.target as HTMLElement;
 
     const targetId =
       target.id === ''
@@ -155,7 +173,6 @@ export class UserComponent implements OnInit {
 
   onRecordDoubleClick(args: RecordDoubleClickEventArgs): void {
     if (this.selectedUser !== undefined) {
-      // this.applicationService.entitySelected(this.selectedUser.userId);
       this.userService.selectedUserChanged(this.selectedUser.userId);
       this.enableParentForm(true);
     } else {
@@ -190,10 +207,7 @@ export class UserComponent implements OnInit {
     this.applicationService.entitySelected(this.selectedUser.userId);
   }
 
-  onRowDeselected(args: RowDeselectEventArgs): void {
-    // this.selectedUser = undefined;
-    // this.userService.selectedUserChanged(0);
-  }
+  onRowDeselected(args: RowDeselectEventArgs): void {}
 
   private search(clear: boolean = false) {
     const searchString: HTMLInputElement = document.getElementById(
@@ -201,5 +215,10 @@ export class UserComponent implements OnInit {
     ) as HTMLInputElement;
     if (clear) searchString.value = '';
     this.searchStringSubject.next(searchString.value ? searchString.value : '');
+  }
+
+  private updateGridHeight(): void {
+    this.screenHeight = applyGridHeightAboveFooter(this.grid);
+    this.cdr.markForCheck();
   }
 }

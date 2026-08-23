@@ -11,16 +11,22 @@ import {
 } from '@syncfusion/ej2-angular-inputs';
 import { ButtonModule, SwitchModule } from '@syncfusion/ej2-angular-buttons';
 import { DatePickerModule } from '@syncfusion/ej2-angular-calendars';
+import { DropDownListModule } from '@syncfusion/ej2-angular-dropdowns';
 import { enableRipple } from '@syncfusion/ej2-base';
 import { ContactGridsModule } from '@shared/components/contact-grids.module';
 import { routes } from './_routes';
 import { ProviderComponent } from './provider-grid';
 import { ProviderDetailComponent } from './provider-detail/provider-detail';
+import { ProviderMovementsComponent } from './provider-movements/provider-movements';
 
 enableRipple(true);
 
 @NgModule({
-  declarations: [ProviderComponent, ProviderDetailComponent],
+  declarations: [
+    ProviderComponent,
+    ProviderDetailComponent,
+    ProviderMovementsComponent,
+  ],
   imports: [
     CommonModule,
     RouterModule.forChild(routes),
@@ -32,6 +38,7 @@ enableRipple(true);
     NumericTextBoxModule,
     SwitchModule,
     DatePickerModule,
+    DropDownListModule,
     ButtonModule,
     FormsModule,
     ReactiveFormsModule,

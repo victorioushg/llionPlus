@@ -31,38 +31,38 @@
             <e-column
               field="movementDate"
               headerText="Fecha"
-              type="date"
-              format="dd/MM/yyyy"
-              width="90"
+              type="dateTime"
+              format="dd/MM/yyyy HH:mm"
+              width="130"
             ></e-column>
             <e-column
               field="movementType"
               headerText="Tipo"
               textAlign="Center"
-              width="70"
+              width="80"
             ></e-column>
             <e-column
               field="documentNumber"
-              headerText="Documento"
-              width="110"
+              headerText="Nº Movimiento"
+              width="130"
             ></e-column>
             <e-column
               field="quantity"
               headerText="Cantidad"
               textAlign="Right"
               format="#,##0.000"
-              width="90"
+              width="100"
             ></e-column>
             <e-column
               field="uom"
               headerText="Unidad"
-              width="70"
+              width="80"
               textAlign="Center"
             ></e-column>
             <e-column
               field="weight"
               headerText="Peso"
-              width="70"
+              width="90"
               format="#,##0.000"
               textAlign="Right"
             ></e-column>
@@ -70,59 +70,31 @@
               field="totalCost"
               headerText="Costo Total"
               textAlign="Right"
-              width="100"
+              width="110"
               format="#,##0.00"
             ></e-column>
             <e-column
-              field="totalCostWithDiscount"
-              headerText="Costo c/Desc."
-              width="100"
-              format="#,##0.00"
-              textAlign="Right"
+              field="origin"
+              headerText="Origen"
+              width="90"
             ></e-column>
             <e-column
-              field="totalSale"
-              headerText="Venta Total"
-              width="100"
-              format="#,##0.00"
-              textAlign="Right"
+              field="customerProviderName"
+              headerText="Cliente / Proveedor"
+              width="240"
+            
             ></e-column>
             <e-column
-              field="totalSaleWithDiscount"
-              headerText="Venta c/Desc."
-              width="100"
-              format="#,##0.00"
-              textAlign="Right"
-            ></e-column>
-            <e-column field="origin" headerText="Origen" width="100"></e-column>
-            <e-column
-              field="documentOrigin"
-              headerText="Doc. Origen"
-              width="100"
-            ></e-column>
-            <e-column
-              field="customer_Provider"
-              headerText="Prov./Cliente"
-              width="100"
-            ></e-column>
-            <e-column
-              field="salesPersonId"
+              field="salesPersonName"
               headerText="Vendedor"
-              width="80"
+              width="160"
             ></e-column>
             <e-column
-              field="warehouseId"
+              field="warehouse"
               headerText="Almacén"
-              width="80"
+              width="160"
             ></e-column>
-            <e-column
-              field="block_Date"
-              headerText="Fecha Cierre"
-              width="100"
-              type="date"
-              textAlign="Center"
-              format="dd/MM/yyyy"
-            ></e-column>
+            <e-column field="warehouseId" [visible]="false"></e-column>
           </e-columns>
 
           <ng-template #editSettingsTemplate let-data>
@@ -142,221 +114,165 @@
                 name="organizationId"
                 [(ngModel)]="movementData.organizationId"
               />
+              <input
+                type="hidden"
+                name="origin"
+                [(ngModel)]="movementData.origin"
+              />
 
-              <div class="row">
-                <div class="col-md-4">
-                  <ejs-datepicker
-                    id="movementDate"
-                    name="movementDate"
-                    [(ngModel)]="movementData.movementDate"
-                    placeholder="Fecha"
-                    floatLabelType="Always"
-                    format="dd/MM/yyyy"
-                    [required]="true"
-                  ></ejs-datepicker>
-                </div>
-                <div class="col-md-4">
-                  <ejs-dropdownlist
-                    id="movementType"
-                    name="movementType"
-                    [(ngModel)]="movementData.movementType"
-                    [dataSource]="(movementTypes$ | async) || []"
-                    [fields]="movementTypeFields"
-                    [allowFiltering]="true"
-                    placeholder="Tipo de movimiento"
-                    floatLabelType="Always"
-                    popupHeight="220px"
-                    [required]="true"
-                  ></ejs-dropdownlist>
-                </div>
-                <div class="col-md-4">
-                  <ejs-textbox
-                    id="documentNumber"
-                    name="documentNumber"
-                    [(ngModel)]="movementData.documentNumber"
-                    placeholder="Documento"
-                    floatLabelType="Always"
-                    [required]="true"
-                  ></ejs-textbox>
-                </div>
+              <div class="dlg-row dlg-row-top">
+                <label class="dlg-label">Mercancía</label>
+                <ejs-textbox
+                  [readonly]="true"
+                  [multiline]="true"
+                  cssClass="dlg-readonly-field"
+                  [value]="merchandiseDisplayName"
+                ></ejs-textbox>
               </div>
 
-              <div class="row">
-                <div class="col-md-3">
+              <div class="dlg-row">
+                <label class="dlg-label">Unidad</label>
+                <ejs-dropdownlist
+                  id="uom"
+                  name="uom"
+                  [(ngModel)]="movementData.uom"
+                  [dataSource]="uomOptions"
+                  [fields]="uomFields"
+                  [allowFiltering]="true"
+                  popupHeight="220px"
+                  [required]="true"
+                  (change)="onUomChange($event)"
+                ></ejs-dropdownlist>
+              </div>
+
+              <div class="dlg-row">
+                <label class="dlg-label">Fecha</label>
+                <ejs-datetimepicker
+                  id="movementDate"
+                  name="movementDate"
+                  [(ngModel)]="movementData.movementDate"
+                  format="dd-MM-yyyy HH:mm"
+                  [required]="true"
+                ></ejs-datetimepicker>
+              </div>
+
+              <div class="dlg-row">
+                <label class="dlg-label">Tipo movimiento</label>
+                <ejs-dropdownlist
+                  id="movementType"
+                  name="movementType"
+                  [(ngModel)]="movementData.movementType"
+                  [dataSource]="(movementTypes$ | async) || []"
+                  [fields]="movementTypeFields"
+                  [allowFiltering]="true"
+                  popupHeight="220px"
+                  [required]="true"
+                ></ejs-dropdownlist>
+              </div>
+
+              <div class="dlg-row">
+                <label class="dlg-label">Nº Movimiento</label>
+                <ejs-textbox
+                  name="documentNumber"
+                  [(ngModel)]="movementData.documentNumber"
+                  [readonly]="true"
+                  cssClass="dlg-readonly-field"
+                ></ejs-textbox>
+              </div>
+
+              <div class="dlg-row">
+                <label class="dlg-label">Nº Lote</label>
+                <ejs-dropdownlist
+                  id="lotNumber"
+                  name="lotNumber"
+                  [(ngModel)]="movementData.lotNumber"
+                  [dataSource]="(lots$ | async) || []"
+                  [fields]="lotFields"
+                  [allowFiltering]="true"
+                  [showClearButton]="true"
+                  popupHeight="180px"
+                ></ejs-dropdownlist>
+              </div>
+
+              <div class="dlg-row">
+                <label class="dlg-label">Cantidad</label>
+                <ejs-numerictextbox
+                  id="quantity"
+                  name="quantity"
+                  [(ngModel)]="movementData.quantity"
+                  format="n3"
+                  [decimals]="3"
+                  [validateDecimalOnType]="true"
+                  [showSpinButton]="false"
+                  [required]="true"
+                  (change)="onQuantityOrCostChange()"
+                ></ejs-numerictextbox>
+              </div>
+
+              <div class="dlg-row">
+                <label class="dlg-label">Costo unitario</label>
+                <ejs-numerictextbox
+                  id="unitCost"
+                  name="unitCost"
+                  [(ngModel)]="movementData.unitCost"
+                  format="n2"
+                  [decimals]="2"
+                  [validateDecimalOnType]="true"
+                  [showSpinButton]="false"
+                  (change)="onQuantityOrCostChange()"
+                ></ejs-numerictextbox>
+              </div>
+
+              <div class="dlg-row">
+                <label class="dlg-label">Almacén</label>
+                <ejs-dropdownlist
+                  id="warehouseId"
+                  name="warehouseId"
+                  [(ngModel)]="movementData.warehouseId"
+                  [dataSource]="(warehouses$ | async) || []"
+                  [fields]="warehouseFields"
+                  [allowFiltering]="true"
+                  popupHeight="220px"
+                  [required]="true"
+                ></ejs-dropdownlist>
+              </div>
+
+              <div class="dlg-row">
+                <label class="dlg-label">Costo Total</label>
+                <ejs-numerictextbox
+                  name="totalCost"
+                  [(ngModel)]="movementData.totalCost"
+                  format="n2"
+                  [decimals]="2"
+                  [showSpinButton]="false"
+                  [readonly]="true"
+                  [enabled]="false"
+                ></ejs-numerictextbox>
+              </div>
+
+              <div class="dlg-row">
+                <label class="dlg-label">Peso total</label>
+                <div class="dlg-weight">
                   <ejs-numerictextbox
-                    id="quantity"
-                    name="quantity"
-                    [(ngModel)]="movementData.quantity"
-                    placeholder="Cantidad"
-                    floatLabelType="Always"
-                    format="n3"
-                    [decimals]="5"
-                    [showSpinButton]="false"
-                    [required]="true"
-                  ></ejs-numerictextbox>
-                </div>
-                <div class="col-md-3">
-                  <ejs-dropdownlist
-                    id="uom"
-                    name="uom"
-                    [(ngModel)]="movementData.uom"
-                    [dataSource]="(uoms$ | async) || []"
-                    [fields]="uomFields"
-                    [allowFiltering]="true"
-                    placeholder="Unidad"
-                    floatLabelType="Always"
-                    popupHeight="220px"
-                    [required]="true"
-                  ></ejs-dropdownlist>
-                </div>
-                <div class="col-md-3">
-                  <ejs-numerictextbox
-                    id="weight"
                     name="weight"
                     [(ngModel)]="movementData.weight"
-                    placeholder="Peso"
-                    floatLabelType="Always"
                     format="n3"
-                    [decimals]="5"
+                    [decimals]="3"
                     [showSpinButton]="false"
+                    [readonly]="true"
+                    [enabled]="false"
                   ></ejs-numerictextbox>
-                </div>
-                <div class="col-md-3">
-                  <ejs-numerictextbox
-                    id="warehouseId"
-                    name="warehouseId"
-                    [(ngModel)]="movementData.warehouseId"
-                    placeholder="Almacén"
-                    floatLabelType="Always"
-                    format="n0"
-                    [decimals]="0"
-                    [showSpinButton]="false"
-                    [required]="true"
-                  ></ejs-numerictextbox>
+                  <span class="dlg-weight-unit">Kgr.</span>
                 </div>
               </div>
 
-              <div class="row">
-                <div class="col-md-3">
-                  <ejs-numerictextbox
-                    id="totalCost"
-                    name="totalCost"
-                    [(ngModel)]="movementData.totalCost"
-                    placeholder="Costo total"
-                    floatLabelType="Always"
-                    format="n2"
-                    [decimals]="2"
-                    [showSpinButton]="false"
-                  ></ejs-numerictextbox>
-                </div>
-                <div class="col-md-3">
-                  <ejs-numerictextbox
-                    id="totalCostWithDiscount"
-                    name="totalCostWithDiscount"
-                    [(ngModel)]="movementData.totalCostWithDiscount"
-                    placeholder="Costo c/descuento"
-                    floatLabelType="Always"
-                    format="n2"
-                    [decimals]="2"
-                    [showSpinButton]="false"
-                  ></ejs-numerictextbox>
-                </div>
-                <div class="col-md-3">
-                  <ejs-numerictextbox
-                    id="totalSale"
-                    name="totalSale"
-                    [(ngModel)]="movementData.totalSale"
-                    placeholder="Venta total"
-                    floatLabelType="Always"
-                    format="n2"
-                    [decimals]="2"
-                    [showSpinButton]="false"
-                  ></ejs-numerictextbox>
-                </div>
-                <div class="col-md-3">
-                  <ejs-numerictextbox
-                    id="totalSaleWithDiscount"
-                    name="totalSaleWithDiscount"
-                    [(ngModel)]="movementData.totalSaleWithDiscount"
-                    placeholder="Venta c/descuento"
-                    floatLabelType="Always"
-                    format="n2"
-                    [decimals]="2"
-                    [showSpinButton]="false"
-                  ></ejs-numerictextbox>
-                </div>
-              </div>
-
-              <div class="row">
-                <div class="col-md-4">
-                  <ejs-textbox
-                    id="origin"
-                    name="origin"
-                    [(ngModel)]="movementData.origin"
-                    placeholder="Origen"
-                    floatLabelType="Always"
-                  ></ejs-textbox>
-                </div>
-                <div class="col-md-4">
-                  <ejs-textbox
-                    id="documentOrigin"
-                    name="documentOrigin"
-                    [(ngModel)]="movementData.documentOrigin"
-                    placeholder="Documento origen"
-                    floatLabelType="Always"
-                  ></ejs-textbox>
-                </div>
-                <div class="col-md-4">
-                  <ejs-numerictextbox
-                    id="customer_Provider"
-                    name="customer_Provider"
-                    [(ngModel)]="movementData.customer_Provider"
-                    placeholder="Proveedor / Cliente"
-                    floatLabelType="Always"
-                    format="n0"
-                    [decimals]="0"
-                    [showSpinButton]="false"
-                  ></ejs-numerictextbox>
-                </div>
-              </div>
-
-              <div class="row">
-                <div class="col-md-4">
-                  <ejs-numerictextbox
-                    id="salesPersonId"
-                    name="salesPersonId"
-                    [(ngModel)]="movementData.salesPersonId"
-                    placeholder="Vendedor"
-                    floatLabelType="Always"
-                    format="n0"
-                    [decimals]="0"
-                    [showSpinButton]="false"
-                  ></ejs-numerictextbox>
-                </div>
-                <div class="col-md-4">
-                  <ejs-numerictextbox
-                    id="accountID"
-                    name="accountID"
-                    [(ngModel)]="movementData.accountID"
-                    placeholder="Cuenta"
-                    floatLabelType="Always"
-                    format="n0"
-                    [decimals]="0"
-                    [showSpinButton]="false"
-                  ></ejs-numerictextbox>
-                </div>
-                <div class="col-md-4">
-                  <ejs-numerictextbox
-                    id="classId"
-                    name="classId"
-                    [(ngModel)]="movementData.classId"
-                    placeholder="Clase"
-                    floatLabelType="Always"
-                    format="n0"
-                    [decimals]="0"
-                    [showSpinButton]="false"
-                  ></ejs-numerictextbox>
-                </div>
+              <div class="dlg-row dlg-row-top">
+                <label class="dlg-label">Comentario</label>
+                <ejs-textbox
+                  name="comment"
+                  [(ngModel)]="movementData.comment"
+                  [multiline]="true"
+                ></ejs-textbox>
               </div>
             </div>
           </ng-template>

@@ -1,0 +1,92 @@
+<div
+  id="customer-movements-container"
+  [class.is-disabled]="!gridEnabled"
+>
+  <div id="customer-movements-grid">
+    <ejs-grid
+      #movementsgrid
+      [dataSource]="(movements$ | async) || []"
+      [allowFiltering]="false"
+      [allowSorting]="true"
+      [toolbar]="toolbar"
+      [height]="screenHeight"
+      [searchSettings]="searchSettings"
+      [sortSettings]="sortSettings"
+      [rowHeight]="36"
+      clipMode="EllipsisWithTooltip"
+      (toolbarClick)="onToolbarClick($event)"
+    >
+      <e-columns>
+        <e-column
+          field="movementDate"
+          headerText="Fecha"
+          type="date"
+          format="dd/MM/yyyy"
+          width="100"
+          textAlign="Center"
+        ></e-column>
+        <e-column
+          field="documentNumber"
+          headerText="Documento"
+          width="130"
+        ></e-column>
+        <e-column
+          field="movementType"
+          headerText="Tipo"
+          width="70"
+          textAlign="Center"
+        ></e-column>
+        <e-column
+          field="concept"
+          headerText="Concepto"
+          width="240"
+        ></e-column>
+        <e-column
+          field="amount"
+          headerText="Importe"
+          type="number"
+          format="N2"
+          width="120"
+          textAlign="Right"
+        ></e-column>
+        <e-column
+          field="dueDate"
+          headerText="Vence"
+          type="date"
+          format="dd/MM/yyyy"
+          width="100"
+          textAlign="Center"
+        ></e-column>
+        <e-column
+          field="origin"
+          headerText="Origen"
+          width="80"
+          textAlign="Center"
+        ></e-column>
+        <e-column
+          field="originDocument"
+          headerText="Doc. origen"
+          width="120"
+        ></e-column>
+        <e-column
+          field="paymentMethod"
+          headerText="Forma pago"
+          width="110"
+        ></e-column>
+        <e-column
+          field="fiscalPeriod"
+          headerText="Ejercicio"
+          width="90"
+          textAlign="Center"
+        ></e-column>
+        <e-column
+          field="movementId"
+          [isPrimaryKey]="true"
+          [visible]="false"
+        ></e-column>
+        <e-column field="customerId" [visible]="false"></e-column>
+        <e-column field="organizationId" [visible]="false"></e-column>
+      </e-columns>
+    </ejs-grid>
+  </div>
+</div>

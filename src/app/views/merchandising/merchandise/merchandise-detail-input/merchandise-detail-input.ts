@@ -2,6 +2,7 @@ import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
   Component,
+  Input,
   OnDestroy,
   OnInit,
   ViewChild,
@@ -31,8 +32,14 @@ interface ICodeTypeOption {
   styleUrls: ['./merchandise-detail-input.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: false,
+  host: {
+    '[class.codes-only-host]': 'codesOnly',
+  },
 })
 export class MerchandiseDetailInputComponent implements OnInit, OnDestroy {
+  /** When true (servicios), hide UOM/equivalencia grid and show codes only. */
+  @Input() codesOnly = false;
+
   @ViewChild('uomgrid') uomGrid?: GridComponent;
   @ViewChild('codesgrid') codesGrid?: GridComponent;
 
@@ -64,7 +71,7 @@ export class MerchandiseDetailInputComponent implements OnInit, OnDestroy {
   );
   codesToolbar = withToolbarTitle(
     ['Add', 'Edit', 'Delete', 'Update', 'Cancel'],
-    'Códigos de mercancía'
+    'Códigos'
   );
 
   uomEditSettings: EditSettingsModel = {
@@ -95,6 +102,14 @@ export class MerchandiseDetailInputComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
+    if (this.codesOnly) {
+      this.codesGridHeight = 200;
+      this.codesToolbar = withToolbarTitle(
+        ['Add', 'Edit', 'Delete', 'Update', 'Cancel'],
+        'Códigos de servicio'
+      );
+    }
+
     this.uomData$ = this.merchandiseService.merchandiseUom$;
     this.codesData$ = this.merchandiseService.merchandiseCodes$;
     this.organizationId = this.merchandiseService.currentOrganizationId;
@@ -133,7 +148,9 @@ export class MerchandiseDetailInputComponent implements OnInit, OnDestroy {
     if (needsMerchandise && this.selectedMerchandiseId <= 0) {
       args.cancel = true;
       this.toastService.showMyToast(
-        'Debe seleccionar una mercancía para gestionar códigos',
+        this.merchandiseService.isServiceCatalog
+          ? 'Debe seleccionar un servicio para gestionar códigos'
+          : 'Debe seleccionar una mercancía para gestionar códigos',
         toastType.warning
       );
       return;

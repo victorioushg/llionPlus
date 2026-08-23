@@ -1,6 +1,7 @@
 import {
   AfterViewInit,
   ChangeDetectionStrategy,
+  ChangeDetectorRef,
   Component,
   OnDestroy,
   OnInit,
@@ -27,13 +28,16 @@ import {
   Subject,
   catchError,
   combineLatest,
+  fromEvent,
   map,
   shareReplay,
   startWith,
   takeUntil,
 } from 'rxjs';
+import { debounceTime } from 'rxjs/operators';
 import MiniToolbar from '@assets/json/minitoolbar.json';
-import { withToolbarTitle } from '@shared/utils/grid-toolbar';
+import { withToolbarTitle, bindGridSearchAsYouType } from '@shared/utils/grid-toolbar';
+import { contentGridHeight, applyGridHeightAboveFooter } from '@shared/utils/layout';
 import { ApplicationService } from '@shared/services/applicattionService';
 import { ToastService } from '@shared/services/toastService';
 import { toastType } from '@shared/enums/enums';
@@ -51,13 +55,17 @@ export class CustomerComponent implements OnInit, AfterViewInit, OnDestroy {
   commands!: CommandModel[];
   toolbar = withToolbarTitle(MiniToolbar as object[], 'Clientes');
   searchSettings?: SearchSettingsModel;
+  screenHeight = contentGridHeight();
 
   customers$!: Observable<ICustomer[]>;
   enabled$!: Observable<boolean>;
   disabledGrid$!: Observable<boolean>;
   entityTypeId = 0;
 
-  headerText: { text: string }[] = [{ text: 'cliente' }];
+  headerText: { text: string }[] = [
+    { text: 'cliente' },
+    { text: 'movimientos' },
+  ];
 
   @ViewChild('grid') grid!: GridComponent;
   @ViewChild('tabs') tabObj?: TabComponent;
@@ -70,16 +78,29 @@ export class CustomerComponent implements OnInit, AfterViewInit, OnDestroy {
   constructor(
     private applicationService: ApplicationService,
     private customerService: CustomerService,
-    private toastService: ToastService
+    private toastService: ToastService,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngAfterViewInit(): void {
     if (this.tabObj) {
       (this.tabObj as TabComponent).element.classList.add('e-fill');
     }
+    this.updateGridHeight();
+    setTimeout(() => this.updateGridHeight(), 0);
+    bindGridSearchAsYouType(
+      () => this.grid,
+      (value) => this.searchStringSubject.next(value),
+      this.destroy$
+    );
   }
 
   ngOnInit(): void {
+    this.updateGridHeight();
+    fromEvent(window, 'resize')
+      .pipe(debounceTime(100), takeUntil(this.destroy$))
+      .subscribe(() => this.updateGridHeight());
+
     this.clearCustomerSelection();
 
     this.applicationService
@@ -102,11 +123,17 @@ export class CustomerComponent implements OnInit, AfterViewInit, OnDestroy {
       this.searchStringSubject.asObservable().pipe(startWith('')),
     ]).pipe(
       map(([customers, searchStr]) =>
-        customers.filter((customer) =>
-          (customer.description ?? '')
-            .toLocaleLowerCase()
-            .includes(searchStr.toLocaleLowerCase())
-        )
+        customers
+          .filter((customer) =>
+            (customer.description ?? '')
+              .toLocaleLowerCase()
+              .includes(searchStr.toLocaleLowerCase())
+          )
+          .sort((a, b) =>
+            (a.description ?? '').localeCompare(b.description ?? '', 'es', {
+              sensitivity: 'base',
+            })
+          )
       ),
       catchError((err) => {
         this.toastService.showMyToast(err, toastType.error);
@@ -248,5 +275,10 @@ export class CustomerComponent implements OnInit, AfterViewInit, OnDestroy {
       searchString.value = '';
     }
     this.searchStringSubject.next(searchString.value || '');
+  }
+
+  private updateGridHeight(): void {
+    this.screenHeight = applyGridHeightAboveFooter(this.grid);
+    this.cdr.markForCheck();
   }
 }

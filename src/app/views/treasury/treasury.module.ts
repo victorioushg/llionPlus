@@ -10,17 +10,27 @@ import {
   TextBoxModule,
 } from '@syncfusion/ej2-angular-inputs';
 import { DropDownListModule } from '@syncfusion/ej2-angular-dropdowns';
-import { ButtonModule, SwitchModule } from '@syncfusion/ej2-angular-buttons';
+import {
+  ButtonModule,
+  CheckBoxModule,
+  SwitchModule,
+} from '@syncfusion/ej2-angular-buttons';
+import { DatePickerModule } from '@syncfusion/ej2-angular-calendars';
 import { enableRipple } from '@syncfusion/ej2-base';
 import { ContactGridsModule } from '@shared/components/contact-grids.module';
 import { routes } from './_routes';
 import { TreasuryComponent } from './treasury-grid';
 import { TreasuryDetailComponent } from './treasury-detail/treasury-detail';
+import { TreasuryMovementsComponent } from './treasury-movements/treasury-movements';
 
 enableRipple(true);
 
 @NgModule({
-  declarations: [TreasuryComponent, TreasuryDetailComponent],
+  declarations: [
+    TreasuryComponent,
+    TreasuryDetailComponent,
+    TreasuryMovementsComponent,
+  ],
   imports: [
     CommonModule,
     RouterModule.forChild(routes),
@@ -31,7 +41,9 @@ enableRipple(true);
     TextBoxModule,
     NumericTextBoxModule,
     DropDownListModule,
+    DatePickerModule,
     SwitchModule,
+    CheckBoxModule,
     ButtonModule,
     FormsModule,
     ReactiveFormsModule,

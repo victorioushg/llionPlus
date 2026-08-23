@@ -8,6 +8,7 @@
           [allowFiltering]="enabled$ | async"
           [cssClass]="(disabledGrid$ | async) ? 'disablegrid' : ''"
           [toolbar]="toolbar"
+          [height]="screenHeight"
           [searchSettings]="searchSettings"
           (actionBegin)="actionBegin($event)"
           (toolbarClick)="onToolbarClick($event)"

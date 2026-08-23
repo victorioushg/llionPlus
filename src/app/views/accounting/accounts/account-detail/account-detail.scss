@@ -1,0 +1,45 @@
+@use "variables" as *;
+
+:host {
+  display: block;
+  width: 100%;
+}
+
+.wrapper-detail {
+  width: 100%;
+}
+
+.account-detail-form {
+  .row {
+    margin-bottom: 4px;
+  }
+}
+
+.flags-row {
+  align-items: center;
+}
+
+#account-form-buttons {
+  display: none;
+}
+
+/* Popup is appended to body — pierce encapsulation */
+::ng-deep .e-popup.treasury-dropdown {
+  .e-list-group-item {
+    border-top: 1px solid rgba(0, 0, 0, 0.22);
+    margin-top: 4px;
+    padding-top: 6px;
+    font-weight: 600;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: rgba(0, 0, 0, 0.55);
+    background: transparent;
+    pointer-events: none;
+  }
+
+  .e-list-group-item:first-child {
+    border-top: none;
+    margin-top: 0;
+  }
+}

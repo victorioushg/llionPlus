@@ -1,6 +1,7 @@
 import {
   AfterViewInit,
   ChangeDetectionStrategy,
+  ChangeDetectorRef,
   Component,
   OnDestroy,
   OnInit,
@@ -27,13 +28,19 @@ import {
   Subject,
   catchError,
   combineLatest,
+  fromEvent,
   map,
   shareReplay,
   startWith,
   takeUntil,
 } from 'rxjs';
+import { debounceTime } from 'rxjs/operators';
 import MiniToolbar from '@assets/json/minitoolbar.json';
 import { withToolbarTitle } from '@shared/utils/grid-toolbar';
+import {
+  applyGridHeightAboveFooter,
+  contentGridHeight,
+} from '@shared/utils/layout';
 import { ToastService } from '@shared/services/toastService';
 import { toastType } from '@shared/enums/enums';
 import { AccountsService } from './accounts.service';
@@ -50,6 +57,7 @@ export class AccountsComponent implements OnInit, AfterViewInit, OnDestroy {
   commands!: CommandModel[];
   toolbar = withToolbarTitle(MiniToolbar as object[], 'Cuentas contables');
   searchSettings?: SearchSettingsModel;
+  screenHeight = contentGridHeight();
 
   accounts$!: Observable<IAccount[]>;
   enabled$!: Observable<boolean>;
@@ -67,16 +75,24 @@ export class AccountsComponent implements OnInit, AfterViewInit, OnDestroy {
 
   constructor(
     private accountsService: AccountsService,
-    private toastService: ToastService
+    private toastService: ToastService,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngAfterViewInit(): void {
     if (this.tabObj) {
       (this.tabObj as TabComponent).element.classList.add('e-fill');
     }
+    this.updateGridHeight();
+    setTimeout(() => this.updateGridHeight(), 0);
   }
 
   ngOnInit(): void {
+    this.updateGridHeight();
+    fromEvent(window, 'resize')
+      .pipe(debounceTime(100), takeUntil(this.destroy$))
+      .subscribe(() => this.updateGridHeight());
+
     this.clearAccountSelection();
 
     this.commands = [
@@ -95,7 +111,9 @@ export class AccountsComponent implements OnInit, AfterViewInit, OnDestroy {
         accounts.filter((account) => {
           const needle = searchStr.toLocaleLowerCase();
           return (
-            (account.description ?? '').toLocaleLowerCase().includes(needle) ||
+            (account.name ?? account.description ?? '')
+              .toLocaleLowerCase()
+              .includes(needle) ||
             (account.code ?? '').toLocaleLowerCase().includes(needle)
           );
         })
@@ -174,11 +192,23 @@ export class AccountsComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   commandClick(args: CommandClickEventArgs): void {
+    if (args.target?.title === 'Delete') {
+      this.deleteSelectedAccount();
+    }
+  }
+
+  private deleteSelectedAccount(): void {
     const selected = this.selectedAccountSubject.value;
-    if (args.target?.title === 'Delete' && selected) {
+    if (selected) {
       this.accountsService.deleteAccount(selected);
       this.clearAccountSelection();
+      return;
     }
+
+    this.toastService.showMyToast(
+      'Debe seleccionar una cuenta...',
+      toastType.error
+    );
   }
 
   onRowSelected(args: RowSelectEventArgs): void {
@@ -226,5 +256,10 @@ export class AccountsComponent implements OnInit, AfterViewInit, OnDestroy {
       searchString.value = '';
     }
     this.searchStringSubject.next(searchString.value || '');
+  }
+
+  private updateGridHeight(): void {
+    this.screenHeight = applyGridHeightAboveFooter(this.grid);
+    this.cdr.markForCheck();
   }
 }

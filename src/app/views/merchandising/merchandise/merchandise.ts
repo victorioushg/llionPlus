@@ -25,6 +25,12 @@ export interface IMerchandise {
   classId: number;
   parentId: number;
   organizationId: number;
+  /** true = servicio (Service=1 in mer_merchandise) */
+  service?: boolean | null;
+  /** Normal | ISLR */
+  serviceType?: string | null;
+  /** Service unit on mer_merchandise (Hora, Unidad, …) — not a lookup table */
+  unidadServicio?: string | null;
   /** @deprecated Prefer mer_merchandise_tax grid */
   ivaRateType?: string | null;
 }

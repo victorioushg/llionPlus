@@ -24,10 +24,21 @@ export class SpinnerService {
   private target: HTMLElement | null = null;
   private created = false;
   private pendingCount = 0;
+  private globalSuppressed = false;
 
   /** Apply branded Syncfusion spinner template app-wide (grids, dialogs, etc.). */
   applyGlobalTemplate(): void {
     setSpinner({ template: LLION_SPINNER_TEMPLATE });
+  }
+
+  /** Hide the full-page spinner (e.g. a view shows its own grid spinner). */
+  suppressGlobal(): void {
+    this.globalSuppressed = true;
+    this.forceHide();
+  }
+
+  resumeGlobal(): void {
+    this.globalSuppressed = false;
   }
 
   init(target: HTMLElement): void {
@@ -44,6 +55,9 @@ export class SpinnerService {
   }
 
   show(): void {
+    if (this.globalSuppressed) {
+      return;
+    }
     this.pendingCount += 1;
     if (this.pendingCount === 1 && this.target) {
       showSpinner(this.target);
@@ -51,6 +65,9 @@ export class SpinnerService {
   }
 
   hide(): void {
+    if (this.globalSuppressed) {
+      return;
+    }
     if (this.pendingCount === 0) {
       return;
     }

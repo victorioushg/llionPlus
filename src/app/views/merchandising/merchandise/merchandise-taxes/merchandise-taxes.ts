@@ -85,6 +85,13 @@ export class MerchandiseTaxesComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    this.taxesToolbar = withToolbarTitle(
+      ['Add', 'Edit', 'Delete'],
+      this.merchandiseService.isServiceCatalog
+        ? 'Impuestos de servicio'
+        : 'Impuestos de mercancía'
+    );
+
     this.organizationId = this.merchandiseService.currentOrganizationId;
 
     // Always resolve Rate from organization app_taxes (live), so org changes apply here.
@@ -166,7 +173,9 @@ export class MerchandiseTaxesComponent implements OnInit, OnDestroy {
     if (needsMerchandise && this.selectedMerchandiseId <= 0) {
       args.cancel = true;
       this.toastService.showMyToast(
-        'Debe seleccionar una mercancía para gestionar impuestos',
+        this.merchandiseService.isServiceCatalog
+          ? 'Debe seleccionar un servicio para gestionar impuestos'
+          : 'Debe seleccionar una mercancía para gestionar impuestos',
         toastType.warning
       );
       return;

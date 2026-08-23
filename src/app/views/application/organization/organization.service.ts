@@ -219,7 +219,14 @@ export class OrganizationService {
     this.currencies$ = this.http
       .get<IApiResponse<ICurrency[]>>(`${this.organizationUrl}/currencies`)
       .pipe(
-        map((data) => data.result),
+        map((data) =>
+          (data.result ?? []).map((row) => ({
+            currency: row.currency,
+            alphabeticCode: row.alphabeticCode,
+            numericCode:
+              row.numericCode != null ? Number(row.numericCode) : null,
+          }))
+        ),
         catchError(this.errorHandlerService.handleError)
       );
 

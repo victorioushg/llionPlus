@@ -10,11 +10,19 @@
   margin-top: 20px;
 }
 
-.taxes-row {
-  margin-top: 16px;
-}
-
 :host {
   display: block;
   width: 100%;
+  height: 100%;
+}
+
+.wrapper-detail {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.taxes-row {
+  margin-top: 16px;
+  flex: 0 0 auto;
 }
