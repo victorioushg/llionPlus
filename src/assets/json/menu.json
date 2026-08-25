@@ -99,8 +99,35 @@
       },
       {
         "nodeId": "05-02",
-        "nodeText": "reportes proveedores",
-        "image": "../../assets/images/transparent-icon.png"
+        "nodeText": "documentos",
+        "image": "../../assets/images/transparent-icon.png",
+        "nodeChild": [
+          {
+            "nodeId": "05-02-01",
+            "nodeText": "órdenes de compra",
+            "image": "../../assets/images/transparent-icon.png"
+          },
+          {
+            "nodeId": "05-02-02",
+            "nodeText": "recepciones de mercancías",
+            "image": "../../assets/images/transparent-icon.png"
+          },
+          {
+            "nodeId": "05-02-03",
+            "nodeText": "compras",
+            "image": "../../assets/images/transparent-icon.png"
+          },
+          {
+            "nodeId": "05-02-04",
+            "nodeText": "notas crédito",
+            "image": "../../assets/images/transparent-icon.png"
+          },
+          {
+            "nodeId": "05-02-05",
+            "nodeText": "notas débito",
+            "image": "../../assets/images/transparent-icon.png"
+          }
+        ]
       }
     ]
   },

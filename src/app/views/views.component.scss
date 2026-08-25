@@ -82,9 +82,18 @@
 
 #header-section .header-list,
 #sidebar-treeview .e-treeview,
-#sidebar-treeview .e-treeview .e-ul {
+#sidebar-treeview .e-treeview > .e-ul {
   padding: 0;
   margin: 0;
+}
+
+#sidebar-treeview .e-treeview .e-list-item .e-ul {
+  padding: 0;
+  margin: 0;
+}
+
+#sidebar-treeview .e-treeview .e-list-item.e-level-2 > .e-ul {
+  padding-left: 2rem;
 }
 
 #sidebar-treeview {
@@ -245,6 +254,10 @@
 .treeview-text {
   padding-left: 15px;
   font-weight: 600;
+}
+
+#sidebar-treeview .e-treeview .e-list-item.e-level-3 .treeview-text {
+  padding-left: 22px;
 }
 
 

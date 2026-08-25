@@ -1,0 +1,59 @@
+<div id="container" class="container">
+  <div class="row">
+    <div class="col-lg-5">
+      <div id="purchase-order-grid">
+        <ejs-grid
+          #grid
+          [dataSource]="(purchaseOrders$ | async) || []"
+          [allowFiltering]="false"
+          [allowSorting]="false"
+          [toolbar]="toolbar"
+          [height]="screenHeight"
+          [searchSettings]="searchSettings"
+          [allowTextWrap]="false"
+          clipMode="EllipsisWithTooltip"
+          (actionBegin)="actionBegin($event)"
+          (toolbarClick)="onToolbarClick($event)"
+          (rowSelected)="onRowSelected($event)"
+          (rowDeselected)="onRowDeselected($event)"
+          (recordDoubleClick)="onRecordDoubleClick($event)"
+          (commandClick)="commandClick($event)"
+          (dataBound)="onDataBound()"
+        >
+          <e-columns>
+            <e-column width="50" [commands]="commands" clipMode="Clip"></e-column>
+            <e-column
+              field="poNumber"
+              headerText="Nº orden"
+              width="110"
+              clipMode="EllipsisWithTooltip"
+            ></e-column>
+            <e-column
+              field="providerName"
+              headerText="Proveedor"
+              width="200"
+              clipMode="EllipsisWithTooltip"
+            ></e-column>
+            <e-column
+              field="issueDate"
+              headerText="Emisión"
+              type="date"
+              format="dd/MM/yyyy"
+              width="110"
+            ></e-column>
+            <e-column
+              field="poId"
+              [isPrimaryKey]="true"
+              [visible]="false"
+            ></e-column>
+          </e-columns>
+        </ejs-grid>
+      </div>
+    </div>
+    <div class="col-lg-7">
+      <div class="purchase-order-placeholder">
+        {{ placeholderText }}
+      </div>
+    </div>
+  </div>
+</div>

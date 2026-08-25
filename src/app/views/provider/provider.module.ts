@@ -18,6 +18,7 @@ import { routes } from './_routes';
 import { ProviderComponent } from './provider-grid';
 import { ProviderDetailComponent } from './provider-detail/provider-detail';
 import { ProviderMovementsComponent } from './provider-movements/provider-movements';
+import { PurchaseOrderComponent } from './purchase-orders/purchase-order-grid';
 
 enableRipple(true);
 
@@ -26,6 +27,7 @@ enableRipple(true);
     ProviderComponent,
     ProviderDetailComponent,
     ProviderMovementsComponent,
+    PurchaseOrderComponent,
   ],
   imports: [
     CommonModule,

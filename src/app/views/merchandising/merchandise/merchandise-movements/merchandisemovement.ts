@@ -39,6 +39,16 @@ export interface IMerchandiseMovement {
   warehouse?: string | null;
 }
 
+export interface IMerchandiseLastUnitCost {
+  merchandiseId?: number;
+  uom?: string | null;
+  quantity?: number | null;
+  totalCost?: number | null;
+  unitCost?: number | null;
+  movementDate?: Date | string | null;
+  movementId?: number | null;
+}
+
 export interface IMerchandiseWithMovements {
   merchandise: IMerchandise;
   movements: IMerchandiseMovement[];

@@ -114,12 +114,6 @@
                 name="organizationId"
                 [(ngModel)]="movementData.organizationId"
               />
-              <input
-                type="hidden"
-                name="origin"
-                [(ngModel)]="movementData.origin"
-              />
-
               <div class="dlg-row dlg-row-top">
                 <label class="dlg-label">Mercancía</label>
                 <ejs-textbox
@@ -164,6 +158,20 @@
                   [(ngModel)]="movementData.movementType"
                   [dataSource]="(movementTypes$ | async) || []"
                   [fields]="movementTypeFields"
+                  [allowFiltering]="true"
+                  popupHeight="220px"
+                  [required]="true"
+                ></ejs-dropdownlist>
+              </div>
+
+              <div class="dlg-row">
+                <label class="dlg-label">Origen</label>
+                <ejs-dropdownlist
+                  id="origin"
+                  name="origin"
+                  [(ngModel)]="movementData.origin"
+                  [dataSource]="(origins$ | async) || []"
+                  [fields]="originFields"
                   [allowFiltering]="true"
                   popupHeight="220px"
                   [required]="true"

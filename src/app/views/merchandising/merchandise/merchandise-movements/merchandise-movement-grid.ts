@@ -16,10 +16,12 @@ import {
 } from '@syncfusion/ej2-angular-grids';
 import { ChangeEventArgs } from '@syncfusion/ej2-angular-dropdowns';
 import { NgForm } from '@angular/forms';
-import { Observable, Subject, of, take, takeUntil } from 'rxjs';
+import { map, Observable, Subject, of, take, takeUntil } from 'rxjs';
 import { IMerchandiseMovement } from './merchandisemovement';
 import { IMerchandise, IMerchandiseUom } from '../merchandise';
 import { MerchandiseService } from '../merchandise.service';
+import { OrganizationService } from '@views/application/organization/organization.service';
+import { IOrigin } from '@views/application/organization/organization';
 import { ToastService } from '@shared/services/toastService';
 import { toastType } from '@shared/enums/enums';
 import { withToolbarTitle } from '@shared/utils/grid-toolbar';
@@ -53,6 +55,7 @@ export class MerchandiseMovementComponent
   movements$!: Observable<IMerchandiseMovement[]>;
   movementTypes$!: Observable<IGroup[]>;
   warehouses$!: Observable<IGroup[]>;
+  origins$!: Observable<IOrigin[]>;
   /** Lot numbers — empty until lot tracking is wired. */
   lots$: Observable<{ lotNumber: string }[]> = of([]);
   selectedMerchandise: IMerchandise | null = null;
@@ -117,12 +120,17 @@ export class MerchandiseMovementComponent
     value: 'altern_GroupCode',
   };
   warehouseFields: Object = { text: 'description', value: 'groupId' };
+  originFields: Object = { text: 'displayText', value: 'origin' };
   uomFields: Object = { text: 'code', value: 'code' };
   lotFields: Object = { text: 'lotNumber', value: 'lotNumber' };
 
   movementData: IMerchandiseMovement = this.createEmptyMovement();
   private uomList: IMerchandiseUom[] = [];
   private previousUomCode = '';
+  private loadedMovements: IMerchandiseMovement[] = [];
+  private originCodes = new Set<string>();
+  /** Last cost we prefilled so an API refresh does not overwrite a user edit. */
+  private prefilledUnitCost: number | null = null;
 
   get merchandiseDisplayName(): string {
     const m = this.selectedMerchandise;
@@ -143,8 +151,8 @@ export class MerchandiseMovementComponent
     mode: 'Dialog',
   };
 
-  /** Only inventory adjustments with this origin can be edited/deleted. */
-  private readonly editableOrigin = 'INC';
+  /** Only inventory movements (origin INV) can be edited or deleted. */
+  private readonly inventoryOrigin = 'INV';
 
   private selectedMerchandiseId = 0;
   private organizationId = 1;
@@ -152,6 +160,7 @@ export class MerchandiseMovementComponent
 
   constructor(
     private merchandiseService: MerchandiseService,
+    private organizationService: OrganizationService,
     private toastService: ToastService,
     private cdr: ChangeDetectorRef
   ) {}
@@ -160,7 +169,29 @@ export class MerchandiseMovementComponent
     this.movements$ = this.merchandiseService.merchandiseMovements$;
     this.movementTypes$ = this.merchandiseService.movementTypes$;
     this.warehouses$ = this.merchandiseService.warehouses$;
+    this.origins$ = this.organizationService.origins$.pipe(
+      map((rows) =>
+        (rows ?? []).map((o) => ({
+          ...o,
+          displayText: o.originDescription
+            ? `${o.origin} - ${o.originDescription}`
+            : o.origin,
+        }))
+      )
+    );
     this.organizationId = this.merchandiseService.currentOrganizationId;
+
+    this.origins$.pipe(takeUntil(this.destroy$)).subscribe((rows) => {
+      this.originCodes = new Set(
+        (rows ?? [])
+          .map((o) => (o.origin || '').trim().toUpperCase())
+          .filter((code) => !!code)
+      );
+    });
+
+    this.movements$.pipe(takeUntil(this.destroy$)).subscribe((rows) => {
+      this.loadedMovements = Array.isArray(rows) ? rows : [];
+    });
 
     this.merchandiseService.merchandiseUom$
       .pipe(takeUntil(this.destroy$))
@@ -242,7 +273,7 @@ export class MerchandiseMovementComponent
       if (!this.isEditableOrigin(row.origin)) {
         args.cancel = true;
         this.toastService.showMyToast(
-          `Solo se pueden editar movimientos con origen ${this.editableOrigin}`,
+          `Solo se pueden editar movimientos con origen ${this.inventoryOrigin}`,
           toastType.warning
         );
         return;
@@ -254,7 +285,7 @@ export class MerchandiseMovementComponent
       if (rows.some((r) => !this.isEditableOrigin(r.origin))) {
         args.cancel = true;
         this.toastService.showMyToast(
-          `Solo se pueden eliminar movimientos con origen ${this.editableOrigin}`,
+          `Solo se pueden eliminar movimientos con origen ${this.inventoryOrigin}`,
           toastType.warning
         );
         return;
@@ -292,12 +323,19 @@ export class MerchandiseMovementComponent
         lotNumber: row.lotNumber ?? null,
         comment: row.comment ?? null,
         documentNumber: isAdd ? '' : (row.documentNumber ?? ''),
-        origin: isAdd ? this.editableOrigin : (row.origin ?? this.editableOrigin),
+        origin: isAdd
+          ? this.inventoryOrigin
+          : (row.origin ?? this.inventoryOrigin),
+        documentOrigin: isAdd
+          ? ''
+          : (row.documentOrigin || row.documentNumber || ''),
       };
       this.previousUomCode = this.movementData.uom || '';
+      this.prefilledUnitCost = isAdd ? Number(this.movementData.unitCost) || 0 : null;
       this.recalculateTotals();
 
       if (isAdd) {
+        this.prefillLastUnitCost();
         this.merchandiseService
           .getNextMovementDocumentNumber()
           .pipe(take(1))
@@ -306,6 +344,8 @@ export class MerchandiseMovementComponent
               this.movementData = {
                 ...this.movementData,
                 documentNumber: doc,
+                documentOrigin: doc,
+                origin: this.resolveOrigin(this.movementData.origin),
               };
               this.cdr.markForCheck();
             },
@@ -318,21 +358,18 @@ export class MerchandiseMovementComponent
     if (args.requestType === 'save') {
       if (this.movementForm?.valid) {
         this.recalculateTotals();
-        const payload: IMerchandiseMovement = {
-          ...this.movementData,
-          merchandiseId: this.selectedMerchandiseId,
-          organizationId: this.organizationId,
-          origin: this.movementData.origin || this.editableOrigin,
-        };
+        const payload: IMerchandiseMovement = this.asInventoryMovementPayload(
+          this.movementData
+        );
 
         if (
           payload.movementId &&
           payload.movementId > 0 &&
-          !this.isEditableOrigin(payload.origin)
+          !this.isEditableOrigin(this.movementData.origin)
         ) {
           args.cancel = true;
           this.toastService.showMyToast(
-            `Solo se pueden editar movimientos con origen ${this.editableOrigin}`,
+            `Solo se pueden editar movimientos con origen ${this.inventoryOrigin}`,
             toastType.warning
           );
           return;
@@ -373,7 +410,31 @@ export class MerchandiseMovementComponent
   }
 
   private isEditableOrigin(origin: string | null | undefined): boolean {
-    return (origin || '').trim().toUpperCase() === this.editableOrigin;
+    return (origin || '').trim().toUpperCase() === this.inventoryOrigin;
+  }
+
+  /** Origin must exist in app_origin; inventory movements default to INV. */
+  private resolveOrigin(origin: string | null | undefined): string {
+    const value = (origin || '').trim().toUpperCase();
+    if (value && (this.originCodes.size === 0 || this.originCodes.has(value))) {
+      return value;
+    }
+    return this.inventoryOrigin;
+  }
+
+  /** Inventory screen: origin from app_origin (INV for now), origin number = movement number. */
+  private asInventoryMovementPayload(
+    movement: IMerchandiseMovement
+  ): IMerchandiseMovement {
+    const documentNumber = movement.documentNumber || '';
+    const origin = this.resolveOrigin(movement.origin);
+    return {
+      ...movement,
+      merchandiseId: this.selectedMerchandiseId,
+      organizationId: this.organizationId,
+      origin,
+      documentOrigin: documentNumber,
+    };
   }
 
   private asMovementRows(data: unknown): IMerchandiseMovement[] {
@@ -474,11 +535,73 @@ export class MerchandiseMovementComponent
       return;
     }
     const current = Number(this.movementData.unitCost) || 0;
-    // cost_default = cost_selected * unitsPerDefault
-    const costDefault = current * from.unitsPerDefault;
-    this.movementData.unitCost = Number(
-      (costDefault / to.unitsPerDefault).toFixed(4)
-    );
+    this.movementData.unitCost = this.convertCostValue(current, from, to);
+  }
+
+  private convertCostValue(
+    unitCost: number,
+    from: MovementUomOption,
+    to: MovementUomOption
+  ): number {
+    const costDefault = unitCost * from.unitsPerDefault;
+    return Number((costDefault / to.unitsPerDefault).toFixed(4));
+  }
+
+  /**
+   * Prefill unit cost from the last transaction. The field stays editable.
+   * Does not overwrite a value the user already typed.
+   */
+  private prefillLastUnitCost(): void {
+    const local = this.lastCostFromLoadedMovements();
+    if (local) {
+      this.applyLastUnitCost(local.unitCost, local.uom);
+    }
+
+    this.merchandiseService
+      .getLastUnitCost(this.selectedMerchandiseId)
+      .pipe(take(1))
+      .subscribe((last) => {
+        if (!last) {
+          return;
+        }
+        const current = Number(this.movementData.unitCost) || 0;
+        if (
+          this.prefilledUnitCost !== null &&
+          current !== this.prefilledUnitCost
+        ) {
+          return;
+        }
+        this.applyLastUnitCost(last.unitCost, last.uom);
+        this.cdr.markForCheck();
+      });
+  }
+
+  private lastCostFromLoadedMovements(): { unitCost: number; uom: string } | null {
+    const last = this.loadedMovements.find((m) => {
+      const qty = Number(m.quantity);
+      const cost = Number(m.totalCost);
+      return qty !== 0 && Number.isFinite(qty) && cost !== 0 && Number.isFinite(cost);
+    });
+    if (!last) {
+      return null;
+    }
+    return {
+      unitCost: Number((Number(last.totalCost) / Number(last.quantity)).toFixed(4)),
+      uom: last.uom || '',
+    };
+  }
+
+  private applyLastUnitCost(unitCost: number, fromUom: string): void {
+    const targetUom = this.movementData.uom || this.uomOptions[0]?.code || fromUom;
+    const from = this.findUomOption(fromUom);
+    const to = this.findUomOption(targetUom);
+    const next =
+      from && to && from.unitsPerDefault > 0 && to.unitsPerDefault > 0
+        ? this.convertCostValue(unitCost, from, to)
+        : Number(unitCost.toFixed(4));
+    this.movementData.unitCost = next;
+    this.prefilledUnitCost = next;
+    this.recalculateTotals();
   }
 
   private recalculateTotals(): void {
@@ -531,7 +654,7 @@ export class MerchandiseMovementComponent
       unitCost: 0,
       totalCost: 0,
       totalCostWithDiscount: null,
-      origin: this.editableOrigin,
+      origin: this.inventoryOrigin,
       documentOrigin: '',
       customer_Provider: null,
       totalSale: null,

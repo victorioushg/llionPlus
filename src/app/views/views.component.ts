@@ -166,14 +166,19 @@ export class ViewsComponent implements OnInit {
   }
 
   public onSelect(args: NodeSelectEventArgs | NodeExpandEventArgs): void {
+    const nodeId = String(args.nodeData['id'] ?? '');
+    const hasChildren = this.menuNodeHasChildren(nodeId);
+
     if (args.node.classList.contains('e-level-1')) {
       this.tree.collapseAll(
         this.data.map((e) => e.nodeId).filter((e) => e != args.nodeData['id'])
       );
       this.tree.expandAll([args.node]);
-      this.tree.expandOn = 'None';
+    } else if (hasChildren) {
+      this.tree.expandAll([args.node]);
     }
-    switch (args.nodeData['id']) {
+
+    switch (nodeId) {
       case '02-01':
         this.router.navigate(['/accounting/accounts']);
         break;
@@ -191,6 +196,9 @@ export class ViewsComponent implements OnInit {
         break;
       case '05-01':
         this.router.navigate(['/provider']);
+        break;
+      case '05-02-01':
+        this.router.navigate(['/provider/purchase-orders']);
         break;
       case '06-01':
         this.router.navigate(['/customer']);
@@ -220,6 +228,25 @@ export class ViewsComponent implements OnInit {
         : '';
 
     this.title += args.nodeData['text'].toString().toLowerCase();
+  }
+
+  private menuNodeHasChildren(nodeId: string): boolean {
+    const walk = (nodes: any[]): any | null => {
+      for (const node of nodes) {
+        if (node.nodeId === nodeId) {
+          return node;
+        }
+        if (Array.isArray(node.nodeChild) && node.nodeChild.length) {
+          const found = walk(node.nodeChild);
+          if (found) {
+            return found;
+          }
+        }
+      }
+      return null;
+    };
+    const match = walk(this.data);
+    return Array.isArray(match?.nodeChild) && match.nodeChild.length > 0;
   }
 
   openClick() {

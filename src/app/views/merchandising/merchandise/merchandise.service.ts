@@ -10,6 +10,7 @@ import {
 } from './merchandise';
 
 import {
+  IMerchandiseLastUnitCost,
   IMerchandiseMovement,
   IMerchandiseWithMovements,
 } from './merchandise-movements/merchandisemovement';
@@ -675,6 +676,33 @@ export class MerchandiseService {
       .pipe(
         map((data) => data.result ?? []),
         catchError(this.errorHandlerService.handleError),
+      );
+  }
+
+  /** Last unit cost from the most recent transaction of this merchandise. */
+  getLastUnitCost(
+    merchandiseId: number
+  ): Observable<{ unitCost: number; uom: string } | null> {
+    const organizationId =
+      this.applicationService.workingOrganization?.organizationId ||
+      this.organizationId ||
+      0;
+    return this.http
+      .get<IApiResponse<IMerchandiseLastUnitCost>>(
+        `${this.merchandiseUrl}/lastcost/${merchandiseId}/${organizationId}`
+      )
+      .pipe(
+        map((data) => {
+          const unitCost = Number(data?.result?.unitCost);
+          if (!unitCost) {
+            return null;
+          }
+          return {
+            unitCost,
+            uom: data.result?.uom || '',
+          };
+        }),
+        catchError(() => of(null)),
       );
   }
 
