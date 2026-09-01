@@ -1,16 +1,15 @@
 <div id="container" class="container">
   <div class="row">
     <div class="col-lg-5">
-      <div id="purchase-order-grid">
+      <div id="provider-document-grid">
         <ejs-grid
           #grid
-          [dataSource]="(purchaseOrders$ | async) || []"
+          [dataSource]="(documents$ | async) || []"
           [allowFiltering]="false"
           [allowSorting]="false"
           [toolbar]="toolbar"
           [height]="screenHeight"
           [searchSettings]="searchSettings"
-          [selectionSettings]="selectionSettings"
           [allowTextWrap]="false"
           clipMode="EllipsisWithTooltip"
           (actionBegin)="actionBegin($event)"
@@ -23,8 +22,8 @@
           <e-columns>
             <e-column width="50" [commands]="commands" clipMode="Clip"></e-column>
             <e-column
-              field="poNumber"
-              headerText="Nº orden"
+              field="documentNumber"
+              [headerText]="config.listNumberHeader"
               width="110"
               clipMode="EllipsisWithTooltip"
             ></e-column>
@@ -42,7 +41,7 @@
               width="110"
             ></e-column>
             <e-column
-              field="poId"
+              field="documentId"
               [isPrimaryKey]="true"
               [visible]="false"
             ></e-column>
@@ -51,7 +50,7 @@
       </div>
     </div>
     <div class="col-lg-7 purchase-order-detail-col" [style.height.px]="panelHeight">
-      <llion-purchase-order-detail></llion-purchase-order-detail>
+      <llion-provider-document-detail></llion-provider-document-detail>
     </div>
   </div>
 </div>

@@ -1,6 +1,6 @@
-export interface IPurchaseOrderLine {
-  poId: number;
-  poRowNumber: number;
+export interface IProviderDocumentLine {
+  documentId: number;
+  rowNumber: number;
   merchandiseId?: number | null;
   itemCode?: string | null;
   description?: string | null;
@@ -12,6 +12,8 @@ export interface IPurchaseOrderLine {
   costByUnit?: number | null;
   merchandiseDiscount?: number | null;
   vendorDiscount?: number | null;
+  acceptanceRate?: number | null;
+  reasonNdb?: number | null;
   totalCost?: number | null;
   totalDiscount?: number | null;
   totalCostAndDiscounts?: number | null;
@@ -19,8 +21,8 @@ export interface IPurchaseOrderLine {
   billRowTypeName?: string | null;
 }
 
-export interface IPurchaseOrderTax {
-  poId: number;
+export interface IProviderDocumentTax {
+  documentId: number;
   taxCode?: string | null;
   taxRate?: number | null;
   taxBase?: number | null;
@@ -30,35 +32,44 @@ export interface IPurchaseOrderTax {
   withHoldingTaxRate?: number | null;
 }
 
-export interface IPurchaseOrderDiscount {
-  poId: number;
-  poDiscountRowNumber: number;
+export interface IProviderDocumentDiscount {
+  documentId: number;
+  discountRowNumber: number;
   description?: string | null;
   discountRate?: number | null;
   totalDiscount?: number | null;
-  subtotalPO?: number | null;
+  subtotal?: number | null;
 }
 
-export interface IPurchaseOrder {
-  poId: number;
-  poNumber: string;
-  poSeriesCode?: string | null;
+export interface IProviderDocument {
+  documentId: number;
+  documentNumber: string;
+  seriesCode?: string | null;
   providerId?: number | null;
   providerCode?: string | null;
   providerName?: string | null;
   issueDate?: Date | string | null;
-  deliveryDate?: Date | string | null;
+  issueDateTax?: Date | string | null;
+  dueDate?: Date | string | null;
   comment?: string | null;
+  warehouseId?: number | null;
+  referenceNumber?: string | null;
+  taxControlNumber?: string | null;
+  billId?: number | null;
+  billNumber?: string | null;
+  creditCash?: boolean | null;
+  creditTerm?: number | null;
   totalItems?: number | null;
   totalCost?: number | null;
-  totalPurchaseOrder?: number | null;
+  totalDiscounts?: number | null;
   totalWeight?: number | null;
   totalTaxes?: number | null;
+  totalDocument?: number | null;
   status?: number | null;
   statusName?: string | null;
   lockedDate?: Date | string | null;
   organizationId: number;
-  lines?: IPurchaseOrderLine[] | null;
-  taxes?: IPurchaseOrderTax[] | null;
-  discounts?: IPurchaseOrderDiscount[] | null;
+  lines?: IProviderDocumentLine[] | null;
+  taxes?: IProviderDocumentTax[] | null;
+  discounts?: IProviderDocumentDiscount[] | null;
 }

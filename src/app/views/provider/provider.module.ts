@@ -19,6 +19,9 @@ import { ProviderComponent } from './provider-grid';
 import { ProviderDetailComponent } from './provider-detail/provider-detail';
 import { ProviderMovementsComponent } from './provider-movements/provider-movements';
 import { PurchaseOrderComponent } from './purchase-orders/purchase-order-grid';
+import { PurchaseOrderDetailComponent } from './purchase-orders/purchase-order-detail/purchase-order-detail';
+import { ProviderDocumentGridComponent } from './documents/provider-document-grid';
+import { ProviderDocumentDetailComponent } from './documents/provider-document-detail';
 
 enableRipple(true);
 
@@ -28,6 +31,9 @@ enableRipple(true);
     ProviderDetailComponent,
     ProviderMovementsComponent,
     PurchaseOrderComponent,
+    PurchaseOrderDetailComponent,
+    ProviderDocumentGridComponent,
+    ProviderDocumentDetailComponent,
   ],
   imports: [
     CommonModule,

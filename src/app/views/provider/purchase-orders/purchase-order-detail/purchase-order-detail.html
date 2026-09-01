@@ -1,0 +1,499 @@
+<div class="wrapper-detail" *ngIf="visible$ | async; else placeholder">
+  <form
+    id="purchase-order-detail-form"
+    class="purchase-order-form"
+    [formGroup]="orderForm"
+    *ngIf="order$ | async as order"
+  >
+    <div class="row">
+      <div class="col-md-3">
+        <ejs-textbox
+          cssClass="po-number-field"
+          placeholder="Orden No."
+          floatLabelType="Always"
+          formControlName="poNumber"
+          [enabled]="false"
+        ></ejs-textbox>
+      </div>
+      <div class="col-md-3">
+        <ejs-datepicker
+          format="dd/MM/yyyy"
+          placeholder="Emisión"
+          floatLabelType="Always"
+          formControlName="issueDate"
+          [enabled]="enabled$ | async"
+        ></ejs-datepicker>
+      </div>
+      <div class="col-md-3">
+        <ejs-datepicker
+          format="dd/MM/yyyy"
+          placeholder="Entrega"
+          floatLabelType="Always"
+          formControlName="deliveryDate"
+          [enabled]="enabled$ | async"
+        ></ejs-datepicker>
+      </div>
+      <div class="col-md-3">
+        <ejs-textbox
+          placeholder="Estatus"
+          floatLabelType="Always"
+          formControlName="statusName"
+          [enabled]="false"
+        ></ejs-textbox>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col-md-3">
+        <ejs-textbox
+          placeholder="Proveedor"
+          floatLabelType="Always"
+          formControlName="providerCode"
+          [enabled]="enabled$ | async"
+        ></ejs-textbox>
+      </div>
+      <div class="col-md-9">
+        <ejs-textbox
+          placeholder="Nombre del proveedor"
+          floatLabelType="Always"
+          formControlName="providerName"
+          [enabled]="enabled$ | async"
+        ></ejs-textbox>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col-md-12">
+        <ejs-textbox
+          placeholder="Comentario"
+          floatLabelType="Always"
+          formControlName="comment"
+          [enabled]="enabled$ | async"
+          [multiline]="true"
+          [htmlAttributes]="{ rows: '2' }"
+        ></ejs-textbox>
+      </div>
+    </div>
+  </form>
+
+  <div class="lines-bar">
+    <div class="order-stat">
+      <span class="order-stat__label">Items</span>
+      <span class="order-stat__value order-stat__value--items">{{ totalItems }}</span>
+    </div>
+    <div class="order-stat">
+      <span class="order-stat__label">Peso total</span>
+      <span class="order-stat__value">{{ totalWeight | number: '1.3-3' }} Kgr.</span>
+    </div>
+  </div>
+
+  <div id="purchase-order-lines-grid">
+    <ejs-grid
+      #linesgrid
+      [dataSource]="lines"
+      [toolbar]="linesToolbar"
+      [editSettings]="linesEditSettings"
+      [allowFiltering]="false"
+      [allowSorting]="false"
+      [allowSelection]="true"
+      [height]="linesHeight"
+      [rowHeight]="32"
+      clipMode="EllipsisWithTooltip"
+      (dataBound)="onLinesDataBound()"
+      (actionBegin)="onLineActionBegin($event)"
+      (actionComplete)="onLineActionComplete($event)"
+    >
+      <e-columns>
+        <e-column
+          field="itemCode"
+          headerText="Item"
+          width="80"
+          [visible]="false"
+        ></e-column>
+        <e-column
+          field="description"
+          headerText="Descripción"
+          width="240"
+          clipMode="EllipsisWithTooltip"
+        ></e-column>
+        <e-column
+          field="taxCode"
+          headerText="IVA"
+          width="36"
+          textAlign="Center"
+        ></e-column>
+        <e-column
+          field="quantity"
+          headerText="Cant."
+          width="70"
+          type="number"
+          format="N3"
+          textAlign="Right"
+        ></e-column>
+        <e-column
+          field="unit"
+          headerText="UND"
+          width="44"
+          textAlign="Center"
+        ></e-column>
+        <e-column
+          field="costByUnit"
+          headerText="Costo Unitario"
+          width="85"
+          type="number"
+          format="N2"
+          textAlign="Right"
+        ></e-column>
+        <e-column
+          field="merchandiseDiscount"
+          headerText="Desc. Art."
+          width="62"
+          textAlign="Right"
+        >
+          <ng-template #template let-data>
+            {{ formatRate(data?.merchandiseDiscount) }}
+          </ng-template>
+        </e-column>
+        <e-column
+          field="vendorDiscount"
+          headerText="Desc. Pro."
+          width="62"
+          textAlign="Right"
+        >
+          <ng-template #template let-data>
+            {{ formatRate(data?.vendorDiscount) }}
+          </ng-template>
+        </e-column>
+        <e-column
+          field="totalCost"
+          headerText="Costo Total"
+          width="100"
+          type="number"
+          format="N2"
+          textAlign="Right"
+        ></e-column>
+        <e-column
+          field="billRowTypeName"
+          headerText="Tipo Renglón"
+          width="100"
+        ></e-column>
+        <e-column field="poRowNumber" [isPrimaryKey]="true" [visible]="false"></e-column>
+      </e-columns>
+
+      <ng-template #editSettingsTemplate>
+        <div ngForm #lineForm="ngForm" class="po-edit-dialog">
+          <div class="row">
+            <div class="col-md-12">
+              <ejs-textbox
+                name="description"
+                [(ngModel)]="lineData.description"
+                placeholder="Descripción"
+                floatLabelType="Always"
+                [required]="true"
+              ></ejs-textbox>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-md-3">
+              <ejs-textbox
+                name="taxCode"
+                [(ngModel)]="lineData.taxCode"
+                placeholder="IVA"
+                floatLabelType="Always"
+              ></ejs-textbox>
+            </div>
+            <div class="col-md-3">
+              <ejs-numerictextbox
+                name="quantity"
+                [(ngModel)]="lineData.quantity"
+                placeholder="Cantidad"
+                floatLabelType="Always"
+                format="n3"
+                [decimals]="3"
+                (change)="onLineAmountChange()"
+              ></ejs-numerictextbox>
+            </div>
+            <div class="col-md-3">
+              <ejs-textbox
+                name="unit"
+                [(ngModel)]="lineData.unit"
+                placeholder="UND"
+                floatLabelType="Always"
+              ></ejs-textbox>
+            </div>
+            <div class="col-md-3">
+              <ejs-numerictextbox
+                name="costByUnit"
+                [(ngModel)]="lineData.costByUnit"
+                placeholder="Costo unitario"
+                floatLabelType="Always"
+                format="n2"
+                [decimals]="2"
+                (change)="onLineAmountChange()"
+              ></ejs-numerictextbox>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-md-4">
+              <ejs-numerictextbox
+                name="merchandiseDiscountPct"
+                [(ngModel)]="lineMerchDiscPct"
+                placeholder="Desc. Art. %"
+                floatLabelType="Always"
+                format="n2"
+                [decimals]="2"
+                (change)="onLineAmountChange()"
+              ></ejs-numerictextbox>
+            </div>
+            <div class="col-md-4">
+              <ejs-numerictextbox
+                name="vendorDiscountPct"
+                [(ngModel)]="lineVendorDiscPct"
+                placeholder="Desc. Pro. %"
+                floatLabelType="Always"
+                format="n2"
+                [decimals]="2"
+                (change)="onLineAmountChange()"
+              ></ejs-numerictextbox>
+            </div>
+            <div class="col-md-4">
+              <ejs-numerictextbox
+                name="totalCost"
+                [(ngModel)]="lineData.totalCost"
+                placeholder="Costo total"
+                floatLabelType="Always"
+                format="n2"
+                [decimals]="2"
+                [enabled]="false"
+              ></ejs-numerictextbox>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-md-4">
+              <ejs-textbox
+                name="billRowTypeName"
+                [(ngModel)]="lineData.billRowTypeName"
+                placeholder="Tipo renglón"
+                floatLabelType="Always"
+              ></ejs-textbox>
+            </div>
+          </div>
+        </div>
+      </ng-template>
+    </ejs-grid>
+  </div>
+
+  <div class="footer-section">
+    <div class="row footer-grids-row">
+      <div class="col-6">
+        <div class="footer-grid">
+          <div id="purchase-order-discounts-grid">
+            <ejs-grid
+              #discountsgrid
+              [dataSource]="discounts"
+              [toolbar]="discountsToolbar"
+              [editSettings]="discountsEditSettings"
+              [allowFiltering]="false"
+              [allowSorting]="false"
+              [allowSelection]="true"
+              [height]="discountsGridHeight"
+              [rowHeight]="footerGridRowHeight"
+              clipMode="EllipsisWithTooltip"
+              (actionBegin)="onDiscountActionBegin($event)"
+              (actionComplete)="onDiscountActionComplete($event)"
+            >
+              <e-columns>
+                <e-column
+                  field="description"
+                  headerText="Descripción"
+                  width="80"
+                  minWidth="70"
+                  clipMode="EllipsisWithTooltip"
+                ></e-column>
+                <e-column
+                  field="discountRate"
+                  headerText="%"
+                  width="50"
+                  minWidth="50"
+                  textAlign="Right"
+                >
+                  <ng-template #template let-data>
+                    {{ formatRate(data?.discountRate) }}
+                  </ng-template>
+                </e-column>
+                <e-column
+                  field="totalDiscount"
+                  headerText="Descuento"
+                  width="80"
+                  minWidth="80"
+                  type="number"
+                  format="N2"
+                  textAlign="Right"
+                ></e-column>
+                <e-column
+                  field="subtotalPO"
+                  headerText="Subtotal"
+                  width="90"
+                  minWidth="90"
+                  type="number"
+                  format="N2"
+                  textAlign="Right"
+                ></e-column>
+                <e-column
+                  field="poDiscountRowNumber"
+                  [isPrimaryKey]="true"
+                  [visible]="false"
+                ></e-column>
+              </e-columns>
+
+              <ng-template #editSettingsTemplate>
+                <div ngForm #discountForm="ngForm" class="po-edit-dialog">
+                  <div class="row">
+                    <div class="col-md-12">
+                      <ejs-textbox
+                        name="description"
+                        [(ngModel)]="discountData.description"
+                        placeholder="Descripción"
+                        floatLabelType="Always"
+                        [required]="true"
+                      ></ejs-textbox>
+                    </div>
+                  </div>
+                  <div class="row">
+                    <div class="col-md-4">
+                      <ejs-numerictextbox
+                        name="discountRatePct"
+                        [(ngModel)]="discountRatePct"
+                        placeholder="% descuento"
+                        floatLabelType="Always"
+                        format="n2"
+                        [decimals]="2"
+                        (change)="onDiscountRateChange()"
+                      ></ejs-numerictextbox>
+                    </div>
+                    <div class="col-md-4">
+                      <ejs-numerictextbox
+                        name="totalDiscount"
+                        [(ngModel)]="discountData.totalDiscount"
+                        placeholder="Descuento"
+                        floatLabelType="Always"
+                        format="n2"
+                        [decimals]="2"
+                        [enabled]="false"
+                      ></ejs-numerictextbox>
+                    </div>
+                    <div class="col-md-4">
+                      <ejs-numerictextbox
+                        name="subtotalPO"
+                        [(ngModel)]="discountData.subtotalPO"
+                        placeholder="Subtotal"
+                        floatLabelType="Always"
+                        format="n2"
+                        [decimals]="2"
+                        [enabled]="false"
+                      ></ejs-numerictextbox>
+                    </div>
+                  </div>
+                </div>
+              </ng-template>
+            </ejs-grid>
+          </div>
+        </div>
+      </div>
+      <div class="col-6">
+        <div class="footer-grid">
+          <div id="purchase-order-taxes-grid">
+            <ejs-grid
+              [dataSource]="taxes"
+              [toolbar]="taxesToolbar"
+              [allowFiltering]="false"
+              [allowSorting]="false"
+              [height]="discountsGridHeight"
+              [rowHeight]="footerGridRowHeight"
+              clipMode="EllipsisWithTooltip"
+            >
+              <e-columns>
+                <e-column
+                  field="taxCode"
+                  headerText="Código"
+                  width="70"
+                  textAlign="Center"
+                  [isPrimaryKey]="true"
+                ></e-column>
+                <e-column
+                  field="taxRate"
+                  headerText="Tasa"
+                  width="70"
+                  textAlign="Right"
+                >
+                  <ng-template #template let-data>
+                    {{ formatRate(data?.taxRate) }}
+                  </ng-template>
+                </e-column>
+                <e-column
+                  field="taxBase"
+                  headerText="Base"
+                  width="90"
+                  type="number"
+                  format="N2"
+                  textAlign="Right"
+                ></e-column>
+                <e-column
+                  field="totalTax"
+                  headerText="IVA"
+                  width="90"
+                  type="number"
+                  format="N2"
+                  textAlign="Right"
+                ></e-column>
+              </e-columns>
+            </ejs-grid>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="totals-strip">
+    <div class="total-field">
+      <span class="total-field__label">Neto</span>
+      <span class="total-field__value">{{ netTotal | number: '1.2-2' }}</span>
+    </div>
+    <div class="total-field">
+      <span class="total-field__label">Descuentos</span>
+      <span class="total-field__value">{{ discountTotal | number: '1.2-2' }}</span>
+    </div>
+    <div class="total-field">
+      <span class="total-field__label">IVA</span>
+      <span class="total-field__value">{{ taxTotal | number: '1.2-2' }}</span>
+    </div>
+    <div class="total-field total-field--grand">
+      <span class="total-field__label">TOTAL Orden de Compra</span>
+      <span class="total-field__value">{{ grandTotal | number: '1.2-2' }}</span>
+    </div>
+  </div>
+
+  <div class="actions-strip">
+    <button
+      ejs-button
+      (click)="onCancelClick()"
+      [disabled]="!(enabled$ | async)"
+    >
+      Cancelar
+    </button>
+    <button
+      ejs-button
+      cssClass="e-primary"
+      (click)="onAcceptClick()"
+      [disabled]="!(enabled$ | async)"
+    >
+      Aceptar
+    </button>
+  </div>
+</div>
+
+<ng-template #placeholder>
+  <div class="purchase-order-placeholder">
+    Seleccione una orden de compra
+  </div>
+</ng-template>

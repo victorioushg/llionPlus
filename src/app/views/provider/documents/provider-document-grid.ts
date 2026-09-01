@@ -7,6 +7,7 @@ import {
   OnInit,
   ViewChild,
 } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
 import {
   CommandClickEventArgs,
   CommandModel,
@@ -16,7 +17,6 @@ import {
   RowSelectEventArgs,
   SearchEventArgs,
   SearchSettingsModel,
-  SelectionSettingsModel,
 } from '@syncfusion/ej2-angular-grids';
 import { ClickEventArgs } from '@syncfusion/ej2-angular-navigations';
 import {
@@ -37,65 +37,74 @@ import { withToolbarTitle, bindGridSearchAsYouType } from '@shared/utils/grid-to
 import { contentGridHeight } from '@shared/utils/layout';
 import { ToastService } from '@shared/services/toastService';
 import { toastType } from '@shared/enums/enums';
-import { PurchaseOrderService } from './purchase-order.service';
-import { IPurchaseOrder } from './purchase-order';
+import { ProviderDocumentService } from './provider-document.service';
+import { IProviderDocument } from './provider-document';
+import {
+  IProviderDocumentKindConfig,
+  ProviderDocumentKind,
+} from './provider-document-kind';
 
 @Component({
   selector: 'llion-content',
-  templateUrl: './purchase-order-grid.html',
-  styleUrls: ['./purchase-order-grid.scss'],
+  templateUrl: './provider-document-grid.html',
+  styleUrls: ['./provider-document-grid.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: false,
+  providers: [ProviderDocumentService],
 })
-export class PurchaseOrderComponent implements OnInit, AfterViewInit, OnDestroy {
+export class ProviderDocumentGridComponent
+  implements OnInit, AfterViewInit, OnDestroy
+{
+  config!: IProviderDocumentKindConfig;
   commands!: CommandModel[];
-  toolbar = withToolbarTitle(
-    [
-      {
-        text: 'Add',
-        tooltipText: 'Incluir',
-        prefixIcon: 'e-add',
-        id: 'add',
-      },
-      {
-        text: 'Edit',
-        tooltipText: 'Modificar',
-        prefixIcon: 'e-edit',
-        id: 'edit',
-      },
-      {
-        text: 'Delete',
-        tooltipText: 'Eliminar',
-        prefixIcon: 'e-delete',
-        id: 'delete',
-      },
-      'Search',
-    ],
-    'Órdenes de compra'
-  );
+  toolbar!: ReturnType<typeof withToolbarTitle>;
   searchSettings?: SearchSettingsModel;
-  selectionSettings: SelectionSettingsModel = {
-    type: 'Single',
-    mode: 'Row',
-    enableToggle: false,
-  };
   screenHeight!: number;
   panelHeight!: number;
-
-  purchaseOrders$!: Observable<IPurchaseOrder[]>;
+  documents$!: Observable<IProviderDocument[]>;
 
   @ViewChild('grid') grid!: GridComponent;
 
   private readonly searchStringSubject = new BehaviorSubject<string>('');
-  private readonly selectedOrderSubject =
-    new BehaviorSubject<IPurchaseOrder | null>(null);
+  private readonly selectedSubject = new BehaviorSubject<IProviderDocument | null>(
+    null
+  );
   private readonly destroy$ = new Subject<void>();
 
   constructor(
-    private purchaseOrderService: PurchaseOrderService,
+    route: ActivatedRoute,
+    private documentService: ProviderDocumentService,
     private toastService: ToastService,
     private cdr: ChangeDetectorRef
-  ) {}
+  ) {
+    const kind = route.snapshot.data['kind'] as ProviderDocumentKind;
+    this.documentService.configure(kind);
+    this.config = this.documentService.config;
+    this.toolbar = withToolbarTitle(
+      [
+        {
+          text: 'Add',
+          tooltipText: 'Incluir',
+          prefixIcon: 'e-add',
+          id: 'add',
+        },
+        {
+          text: 'Edit',
+          tooltipText: 'Modificar',
+          prefixIcon: 'e-edit',
+          id: 'edit',
+        },
+        {
+          text: 'Delete',
+          tooltipText: 'Eliminar',
+          prefixIcon: 'e-delete',
+          id: 'delete',
+        },
+        'Search',
+      ],
+      this.config.title
+    );
+  }
 
   ngOnInit(): void {
     this.updateGridHeight();
@@ -111,19 +120,19 @@ export class PurchaseOrderComponent implements OnInit, AfterViewInit, OnDestroy 
     ];
     this.searchSettings = { operator: 'contains' };
 
-    this.purchaseOrders$ = combineLatest([
-      this.purchaseOrderService.purchaseOrders$,
+    this.documents$ = combineLatest([
+      this.documentService.documents$,
       this.searchStringSubject.asObservable().pipe(startWith('')),
     ]).pipe(
-      map(([orders, searchStr]) => {
+      map(([rows, searchStr]) => {
         const term = (searchStr || '').toLocaleLowerCase().trim();
         const filtered = term
-          ? orders.filter((order) =>
-              `${order.poNumber ?? ''} ${order.providerName ?? ''}`
+          ? rows.filter((row) =>
+              `${row.documentNumber ?? ''} ${row.providerName ?? ''}`
                 .toLocaleLowerCase()
                 .includes(term)
             )
-          : orders;
+          : rows;
         return [...filtered].sort((a, b) => this.compareDescending(a, b));
       }),
       catchError((err) => {
@@ -145,8 +154,8 @@ export class PurchaseOrderComponent implements OnInit, AfterViewInit, OnDestroy 
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
-    this.purchaseOrderService.setSelectedPoId(0);
-    this.purchaseOrderService.enableForm(false);
+    this.documentService.setSelectedId(0);
+    this.documentService.enableForm(false);
   }
 
   onToolbarClick(args: ClickEventArgs): void {
@@ -185,38 +194,34 @@ export class PurchaseOrderComponent implements OnInit, AfterViewInit, OnDestroy 
   }
 
   onRowSelected(args: RowSelectEventArgs): void {
-    const order = (args.data ? args.data : null) as IPurchaseOrder | null;
-    if (!order?.poId) {
+    const row = (args.data ? args.data : null) as IProviderDocument | null;
+    if (!row?.documentId) {
       return;
     }
-    this.selectedOrderSubject.next(order);
-    this.purchaseOrderService.setSelectedPoId(order.poId);
-    this.purchaseOrderService.enableForm(false);
+    this.selectedSubject.next(row);
+    this.documentService.setSelectedId(row.documentId);
+    this.documentService.enableForm(false);
     this.cdr.markForCheck();
   }
 
   onRowDeselected(_args: RowDeselectEventArgs): void {}
 
   onRecordDoubleClick(args: RecordDoubleClickEventArgs): void {
-    const order = (args.rowData ??
-      this.selectedOrderSubject.value) as IPurchaseOrder | null;
-    if (!order?.poId) {
-      this.toastService.showMyToast(
-        'Debe seleccionar una orden de compra',
-        toastType.warning
-      );
-      return;
+    const row = (args.rowData ??
+      this.selectedSubject.value) as IProviderDocument | null;
+    if (row?.documentId) {
+      this.selectedSubject.next(row);
+      this.beginEdit();
+    } else {
+      this.toastService.showMyToast(this.config.selectWarning, toastType.warning);
     }
-    this.selectedOrderSubject.next(order);
-    this.selectOrderRow(order.poId, args.rowIndex);
-    this.beginEdit();
   }
 
   commandClick(args: CommandClickEventArgs): void {
     const row = (args.rowData ??
-      this.selectedOrderSubject.value) as IPurchaseOrder | null;
-    if (args.target?.title === 'Delete' && row?.poId) {
-      this.deleteOrder(row);
+      this.selectedSubject.value) as IProviderDocument | null;
+    if (args.target?.title === 'Delete' && row?.documentId) {
+      this.deleteRow(row);
     }
   }
 
@@ -228,83 +233,62 @@ export class PurchaseOrderComponent implements OnInit, AfterViewInit, OnDestroy 
   }
 
   private beginAdd(): void {
-    this.selectedOrderSubject.next(null);
+    this.selectedSubject.next(null);
     this.grid?.clearRowSelection();
-    this.purchaseOrderService.beginNewPurchaseOrder();
+    this.documentService.setSelectedId(0);
+    this.documentService.enableForm(true);
     this.cdr.markForCheck();
   }
 
   private beginEdit(): void {
-    const selected = this.selectedOrderSubject.value;
-    if (!selected?.poId) {
-      this.toastService.showMyToast(
-        'Debe seleccionar una orden de compra',
-        toastType.warning
-      );
+    const selected = this.selectedSubject.value;
+    if (!selected?.documentId) {
+      this.toastService.showMyToast(this.config.selectWarning, toastType.warning);
       return;
     }
-    this.purchaseOrderService.setSelectedPoId(selected.poId);
-    this.selectOrderRow(selected.poId);
-    this.purchaseOrderService.enableForm(true);
+    this.documentService.setSelectedId(selected.documentId);
+    this.documentService.enableForm(true);
     this.cdr.markForCheck();
   }
 
-  private selectOrderRow(poId: number, rowIndex?: number): void {
-    if (!this.grid || poId <= 0) {
-      return;
-    }
-    const index =
-      rowIndex ?? this.grid.getRowIndexByPrimaryKey(poId);
-    if (index == null || index < 0) {
-      return;
-    }
-    const selected = this.grid.getSelectedRowIndexes() ?? [];
-    if (selected.length === 1 && selected[0] === index) {
-      return;
-    }
-    this.grid.selectRow(index);
-  }
-
   private deleteSelected(): void {
-    const selected = this.selectedOrderSubject.value;
-    if (!selected?.poId) {
-      this.toastService.showMyToast(
-        'Debe seleccionar una orden de compra',
-        toastType.warning
-      );
+    const selected = this.selectedSubject.value;
+    if (!selected?.documentId) {
+      this.toastService.showMyToast(this.config.selectWarning, toastType.warning);
       return;
     }
-    this.deleteOrder(selected);
+    this.deleteRow(selected);
   }
 
-  private deleteOrder(order: IPurchaseOrder): void {
-    this.purchaseOrderService
-      .deletePurchaseOrder(order)
+  private deleteRow(row: IProviderDocument): void {
+    this.documentService
+      .deleteDocument(row)
       .pipe(take(1))
       .subscribe({
         next: (deletedId) => {
           if (deletedId > 0) {
-            this.selectedOrderSubject.next(null);
+            this.selectedSubject.next(null);
             this.cdr.markForCheck();
           }
         },
       });
   }
 
-  private compareDescending(a: IPurchaseOrder, b: IPurchaseOrder): number {
+  private compareDescending(a: IProviderDocument, b: IProviderDocument): number {
     const dateA = this.toTime(a.issueDate);
     const dateB = this.toTime(b.issueDate);
     if (dateA !== dateB) {
       return dateB - dateA;
     }
-    const numberCmp = (b.poNumber || '').localeCompare(a.poNumber || '', 'es', {
-      numeric: true,
-      sensitivity: 'base',
-    });
+    const numberCmp = (b.documentNumber || '').localeCompare(
+      a.documentNumber || '',
+      'es',
+      { numeric: true, sensitivity: 'base' }
+    );
     if (numberCmp !== 0) {
       return numberCmp;
     }
-    return (b.poId || 0) - (a.poId || 0);
+    return (b.documentId || 0) - (a.documentId || 0);
   }
 
   private toTime(value: Date | string | null | undefined): number {
@@ -338,7 +322,6 @@ export class PurchaseOrderComponent implements OnInit, AfterViewInit, OnDestroy 
     const contentEl = gridEl?.querySelector(
       '.e-gridcontent'
     ) as HTMLElement | null;
-    // Syncfusion `height` is the content pane only (toolbar + header sit above it).
     this.screenHeight = contentGridHeight(200, contentEl ?? gridEl ?? null);
     this.panelHeight = contentGridHeight(200, gridEl ?? null);
     if (this.grid) {

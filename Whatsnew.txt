@@ -1,0 +1,70 @@
+llionPlus
+Versión: 202609011
+Fecha: 01/09/2026
+Estado: pendiente de subir al repositorio
+
+==============================================================================
+RESUMEN
+==============================================================================
+Pantalla de órdenes de compra (encabezado, renglones, descuentos de factura
+e IVA) y pantalla genérica de documentos de proveedor. El cálculo de
+importes de renglón, descuentos en cascada y bases de IVA queda alineado
+con el ejemplo OC00000191.
+
+==============================================================================
+ÓRDENES DE COMPRA
+==============================================================================
+- Número de orden: campo bloqueado. Se asigna al Incluir desde el contador
+  ORD (prefijo OC + 8 dígitos).
+- Doble clic en la grilla: mantiene la fila seleccionada y abre el detalle.
+- Cancelar recarga el documento y deja el formulario en solo lectura.
+
+Costo del renglón (Costo Total / TotalCostAndDiscounts)
+  1. Bruto = cantidad × costo unitario
+  2. Desc. Art. sobre el bruto
+  3. Desc. Prov. sobre el neto del artículo (cascada, no suma)
+  Ejemplo OC00000191: 28 × 100, 10% art. y 5% prov. = 2.394,00
+
+Descuentos adicionales de factura (grilla Descuentos)
+  - PODiscountRowNumber 1, 2, … (siguiente = máximo + 1)
+  - El usuario carga descripción y %. Descuento y Subtotal se calculan.
+  - Cada fila aplica su % sobre el SubtotalPO de la anterior.
+  - El Neto del pie es el SubtotalPO de la última fila.
+
+IVA
+  - TaxCode del renglón = RateType (A, B, C, E). Exento: vacío o E.
+  - Tasa: último registro de app_taxes con TaxDateFrom <= fecha de emisión.
+  - Base imponible = neto del renglón (tras desc. art. y prov.) con el
+    mismo encadenado de descuentos de factura.
+  - Ejemplo: 2.394,00 − 2.394,00 × 2% = 2.346,12 (tasa A).
+  - TOTAL Orden de Compra = Neto + IVA.
+
+Interfaz
+  - Anchos de columnas: Descripción 240, Desc. Art./Prov. 62, Costo Total 100.
+  - Grilla de descuentos: Descripción más estrecha; scrollbar automático.
+  - Comentario en la misma fila que Items y Peso total.
+  - Títulos de los campos (Orden No., Emisión, Proveedor, etc.) se leen
+    igual con el formulario deshabilitado; solo se apaga el valor.
+
+==============================================================================
+DOCUMENTOS DE PROVEEDOR
+==============================================================================
+Pantalla parametrizada (recepción, compra, nota de crédito, nota de débito)
+con listado y detalle. El guardado de estos documentos aún no está
+implementado.
+
+==============================================================================
+API / BASE DE DATOS (llionAPI, no va en este repositorio)
+==============================================================================
+Procedimientos locales usados por esta versión:
+  prv_purchaseorder_save
+  prv_purchaseorder_document_get
+  prv_purchaseorder_next_number
+  prv_purchaseorder_taxes_calc
+
+==============================================================================
+PENDIENTE
+==============================================================================
+- Guardar recepción, compras, notas de crédito y débito.
+- Selector de proveedor en la orden de compra.
+- Subir este trabajo al repositorio.
