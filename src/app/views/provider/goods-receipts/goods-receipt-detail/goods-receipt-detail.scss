@@ -17,7 +17,7 @@
   overflow: hidden;
 }
 
-:host ::ng-deep #purchase-order-detail-form {
+:host ::ng-deep #goods-receipt-detail-form {
   .e-float-input .e-float-text,
   .e-float-input label.e-float-text,
   .e-control-wrapper .e-float-text,
@@ -51,7 +51,7 @@
   }
 }
 
-.purchase-order-form {
+.goods-receipt-form {
   flex: 0 0 auto;
 
   .row {
@@ -101,14 +101,14 @@
   min-width: 56px;
 }
 
-#purchase-order-lines-grid {
+#goods-receipt-lines-grid {
   flex: 1 1 0;
   min-height: 80px;
   width: 100%;
   overflow: hidden;
 }
 
-::ng-deep #purchase-order-lines-grid {
+::ng-deep #goods-receipt-lines-grid {
   width: 100%;
 
   .e-grid {
@@ -138,7 +138,7 @@
   .e-gridheader .e-table,
   .e-gridcontent .e-table {
     table-layout: fixed;
-    min-width: 920px;
+    min-width: 1000px;
   }
 
   .e-rowcell {
@@ -168,14 +168,14 @@
   min-width: 0;
 }
 
-#purchase-order-discounts-grid,
-#purchase-order-taxes-grid {
+#goods-receipt-discounts-grid,
+#goods-receipt-taxes-grid {
   height: 150px;
   overflow: hidden;
 }
 
-::ng-deep #purchase-order-discounts-grid,
-::ng-deep #purchase-order-taxes-grid {
+::ng-deep #goods-receipt-discounts-grid,
+::ng-deep #goods-receipt-taxes-grid {
   width: 100%;
 
   .e-gridheader .e-headercontent {
@@ -204,21 +204,21 @@
   }
 }
 
-::ng-deep #purchase-order-discounts-grid .e-gridheader .e-table,
-::ng-deep #purchase-order-discounts-grid .e-gridcontent .e-table {
+::ng-deep #goods-receipt-discounts-grid .e-gridheader .e-table,
+::ng-deep #goods-receipt-discounts-grid .e-gridcontent .e-table {
   table-layout: fixed;
 }
 
-::ng-deep #purchase-order-discounts-grid .e-grid,
-::ng-deep #purchase-order-taxes-grid .e-grid {
+::ng-deep #goods-receipt-discounts-grid .e-grid,
+::ng-deep #goods-receipt-taxes-grid .e-grid {
   width: 100% !important;
   height: 150px !important;
   max-height: 150px !important;
   overflow: hidden !important;
 }
 
-::ng-deep #purchase-order-discounts-grid .e-toolbar,
-::ng-deep #purchase-order-taxes-grid .e-toolbar {
+::ng-deep #goods-receipt-discounts-grid .e-toolbar,
+::ng-deep #goods-receipt-taxes-grid .e-toolbar {
   min-height: 32px;
   height: 32px;
   background-color: $llion-color-primary-container;
@@ -315,7 +315,7 @@
   border: 1px solid rgba(0, 0, 0, 0.12);
 }
 
-.purchase-order-placeholder {
+.goods-receipt-placeholder {
   min-height: 120px;
   padding: 16px;
   color: rgba(0, 0, 0, 0.55);

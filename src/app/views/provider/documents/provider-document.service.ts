@@ -39,6 +39,7 @@ export class ProviderDocumentService {
   config!: IProviderDocumentKindConfig;
   documents$!: Observable<IProviderDocument[]>;
   warehouses$!: Observable<IGroup[]>;
+  merchandises$!: Observable<{ merchandiseId: number; name: string }[]>;
   selectedId$ = this.selectedIdSource.asObservable();
   enableFormAction$ = this.enabledFormSource.asObservable();
   documentSelected$!: Observable<IProviderDocument>;
@@ -73,6 +74,31 @@ export class ProviderDocumentService {
               this.errorHandlerService.handleError(err);
               return of([] as IGroup[]);
             })
+          );
+      }),
+      shareReplay(1)
+    );
+
+    this.merchandises$ = this.applicationService.workingOrganization$.pipe(
+      switchMap((org) => {
+        const organizationId = org?.organizationId ?? 0;
+        if (organizationId <= 0) {
+          return of([] as { merchandiseId: number; name: string }[]);
+        }
+        return this.http
+          .get<IApiResponse<{ merchandiseId?: number; name?: string }[]>>(
+            `${environment.API_URL}merchandise/${organizationId}/0`
+          )
+          .pipe(
+            map((data) =>
+              (data.result ?? [])
+                .map((row) => ({
+                  merchandiseId: Number(row.merchandiseId) || 0,
+                  name: (row.name ?? '').trim(),
+                }))
+                .filter((row) => row.merchandiseId > 0)
+            ),
+            catchError(() => of([] as { merchandiseId: number; name: string }[]))
           );
       }),
       shareReplay(1)

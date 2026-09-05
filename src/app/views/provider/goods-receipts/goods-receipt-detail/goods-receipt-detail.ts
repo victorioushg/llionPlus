@@ -31,26 +31,27 @@ import { debounceTime } from 'rxjs/operators';
 import { withToolbarTitle } from '@shared/utils/grid-toolbar';
 import { ToastService } from '@shared/services/toastService';
 import { toastType } from '@shared/enums/enums';
+import { IGroup } from '@shared/models/group';
 import { IProvider } from '../../provider';
 import { ProviderService } from '../../provider.service';
-import { PurchaseOrderService } from '../purchase-order.service';
+import { GoodsReceiptService } from '../goods-receipt.service';
 import {
-  IPurchaseOrder,
-  IPurchaseOrderDiscount,
-  IPurchaseOrderLine,
-  IPurchaseOrderMerchandise,
-  IPurchaseOrderTax,
-  IPurchaseOrderUnit,
-} from '../purchase-order';
+  IGoodsReceipt,
+  IGoodsReceiptDiscount,
+  IGoodsReceiptLine,
+  IGoodsReceiptMerchandise,
+  IGoodsReceiptTax,
+  IGoodsReceiptUnit,
+} from '../goods-receipt';
 
 @Component({
-  selector: 'llion-purchase-order-detail',
-  templateUrl: './purchase-order-detail.html',
-  styleUrls: ['./purchase-order-detail.scss'],
+  selector: 'llion-goods-receipt-detail',
+  templateUrl: './goods-receipt-detail.html',
+  styleUrls: ['./goods-receipt-detail.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: false,
 })
-export class PurchaseOrderDetailComponent
+export class GoodsReceiptDetailComponent
   implements OnInit, AfterViewInit, OnDestroy
 {
   @ViewChild('linesgrid') linesGrid?: GridComponent;
@@ -62,22 +63,23 @@ export class PurchaseOrderDetailComponent
   readonly footerGridRowHeight = 28;
 
   orderForm!: FormGroup;
-  order$!: Observable<IPurchaseOrder>;
+  order$!: Observable<IGoodsReceipt>;
   enabled$!: Observable<boolean>;
   visible$!: Observable<boolean>;
   providers$!: Observable<IProvider[]>;
-  merchandises$!: Observable<IPurchaseOrderMerchandise[]>;
+  warehouses$!: Observable<IGroup[]>;
+  merchandises$!: Observable<IGoodsReceiptMerchandise[]>;
   providerFields = { text: 'description', value: 'providerId' };
+  warehouseFields = { text: 'fullName', value: 'groupId' };
   merchandiseFields = { text: 'name', value: 'merchandiseId' };
   unitFields = { text: 'code', value: 'code' };
   taxCodeFields = { text: 'code', value: 'code' };
   providerFilterType: 'Contains' = 'Contains';
-  deliveryMinDate: Date | undefined;
-  lineUnitOptions: IPurchaseOrderUnit[] = [];
+  lineUnitOptions: IGoodsReceiptUnit[] = [];
   taxCodeOptions: { code: string }[] = [];
-  lines: IPurchaseOrderLine[] = [];
-  discounts: IPurchaseOrderDiscount[] = [];
-  taxes: IPurchaseOrderTax[] = [];
+  lines: IGoodsReceiptLine[] = [];
+  discounts: IGoodsReceiptDiscount[] = [];
+  taxes: IGoodsReceiptTax[] = [];
   totalWeight = 0;
   totalItems = 0;
   netTotal = 0;
@@ -111,16 +113,16 @@ export class PurchaseOrderDetailComponent
     showDeleteConfirmDialog: true,
   };
 
-  lineData: IPurchaseOrderLine = this.createEmptyLine();
-  discountData: IPurchaseOrderDiscount = this.createEmptyDiscount();
+  lineData: IGoodsReceiptLine = this.createEmptyLine();
+  discountData: IGoodsReceiptDiscount = this.createEmptyDiscount();
   lineMerchDiscPct = 0;
   lineVendorDiscPct = 0;
   discountRatePct = 0;
 
-  currentPoId = 0;
-  private currentOrder: IPurchaseOrder | null = null;
+  currentGrId = 0;
+  private currentOrder: IGoodsReceipt | null = null;
   private providers: IProvider[] = [];
-  private merchandises: IPurchaseOrderMerchandise[] = [];
+  private merchandises: IGoodsReceiptMerchandise[] = [];
   private taxCatalogRows: { taxType?: string; description?: string; rateType?: string }[] =
     [];
   private lastLineMerchandiseId = 0;
@@ -129,12 +131,12 @@ export class PurchaseOrderDetailComponent
   private readonly destroy$ = new Subject<void>();
 
   get providerDropdownEnabled(): boolean {
-    return this.gridEnabled && this.currentPoId <= 0;
+    return this.gridEnabled && this.currentGrId <= 0;
   }
 
   constructor(
     private formBuilder: FormBuilder,
-    private purchaseOrderService: PurchaseOrderService,
+    private goodsReceiptService: GoodsReceiptService,
     private providerService: ProviderService,
     private toastService: ToastService,
     private cdr: ChangeDetectorRef
@@ -142,17 +144,20 @@ export class PurchaseOrderDetailComponent
 
   ngOnInit(): void {
     this.orderForm = this.formBuilder.group({
-      poNumber: [''],
+      grNumber: [''],
       issueDate: [null as Date | null],
-      deliveryDate: [null as Date | null],
+      issueDateTax: [null as Date | null],
       statusName: [''],
       providerId: [null as number | null],
+      warehouseId: [null as number | null],
+      referenceNumber: [''],
       comment: [''],
     });
     this.orderForm.disable({ emitEvent: false });
 
-    this.enabled$ = this.purchaseOrderService.enableFormAction$;
-    this.order$ = this.purchaseOrderService.purchaseOrderSelected$;
+    this.enabled$ = this.goodsReceiptService.enableFormAction$;
+    this.order$ = this.goodsReceiptService.goodsReceiptSelected$;
+    this.warehouses$ = this.goodsReceiptService.warehouses$;
     this.providers$ = this.providerService.providers$.pipe(
       map((rows) =>
         [...(rows ?? [])]
@@ -173,12 +178,12 @@ export class PurchaseOrderDetailComponent
       this.providers = rows;
       this.cdr.markForCheck();
     });
-    this.merchandises$ = this.purchaseOrderService.merchandises$;
+    this.merchandises$ = this.goodsReceiptService.merchandises$;
     this.merchandises$.pipe(takeUntil(this.destroy$)).subscribe((rows) => {
       this.merchandises = rows;
       this.cdr.markForCheck();
     });
-    this.purchaseOrderService.taxCatalog$
+    this.goodsReceiptService.taxCatalog$
       .pipe(takeUntil(this.destroy$))
       .subscribe((rows) => {
         this.taxCatalogRows = rows ?? [];
@@ -188,7 +193,7 @@ export class PurchaseOrderDetailComponent
     this.merchandisePick$
       .pipe(
         switchMap((merchandiseId) =>
-          this.purchaseOrderService.getMerchandiseLineDefaults(merchandiseId)
+          this.goodsReceiptService.getMerchandiseLineDefaults(merchandiseId)
         ),
         takeUntil(this.destroy$)
       )
@@ -196,7 +201,7 @@ export class PurchaseOrderDetailComponent
         this.applyLineUnitDefaults(defaults);
       });
     this.visible$ = combineLatest([this.enabled$, this.order$]).pipe(
-      map(([editing, order]) => editing || (order?.poId ?? 0) > 0)
+      map(([editing, order]) => editing || (order?.grId ?? 0) > 0)
     );
     this.order$.pipe(takeUntil(this.destroy$)).subscribe((order) => {
       this.patchOrder(order);
@@ -217,7 +222,7 @@ export class PurchaseOrderDetailComponent
       this.cdr.markForCheck();
     });
 
-    this.purchaseOrderService.taxCatalog$
+    this.goodsReceiptService.taxCatalog$
       .pipe(takeUntil(this.destroy$))
       .subscribe(() => {
         if (this.gridEnabled) {
@@ -229,10 +234,18 @@ export class PurchaseOrderDetailComponent
     this.orderForm
       .get('issueDate')
       ?.valueChanges.pipe(takeUntil(this.destroy$))
-      .subscribe((issueDate: Date | string | null) => {
-        this.syncDeliveryMin(this.asDate(issueDate));
+      .subscribe(() => {
         if (this.gridEnabled) {
-          this.ensureDeliveryNotBeforeIssue(true);
+          this.recalculateDocument();
+          this.cdr.markForCheck();
+        }
+      });
+
+    this.orderForm
+      .get('issueDateTax')
+      ?.valueChanges.pipe(takeUntil(this.destroy$))
+      .subscribe(() => {
+        if (this.gridEnabled) {
           this.recalculateDocument();
           this.cdr.markForCheck();
         }
@@ -258,7 +271,7 @@ export class PurchaseOrderDetailComponent
   }
 
   onCancelClick(): void {
-    this.purchaseOrderService.cancelEdit();
+    this.goodsReceiptService.cancelEdit();
   }
 
   onAcceptClick(): void {
@@ -269,11 +282,11 @@ export class PurchaseOrderDetailComponent
     this.syncGridRows('discounts');
 
     const form = this.orderForm.getRawValue();
-    const isNew = this.currentPoId <= 0;
-    const poNumber = String(form.poNumber ?? '').trim();
-    if (isNew && !poNumber) {
+    const isNew = this.currentGrId <= 0;
+    const grNumber = String(form.grNumber ?? '').trim();
+    if (isNew && !grNumber) {
       this.toastService.showMyToast(
-        'Indique el número de la orden de compra',
+        'Indique el número de la recepción de mercancías',
         toastType.warning
       );
       return;
@@ -288,7 +301,12 @@ export class PurchaseOrderDetailComponent
       return;
     }
 
-    if (!this.ensureDeliveryNotBeforeIssue(false)) {
+    const warehouseId = Number(form.warehouseId) || 0;
+    if (warehouseId <= 0) {
+      this.toastService.showMyToast(
+        'Seleccione el almacén de entrada',
+        toastType.warning
+      );
       return;
     }
 
@@ -296,9 +314,11 @@ export class PurchaseOrderDetailComponent
       const amounts = this.computeLineAmounts(line);
       return {
         ...line,
-        poId: this.currentPoId,
-        poRowNumber: line.poRowNumber || index + 1,
+        grId: this.currentGrId,
+        grRowNumber: line.grRowNumber || index + 1,
         taxCode: this.normalizedTaxCode(line.taxCode, false),
+        transitQuantity:
+          Number(line.transitQuantity) || Number(line.quantity) || 0,
         totalCost: amounts.totalCost,
         totalDiscount: amounts.totalDiscount,
         totalCostAndDiscounts: amounts.totalCostAndDiscounts,
@@ -307,16 +327,18 @@ export class PurchaseOrderDetailComponent
     this.recalculateDocument();
 
     const provider = this.providers.find((row) => row.providerId === providerId);
-    const payload: IPurchaseOrder = {
-      ...(this.currentOrder ?? this.purchaseOrderService.createEmptyPurchaseOrder()),
-      poId: this.currentPoId,
-      poNumber: isNew ? poNumber : this.currentOrder?.poNumber ?? poNumber,
+    const payload: IGoodsReceipt = {
+      ...(this.currentOrder ?? this.goodsReceiptService.createEmptyGoodsReceipt()),
+      grId: this.currentGrId,
+      grNumber: isNew ? grNumber : this.currentOrder?.grNumber ?? grNumber,
       providerId,
       providerCode: provider?.alternCode ?? this.currentOrder?.providerCode ?? '',
       providerName:
         provider?.description ?? this.currentOrder?.providerName ?? '',
       issueDate: form.issueDate,
-      deliveryDate: form.deliveryDate,
+      issueDateTax: form.issueDateTax ?? form.issueDate,
+      warehouseId,
+      referenceNumber: form.referenceNumber ?? '',
       comment: form.comment ?? '',
       status: isNew ? 0 : this.currentOrder?.status ?? 0,
       statusName: isNew
@@ -324,20 +346,20 @@ export class PurchaseOrderDetailComponent
         : this.currentOrder?.statusName ?? form.statusName ?? '',
       organizationId:
         this.currentOrder?.organizationId ||
-        this.purchaseOrderService.currentOrganizationId,
+        this.goodsReceiptService.currentOrganizationId,
       lines: this.lines,
       discounts: this.discounts.map((item, index) => ({
         ...item,
-        poId: this.currentPoId,
-        poDiscountRowNumber: item.poDiscountRowNumber || index + 1,
+        grId: this.currentGrId,
+        grDiscountRowNumber: item.grDiscountRowNumber || index + 1,
         totalDiscount: this.round2(Number(item.totalDiscount) || 0),
       })),
       taxes: this.taxes,
     };
 
     this.saving = true;
-    this.purchaseOrderService
-      .savePurchaseOrder(payload)
+    this.goodsReceiptService
+      .saveGoodsReceipt(payload)
       .pipe(take(1))
       .subscribe({
         next: () => {
@@ -360,15 +382,15 @@ export class PurchaseOrderDetailComponent
       return;
     }
     if (args.requestType === 'add' || args.requestType === 'beginEdit') {
-      const row = (args.rowData ?? {}) as Partial<IPurchaseOrderLine>;
+      const row = (args.rowData ?? {}) as Partial<IGoodsReceiptLine>;
       this.lineData =
         args.requestType === 'add'
           ? this.createEmptyLine()
           : { ...this.createEmptyLine(), ...row };
       if (args.requestType === 'add') {
-        this.lineData.poRowNumber = this.nextNumber(
+        this.lineData.grRowNumber = this.nextNumber(
           this.lines,
-          (line) => line.poRowNumber
+          (line) => line.grRowNumber
         );
       }
       this.lineMerchDiscPct = this.toPercent(this.lineData.merchandiseDiscount);
@@ -404,12 +426,16 @@ export class PurchaseOrderDetailComponent
         null;
       this.lineData.merchandiseDiscount = this.fromPercent(this.lineMerchDiscPct);
       this.lineData.vendorDiscount = this.fromPercent(this.lineVendorDiscPct);
+      this.lineData.transitQuantity =
+        Number(this.lineData.transitQuantity) ||
+        Number(this.lineData.quantity) ||
+        0;
       Object.assign(this.lineData, this.computeLineAmounts(this.lineData));
       args.data = { ...this.lineData };
     }
     if (args.requestType === 'delete') {
-      const row = this.firstRow<IPurchaseOrderLine>(args.data);
-      if (!row?.poRowNumber) {
+      const row = this.firstRow<IGoodsReceiptLine>(args.data);
+      if (!row?.grRowNumber) {
         args.cancel = true;
         this.toastService.showMyToast(
           'Seleccione un renglón para eliminar',
@@ -435,15 +461,15 @@ export class PurchaseOrderDetailComponent
       return;
     }
     if (args.requestType === 'add' || args.requestType === 'beginEdit') {
-      const row = (args.rowData ?? {}) as Partial<IPurchaseOrderDiscount>;
+      const row = (args.rowData ?? {}) as Partial<IGoodsReceiptDiscount>;
       this.discountData =
         args.requestType === 'add'
           ? this.createEmptyDiscount()
           : { ...this.createEmptyDiscount(), ...row };
       if (args.requestType === 'add') {
-        this.discountData.poDiscountRowNumber = this.nextNumber(
+        this.discountData.grDiscountRowNumber = this.nextNumber(
           this.discounts,
-          (item) => item.poDiscountRowNumber
+          (item) => item.grDiscountRowNumber
         );
       }
       this.discountRatePct = this.toPercent(this.discountData.discountRate);
@@ -460,8 +486,8 @@ export class PurchaseOrderDetailComponent
       args.data = { ...this.discountData };
     }
     if (args.requestType === 'delete') {
-      const row = this.firstRow<IPurchaseOrderDiscount>(args.data);
-      if (!row?.poDiscountRowNumber) {
+      const row = this.firstRow<IGoodsReceiptDiscount>(args.data);
+      if (!row?.grDiscountRowNumber) {
         args.cancel = true;
         this.toastService.showMyToast(
           'Seleccione un descuento para eliminar',
@@ -485,17 +511,11 @@ export class PurchaseOrderDetailComponent
   }
 
   onIssueDateChange(): void {
-    this.ensureDeliveryNotBeforeIssue(true);
     this.cdr.markForCheck();
   }
 
-  onDeliveryDateChange(): void {
-    this.ensureDeliveryNotBeforeIssue(true);
-    this.cdr.markForCheck();
-  }
-
-  private patchOrder(order: IPurchaseOrder): void {
-    this.currentPoId = Number(order.poId) || 0;
+  private patchOrder(order: IGoodsReceipt): void {
+    this.currentGrId = Number(order.grId) || 0;
     this.currentOrder = order;
     this.lines = [...(order.lines ?? [])];
     this.discounts = [...(order.discounts ?? [])];
@@ -509,16 +529,18 @@ export class PurchaseOrderDetailComponent
     const issueDate = this.asDate(order.issueDate);
     this.orderForm.patchValue(
       {
-        poNumber: order.poNumber ?? '',
+        grNumber: order.grNumber ?? '',
         issueDate,
-        deliveryDate: this.asDate(order.deliveryDate),
-        statusName: order.statusName ?? (this.currentPoId <= 0 ? 'Tránsito' : ''),
+        issueDateTax: this.asDate(order.issueDateTax) ?? issueDate,
+        statusName: order.statusName ?? (this.currentGrId <= 0 ? 'Tránsito' : ''),
         providerId: Number(order.providerId) > 0 ? Number(order.providerId) : null,
+        warehouseId:
+          Number(order.warehouseId) > 0 ? Number(order.warehouseId) : null,
+        referenceNumber: order.referenceNumber ?? '',
         comment: order.comment ?? '',
       },
       { emitEvent: false }
     );
-    this.syncDeliveryMin(issueDate);
     this.applyFormEnabled(this.gridEnabled);
   }
 
@@ -531,7 +553,7 @@ export class PurchaseOrderDetailComponent
     return this.round2(this.sumBy(this.lines, (line) => this.lineBase(line)));
   }
 
-  private lineBase(line: IPurchaseOrderLine): number {
+  private lineBase(line: IGoodsReceiptLine): number {
     const computed = this.computeLineAmounts(line).totalCostAndDiscounts;
     const stored = Number(line.totalCostAndDiscounts);
     if (this.gridEnabled) {
@@ -544,7 +566,7 @@ export class PurchaseOrderDetailComponent
     taxCode: string | null | undefined,
     defaultExempt: boolean
   ): string | null {
-    if (this.purchaseOrderService.isExemptRateType(taxCode)) {
+    if (this.goodsReceiptService.isExemptRateType(taxCode)) {
       if (defaultExempt) {
         return 'E';
       }
@@ -559,18 +581,18 @@ export class PurchaseOrderDetailComponent
     this.discounts = [...this.discounts]
       .sort(
         (a, b) =>
-          (Number(a.poDiscountRowNumber) || 0) -
-          (Number(b.poDiscountRowNumber) || 0)
+          (Number(a.grDiscountRowNumber) || 0) -
+          (Number(b.grDiscountRowNumber) || 0)
       )
       .map((item) => {
         const rate = Number(item.discountRate) || 0;
         const totalDiscount = this.round2(running * rate);
-        const subtotalPO = this.round2(Math.max(0, running - totalDiscount));
-        running = subtotalPO;
+        const subtotalGR = this.round2(Math.max(0, running - totalDiscount));
+        running = subtotalGR;
         return {
           ...item,
           totalDiscount,
-          subtotalPO,
+          subtotalGR,
         };
       });
     if (this.discountsGrid) {
@@ -578,24 +600,24 @@ export class PurchaseOrderDetailComponent
     }
   }
 
-  private previewDiscountRow(row: IPurchaseOrderDiscount): void {
-    const base = this.discountBaseBefore(row.poDiscountRowNumber);
+  private previewDiscountRow(row: IGoodsReceiptDiscount): void {
+    const base = this.discountBaseBefore(row.grDiscountRowNumber);
     const rate = this.fromPercent(this.discountRatePct);
     row.discountRate = rate;
     row.totalDiscount = this.round2(base * rate);
-    row.subtotalPO = this.round2(Math.max(0, base - row.totalDiscount));
+    row.subtotalGR = this.round2(Math.max(0, base - row.totalDiscount));
   }
 
   private discountBaseBefore(rowNumber: number): number {
     const invoiceNet = this.linesBaseTotal();
     const previous = [...this.discounts]
       .filter(
-        (item) => (Number(item.poDiscountRowNumber) || 0) < (rowNumber || 0)
+        (item) => (Number(item.grDiscountRowNumber) || 0) < (rowNumber || 0)
       )
       .sort(
         (a, b) =>
-          (Number(a.poDiscountRowNumber) || 0) -
-          (Number(b.poDiscountRowNumber) || 0)
+          (Number(a.grDiscountRowNumber) || 0) -
+          (Number(b.grDiscountRowNumber) || 0)
       );
     let running = invoiceNet;
     for (const item of previous) {
@@ -613,10 +635,10 @@ export class PurchaseOrderDetailComponent
     }
     const last = [...this.discounts].sort(
       (a, b) =>
-        (Number(a.poDiscountRowNumber) || 0) -
-        (Number(b.poDiscountRowNumber) || 0)
+        (Number(a.grDiscountRowNumber) || 0) -
+        (Number(b.grDiscountRowNumber) || 0)
     )[this.discounts.length - 1];
-    const subtotal = Number(last?.subtotalPO);
+    const subtotal = Number(last?.subtotalGR);
     return Number.isFinite(subtotal)
       ? this.round2(subtotal)
       : this.linesBaseTotal();
@@ -626,8 +648,8 @@ export class PurchaseOrderDetailComponent
     let running = this.round2(amount);
     const rows = [...this.discounts].sort(
       (a, b) =>
-        (Number(a.poDiscountRowNumber) || 0) -
-        (Number(b.poDiscountRowNumber) || 0)
+        (Number(a.grDiscountRowNumber) || 0) -
+        (Number(b.grDiscountRowNumber) || 0)
     );
     for (const item of rows) {
       const totalDiscount = this.round2(
@@ -639,7 +661,9 @@ export class PurchaseOrderDetailComponent
   }
 
   private rebuildTaxes(): void {
-    const issueDate =
+    const taxDate =
+      this.asDate(this.orderForm?.getRawValue()?.issueDateTax) ??
+      this.asDate(this.currentOrder?.issueDateTax) ??
       this.asDate(this.orderForm?.getRawValue()?.issueDate) ??
       this.asDate(this.currentOrder?.issueDate);
     const bases = new Map<string, number>();
@@ -658,9 +682,9 @@ export class PurchaseOrderDetailComponent
       .map(([taxCode, lineBase]) => {
         const taxBase = this.applyInvoiceDiscounts(lineBase);
         const taxRate =
-          this.purchaseOrderService.taxRateFor(taxCode, issueDate) ?? 0;
+          this.goodsReceiptService.taxRateFor(taxCode, taxDate) ?? 0;
         return {
-          poId: this.currentPoId,
+          grId: this.currentGrId,
           taxCode,
           taxRate,
           taxBase,
@@ -673,7 +697,7 @@ export class PurchaseOrderDetailComponent
     this.refreshTotals();
   }
 
-  private refreshTotals(order?: IPurchaseOrder): void {
+  private refreshTotals(order?: IGoodsReceipt): void {
     this.totalItems = this.lines.length;
     this.totalWeight = this.round2(
       this.sumBy(this.lines, (line) => line.weight)
@@ -697,9 +721,11 @@ export class PurchaseOrderDetailComponent
       return;
     }
     this.orderForm.get('issueDate')?.enable({ emitEvent: false });
-    this.orderForm.get('deliveryDate')?.enable({ emitEvent: false });
+    this.orderForm.get('issueDateTax')?.enable({ emitEvent: false });
+    this.orderForm.get('warehouseId')?.enable({ emitEvent: false });
+    this.orderForm.get('referenceNumber')?.enable({ emitEvent: false });
     this.orderForm.get('comment')?.enable({ emitEvent: false });
-    if (this.currentPoId <= 0) {
+    if (this.currentGrId <= 0) {
       this.orderForm.get('providerId')?.enable({ emitEvent: false });
     }
   }
@@ -745,11 +771,11 @@ export class PurchaseOrderDetailComponent
   private syncGridRows(kind: 'lines' | 'discounts'): void {
     if (kind === 'lines') {
       const data =
-        (this.linesGrid?.dataSource as IPurchaseOrderLine[]) ?? this.lines;
+        (this.linesGrid?.dataSource as IGoodsReceiptLine[]) ?? this.lines;
       this.lines = [...data];
     } else {
       const data =
-        (this.discountsGrid?.dataSource as IPurchaseOrderDiscount[]) ??
+        (this.discountsGrid?.dataSource as IGoodsReceiptDiscount[]) ??
         this.discounts;
       this.discounts = [...data];
     }
@@ -771,15 +797,16 @@ export class PurchaseOrderDetailComponent
     }
   }
 
-  private createEmptyLine(): IPurchaseOrderLine {
+  private createEmptyLine(): IGoodsReceiptLine {
     return {
-      poId: this.currentPoId,
-      poRowNumber: 0,
+      grId: this.currentGrId,
+      grRowNumber: 0,
       merchandiseId: null,
       itemCode: '',
       description: '',
       taxCode: '',
       quantity: 0,
+      transitQuantity: 0,
       unit: '',
       weight: 0,
       costByUnit: 0,
@@ -790,14 +817,14 @@ export class PurchaseOrderDetailComponent
     };
   }
 
-  private createEmptyDiscount(): IPurchaseOrderDiscount {
+  private createEmptyDiscount(): IGoodsReceiptDiscount {
     return {
-      poId: this.currentPoId,
-      poDiscountRowNumber: 0,
+      grId: this.currentGrId,
+      grDiscountRowNumber: 0,
       description: '',
       discountRate: 0,
       totalDiscount: 0,
-      subtotalPO: 0,
+      subtotalGR: 0,
     };
   }
 
@@ -825,7 +852,7 @@ export class PurchaseOrderDetailComponent
   }
 
   private merchandiseIdFromChange(args?: ChangeEventArgs): number {
-    const item = args?.itemData as IPurchaseOrderMerchandise | undefined;
+    const item = args?.itemData as IGoodsReceiptMerchandise | undefined;
     return (
       Number(args?.value) ||
       Number(item?.merchandiseId) ||
@@ -860,7 +887,7 @@ export class PurchaseOrderDetailComponent
   }
 
   private applyLineUnitDefaults(defaults: {
-    units: IPurchaseOrderUnit[];
+    units: IGoodsReceiptUnit[];
     unit: string;
     taxCode: string;
     weight: number | null;
@@ -943,11 +970,14 @@ export class PurchaseOrderDetailComponent
   onLineAmountChange(): void {
     this.lineData.merchandiseDiscount = this.fromPercent(this.lineMerchDiscPct);
     this.lineData.vendorDiscount = this.fromPercent(this.lineVendorDiscPct);
+    if (!(Number(this.lineData.transitQuantity) > 0)) {
+      this.lineData.transitQuantity = Number(this.lineData.quantity) || 0;
+    }
     Object.assign(this.lineData, this.computeLineAmounts(this.lineData));
     this.cdr.markForCheck();
   }
 
-  private computeLineAmounts(line: IPurchaseOrderLine): {
+  private computeLineAmounts(line: IGoodsReceiptLine): {
     totalCost: number;
     totalDiscount: number;
     totalCostAndDiscounts: number;
@@ -1009,37 +1039,6 @@ export class PurchaseOrderDetailComponent
     return new Date(parsed.getFullYear(), parsed.getMonth(), parsed.getDate());
   }
 
-  private syncDeliveryMin(issueDate: Date | null): void {
-    this.deliveryMinDate = issueDate ?? undefined;
-  }
-
-  private ensureDeliveryNotBeforeIssue(adjust: boolean): boolean {
-    const issueDate = this.asDate(this.orderForm.getRawValue()?.issueDate);
-    const deliveryDate = this.asDate(this.orderForm.getRawValue()?.deliveryDate);
-    this.syncDeliveryMin(issueDate);
-    if (!issueDate || !deliveryDate) {
-      return true;
-    }
-    if (this.toDayKey(deliveryDate) >= this.toDayKey(issueDate)) {
-      return true;
-    }
-    if (adjust) {
-      this.orderForm.get('deliveryDate')?.setValue(issueDate, { emitEvent: false });
-      return true;
-    }
-    this.toastService.showMyToast(
-      'La fecha de entrega no puede ser menor que la fecha de emisión',
-      toastType.warning
-    );
-    return false;
-  }
-
-  private toDayKey(value: Date): string {
-    const month = String(value.getMonth() + 1).padStart(2, '0');
-    const day = String(value.getDate()).padStart(2, '0');
-    return `${value.getFullYear()}-${month}-${day}`;
-  }
-
   private sumBy<T>(
     items: T[],
     pick: (item: T) => number | null | undefined
@@ -1048,7 +1047,7 @@ export class PurchaseOrderDetailComponent
   }
 
   private updateLinesHeight(): void {
-    const host = document.getElementById('purchase-order-lines-grid');
+    const host = document.getElementById('goods-receipt-lines-grid');
     const wrapper = host?.parentElement;
     if (!host || !wrapper || wrapper.clientHeight <= 0) {
       return;

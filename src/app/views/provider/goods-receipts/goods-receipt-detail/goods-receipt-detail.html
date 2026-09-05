@@ -1,7 +1,7 @@
 <div class="wrapper-detail" *ngIf="visible$ | async; else placeholder">
   <form
-    id="purchase-order-detail-form"
-    class="purchase-order-form"
+    id="goods-receipt-detail-form"
+    class="goods-receipt-form"
     [formGroup]="orderForm"
     *ngIf="order$ | async as order"
   >
@@ -9,9 +9,9 @@
       <div class="col-md-3">
         <ejs-textbox
           cssClass="po-number-field"
-          placeholder="Orden No."
+          placeholder="Recepción No."
           floatLabelType="Always"
-          formControlName="poNumber"
+          formControlName="grNumber"
           [enabled]="false"
         ></ejs-textbox>
       </div>
@@ -28,12 +28,10 @@
       <div class="col-md-3">
         <ejs-datepicker
           format="dd/MM/yyyy"
-          placeholder="Entrega"
+          placeholder="Emisión fiscal"
           floatLabelType="Always"
-          formControlName="deliveryDate"
-          [min]="deliveryMinDate"
+          formControlName="issueDateTax"
           [enabled]="enabled$ | async"
-          (change)="onDeliveryDateChange()"
         ></ejs-datepicker>
       </div>
       <div class="col-md-3">
@@ -47,7 +45,7 @@
     </div>
 
     <div class="row">
-      <div class="col-md-12">
+      <div class="col-md-9">
         <ejs-dropdownlist
           placeholder="Proveedor"
           floatLabelType="Always"
@@ -60,10 +58,31 @@
           [enabled]="providerDropdownEnabled"
         ></ejs-dropdownlist>
       </div>
+      <div class="col-md-3">
+        <ejs-dropdownlist
+          placeholder="Almacén de entrada"
+          floatLabelType="Always"
+          formControlName="warehouseId"
+          [dataSource]="(warehouses$ | async) || []"
+          [fields]="warehouseFields"
+          [allowFiltering]="true"
+          [filterType]="providerFilterType"
+          popupHeight="240px"
+          [enabled]="enabled$ | async"
+        ></ejs-dropdownlist>
+      </div>
     </div>
 
     <div class="row">
-      <div class="col-md-12">
+      <div class="col-md-3">
+        <ejs-textbox
+          placeholder="Referencia"
+          floatLabelType="Always"
+          formControlName="referenceNumber"
+          [enabled]="enabled$ | async"
+        ></ejs-textbox>
+      </div>
+      <div class="col-md-9">
         <ejs-textbox
           placeholder="Comentario"
           floatLabelType="Always"
@@ -87,7 +106,7 @@
     </div>
   </div>
 
-  <div id="purchase-order-lines-grid">
+  <div id="goods-receipt-lines-grid">
     <ejs-grid
       #linesgrid
       [dataSource]="lines"
@@ -125,6 +144,14 @@
         <e-column
           field="quantity"
           headerText="Cant."
+          width="70"
+          type="number"
+          format="N3"
+          textAlign="Right"
+        ></e-column>
+        <e-column
+          field="transitQuantity"
+          headerText="Tránsito"
           width="70"
           type="number"
           format="N3"
@@ -177,7 +204,7 @@
           headerText="Tipo Renglón"
           width="100"
         ></e-column>
-        <e-column field="poRowNumber" [isPrimaryKey]="true" [visible]="false"></e-column>
+        <e-column field="grRowNumber" [isPrimaryKey]="true" [visible]="false"></e-column>
       </e-columns>
 
       <ng-template #editSettingsTemplate>
@@ -200,7 +227,7 @@
             </div>
           </div>
           <div class="row">
-            <div class="col-md-3">
+            <div class="col-md-2">
               <ejs-dropdownlist
                 name="taxCode"
                 [(ngModel)]="lineData.taxCode"
@@ -214,7 +241,7 @@
                 (change)="onTaxCodeChange($event)"
               ></ejs-dropdownlist>
             </div>
-            <div class="col-md-3">
+            <div class="col-md-2">
               <ejs-numerictextbox
                 name="quantity"
                 [(ngModel)]="lineData.quantity"
@@ -224,6 +251,17 @@
                 [decimals]="3"
                 [showSpinButton]="false"
                 (change)="onLineAmountChange()"
+              ></ejs-numerictextbox>
+            </div>
+            <div class="col-md-2">
+              <ejs-numerictextbox
+                name="transitQuantity"
+                [(ngModel)]="lineData.transitQuantity"
+                placeholder="Tránsito"
+                floatLabelType="Always"
+                format="n3"
+                [decimals]="3"
+                [showSpinButton]="false"
               ></ejs-numerictextbox>
             </div>
             <div class="col-md-3">
@@ -240,7 +278,7 @@
                 (change)="onUnitChange()"
               ></ejs-dropdownlist>
             </div>
-            <div class="col-md-3">
+            <div class="col-md-2">
               <ejs-numerictextbox
                 name="costByUnit"
                 [(ngModel)]="lineData.costByUnit"
@@ -310,7 +348,7 @@
     <div class="row footer-grids-row">
       <div class="col-6">
         <div class="footer-grid">
-          <div id="purchase-order-discounts-grid">
+          <div id="goods-receipt-discounts-grid">
             <ejs-grid
               #discountsgrid
               [dataSource]="discounts"
@@ -354,7 +392,7 @@
                   textAlign="Right"
                 ></e-column>
                 <e-column
-                  field="subtotalPO"
+                  field="subtotalGR"
                   headerText="Subtotal"
                   width="90"
                   minWidth="90"
@@ -363,7 +401,7 @@
                   textAlign="Right"
                 ></e-column>
                 <e-column
-                  field="poDiscountRowNumber"
+                  field="grDiscountRowNumber"
                   [isPrimaryKey]="true"
                   [visible]="false"
                 ></e-column>
@@ -409,8 +447,8 @@
                     </div>
                     <div class="col-md-4">
                       <ejs-numerictextbox
-                        name="subtotalPO"
-                        [(ngModel)]="discountData.subtotalPO"
+                        name="subtotalGR"
+                        [(ngModel)]="discountData.subtotalGR"
                         placeholder="Subtotal"
                         floatLabelType="Always"
                         format="n2"
@@ -428,7 +466,7 @@
       </div>
       <div class="col-6">
         <div class="footer-grid">
-          <div id="purchase-order-taxes-grid">
+          <div id="goods-receipt-taxes-grid">
             <ejs-grid
               [dataSource]="taxes"
               [toolbar]="taxesToolbar"
@@ -494,7 +532,7 @@
       <span class="total-field__value">{{ taxTotal | number: '1.2-2' }}</span>
     </div>
     <div class="total-field total-field--grand">
-      <span class="total-field__label">TOTAL Orden de Compra</span>
+      <span class="total-field__label">TOTAL Recepción</span>
       <span class="total-field__value">{{ grandTotal | number: '1.2-2' }}</span>
     </div>
   </div>
@@ -519,7 +557,7 @@
 </div>
 
 <ng-template #placeholder>
-  <div class="purchase-order-placeholder">
-    Seleccione una orden de compra
+  <div class="goods-receipt-placeholder">
+    Seleccione una recepción de mercancías
   </div>
 </ng-template>

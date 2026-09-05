@@ -61,11 +61,11 @@
         </ejs-grid>
       </div>
     </div>
-    <div class="col-lg-8">
+    <div class="col-lg-8 detail-pane">
       <ejs-tab
         id="tabs"
         #tabs
-        loadOn="Init"
+        heightAdjustMode="Auto"
         (selected)="onTabSelected($event)"
       >
         <e-tabitems>
@@ -216,13 +216,13 @@
             </ng-template>
           </e-tabitem>
 
-          <e-tabitem *ngIf="!isServiceCatalog" [header]="headerText[4]">
+          <e-tabitem [header]="headerText[4]">
             <ng-template #content>
               <div class="tab-placeholder">Existencias (próximamente)</div>
             </ng-template>
           </e-tabitem>
 
-          <e-tabitem *ngIf="!isServiceCatalog" [header]="headerText[5]">
+          <e-tabitem [header]="headerText[5]">
             <ng-template #content>
               <div class="row">
                 <div class="col-lg-6">

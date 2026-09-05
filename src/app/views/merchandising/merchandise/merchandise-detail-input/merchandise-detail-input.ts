@@ -116,13 +116,19 @@ export class MerchandiseDetailInputComponent implements OnInit, OnDestroy {
 
     this.merchandiseService.codeTypes$
       .pipe(takeUntil(this.destroy$))
-      .subscribe((types) => {
-        this.codeTypeOptions = (types ?? [])
-          .map((t) => String(t.description ?? '').trim())
-          .filter((description) => !!description)
-          .map((description) => ({ merchandiseCodeType: description }));
-        this.applyCodeTypeDataSource();
-        this.cdr.markForCheck();
+      .subscribe({
+        next: (types) => {
+          this.codeTypeOptions = (types ?? [])
+            .map((t) => String(t.description ?? '').trim())
+            .filter((description) => !!description)
+            .map((description) => ({ merchandiseCodeType: description }));
+          this.applyCodeTypeDataSource();
+          this.cdr.markForCheck();
+        },
+        error: () => {
+          this.codeTypeOptions = [];
+          this.cdr.markForCheck();
+        },
       });
 
     this.merchandiseService.merchandiseSelectedAction$

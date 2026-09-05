@@ -1,6 +1,6 @@
-export interface IPurchaseOrderLine {
-  poId: number;
-  poRowNumber: number;
+export interface IGoodsReceiptLine {
+  grId: number;
+  grRowNumber: number;
   merchandiseId?: number | null;
   itemCode?: string | null;
   description?: string | null;
@@ -19,7 +19,7 @@ export interface IPurchaseOrderLine {
   billRowTypeName?: string | null;
 }
 
-export interface IPurchaseOrderMerchandise {
+export interface IGoodsReceiptMerchandise {
   merchandiseId: number;
   name: string;
   description?: string | null;
@@ -28,14 +28,14 @@ export interface IPurchaseOrderMerchandise {
   unidadServicio?: string | null;
 }
 
-export interface IPurchaseOrderUnit {
+export interface IGoodsReceiptUnit {
   code: string;
   weight: number;
   wholesale: boolean;
 }
 
-export interface IPurchaseOrderTax {
-  poId: number;
+export interface IGoodsReceiptTax {
+  grId: number;
   taxCode?: string | null;
   taxRate?: number | null;
   taxBase?: number | null;
@@ -45,35 +45,38 @@ export interface IPurchaseOrderTax {
   withHoldingTaxRate?: number | null;
 }
 
-export interface IPurchaseOrderDiscount {
-  poId: number;
-  poDiscountRowNumber: number;
+export interface IGoodsReceiptDiscount {
+  grId: number;
+  grDiscountRowNumber: number;
   description?: string | null;
   discountRate?: number | null;
   totalDiscount?: number | null;
-  subtotalPO?: number | null;
+  subtotalGR?: number | null;
 }
 
-export interface IPurchaseOrder {
-  poId: number;
-  poNumber: string;
-  poSeriesCode?: string | null;
+export interface IGoodsReceipt {
+  grId: number;
+  grNumber: string;
+  grSeriesCode?: string | null;
   providerId?: number | null;
   providerCode?: string | null;
   providerName?: string | null;
   issueDate?: Date | string | null;
-  deliveryDate?: Date | string | null;
+  issueDateTax?: Date | string | null;
+  warehouseId?: number | null;
+  referenceNumber?: string | null;
   comment?: string | null;
   totalItems?: number | null;
   totalCost?: number | null;
-  totalPurchaseOrder?: number | null;
+  totalDiscounts?: number | null;
+  totalGoodsReceipt?: number | null;
   totalWeight?: number | null;
   totalTaxes?: number | null;
   status?: number | null;
   statusName?: string | null;
   lockedDate?: Date | string | null;
   organizationId: number;
-  lines?: IPurchaseOrderLine[] | null;
-  taxes?: IPurchaseOrderTax[] | null;
-  discounts?: IPurchaseOrderDiscount[] | null;
+  lines?: IGoodsReceiptLine[] | null;
+  taxes?: IGoodsReceiptTax[] | null;
+  discounts?: IGoodsReceiptDiscount[] | null;
 }

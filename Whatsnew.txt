@@ -1,20 +1,105 @@
 llionPlus
-Versión: 202609011
-Fecha: 01/09/2026
+Versión: 202609041
+Fecha: 04/09/2026
 Estado: pendiente de subir al repositorio
 
 ==============================================================================
 RESUMEN
+==============================================================================
+Alta de recepción de mercancías desde Incluir, con el mismo flujo que la
+orden de compra. El número se toma de app_counters (fila Goods Receipt)
+como CONCAT(Module, Counter), por ejemplo RCP00000002. El almacén de
+entrada es obligatorio (WarehouseId). El proveedor se elige en un
+dropdown. Alta: estatus Tránsito. En renglones, la mercancía se elige
+por nombre y se guarda MerchandiseId.
+
+==============================================================================
+RECEPCIONES DE MERCANCÍAS
+==============================================================================
+- Incluir abre un documento nuevo (grId = 0) con el formulario habilitado.
+- Número de recepción: campo bloqueado. Al Incluir se llama a
+  goodsreceipts/next/{organizationId}.
+- Origen: app_counters, CounterDescription = Goods Receipt.
+  GRNumber = CONCAT(Module, Counter) (Module RCP + contador a 8 dígitos).
+- Si al guardar el número viene vacío, prv_goodsreceipt_save asigna uno
+  con la misma regla.
+- Proveedor: dropdown con el nombre visible; se guarda VendorId. En alta
+  se puede elegir; en consulta/modificar queda bloqueado.
+- Almacén de entrada: dropdown de almacenes de la organización
+  (merchandise/warehouses). Obligatorio en alta y modificación.
+- Estatus: no editable. En incluir queda en Tránsito.
+- Campos editables en alta/modificar: emisión, emisión fiscal, almacén,
+  referencia y comentario. Emisión y emisión fiscal por defecto = hoy.
+- Renglón: igual que la orden de compra (mercancía por nombre, IVA
+  RateType, UOM de mer_merchandise_uom). Además se muestra y edita la
+  cantidad en tránsito.
+- Los numéricos del popup no tienen flechas; el usuario escribe el valor.
+
+==============================================================================
+ÓRDENES DE COMPRA
+==============================================================================
+- Incluir abre un documento nuevo (poId = 0) con el formulario habilitado.
+- Número de orden: campo bloqueado. Al Incluir se llama a
+  purchaseorders/next/{organizationId}.
+- Origen: app_counters, CounterDescription = Purchase Order.
+  PONumber = CONCAT(Module, Counter) (Module ORD + contador a 8 dígitos).
+- Si al guardar el número viene vacío, prv_purchaseorder_save asigna uno
+  con la misma regla.
+- Proveedor: dropdown con todos los proveedores (solo el nombre). El valor
+  guardado es VendorId. En un documento existente el dropdown muestra el
+  proveedor de esa orden. En alta se puede elegir; en consulta/modificar
+  queda bloqueado.
+- Estatus: no editable. En incluir queda en Tránsito.
+- Campos editables en alta/modificar: emisión, entrega y comentario.
+- Emisión por defecto = hoy. Entrega por defecto = hoy + 7 días.
+- La fecha de entrega no puede ser menor que la de emisión.
+- Renglón: en el popup, Mercancía es un dropdown (nombre visible). Se
+  guarda MerchandiseId y en Descripción del renglón va la descripción de
+  la mercancía. Al seleccionar se carga el IVA (RateType; si no hay, A) y
+  las unidades de mer_merchandise_uom: primero la de venta al mayor y
+  luego las equivalencias (p.ej. CAJ, UND).
+- Los numéricos del popup (cantidad, costos, %) no tienen flechas; el
+  usuario escribe el valor.
+
+==============================================================================
+API / BASE DE DATOS (llionAPI, no va en este repositorio)
+==============================================================================
+- prv_goodsreceipt_next_number: busca Goods Receipt en app_counters,
+  incrementa Counter (padding 8) y devuelve CONCAT(Module, Counter).
+- prv_goodsreceipt_save: en alta, si GRNumber está vacío, llama a
+  prv_goodsreceipt_next_number. Persiste WarehouseId, IssueDateTax y
+  ReferenceNumber.
+- prv_purchaseorder_next_number: busca Purchase Order en app_counters,
+  incrementa Counter (padding 8) y devuelve CONCAT(Module, Counter).
+- prv_purchaseorder_save: en alta, si PONumber está vacío, llama a
+  prv_purchaseorder_next_number.
+
+==============================================================================
+PENDIENTE
+==============================================================================
+- Guardar compras, notas de crédito y débito.
+- Reiniciar llionAPI (IIS Express) para cargar el controlador de recepciones.
+- Subir este trabajo al repositorio.
+
+==============================================================================
+VERSIÓN ANTERIOR: 202609031 — 03/09/2026
+==============================================================================
+Alta de orden de compra desde Incluir. El número se toma de app_counters
+(fila Purchase Order) como CONCAT(Module, Counter), por ejemplo ORD00000193.
+El proveedor se elige en un dropdown (nombre visible, se guarda VendorId).
+Alta: estatus Tránsito; solo se editan emisión, entrega y comentario.
+En renglones, la mercancía se elige por nombre y se guarda MerchandiseId.
+
+==============================================================================
+VERSIÓN ANTERIOR: 202609011 — 01/09/2026
 ==============================================================================
 Pantalla de órdenes de compra (encabezado, renglones, descuentos de factura
 e IVA) y pantalla genérica de documentos de proveedor. El cálculo de
 importes de renglón, descuentos en cascada y bases de IVA queda alineado
 con el ejemplo OC00000191.
 
-==============================================================================
-ÓRDENES DE COMPRA
-==============================================================================
-- Número de orden: campo bloqueado. Se asigna al Incluir desde el contador
+Órdenes de compra
+- Número de orden: campo bloqueado. Se asignaba al Incluir desde el contador
   ORD (prefijo OC + 8 dígitos).
 - Doble clic en la grilla: mantiene la fila seleccionada y abre el detalle.
 - Cancelar recarga el documento y deja el formulario en solo lectura.
@@ -46,25 +131,13 @@ Interfaz
   - Títulos de los campos (Orden No., Emisión, Proveedor, etc.) se leen
     igual con el formulario deshabilitado; solo se apaga el valor.
 
-==============================================================================
-DOCUMENTOS DE PROVEEDOR
-==============================================================================
-Pantalla parametrizada (recepción, compra, nota de crédito, nota de débito)
-con listado y detalle. El guardado de estos documentos aún no está
-implementado.
+Documentos de proveedor
+- Pantalla parametrizada (recepción, compra, nota de crédito, nota de débito)
+  con listado y detalle. El guardado de estos documentos aún no está
+  implementado.
 
-==============================================================================
-API / BASE DE DATOS (llionAPI, no va en este repositorio)
-==============================================================================
-Procedimientos locales usados por esta versión:
+Procedimientos locales usados por esa versión:
   prv_purchaseorder_save
   prv_purchaseorder_document_get
   prv_purchaseorder_next_number
   prv_purchaseorder_taxes_calc
-
-==============================================================================
-PENDIENTE
-==============================================================================
-- Guardar recepción, compras, notas de crédito y débito.
-- Selector de proveedor en la orden de compra.
-- Subir este trabajo al repositorio.

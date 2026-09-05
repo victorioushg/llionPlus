@@ -9,6 +9,14 @@
   opacity: 1;
 }
 
+.detail-pane {
+  min-height: 480px;
+}
+
+::ng-deep .detail-pane .e-tab {
+  min-height: 480px;
+}
+
 #merchandise-grid {
   position: relative;
 }

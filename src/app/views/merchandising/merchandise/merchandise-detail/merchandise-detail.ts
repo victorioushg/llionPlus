@@ -1,5 +1,6 @@
 import {
   ChangeDetectionStrategy,
+  ChangeDetectorRef,
   Component,
   OnDestroy,
   OnInit,
@@ -14,9 +15,9 @@ import {
 } from '../merchandise';
 import {
   catchError,
-  EMPTY,
   map,
   Observable,
+  of,
   Subject,
   takeUntil,
   tap,
@@ -116,6 +117,7 @@ export class MerchandiseDetailComponent implements OnInit, OnDestroy {
     private applicationService: ApplicationService,
     private formBuilder: FormBuilder,
     private merchandiseService: MerchandiseService,
+    private cdr: ChangeDetectorRef,
   ) {}
 
   ngOnInit() {
@@ -150,34 +152,36 @@ export class MerchandiseDetailComponent implements OnInit, OnDestroy {
       tap((data: IMerchandise) => {
         const merchandise = Array.isArray(data) ? data[0] : data;
         this.merchandise = merchandise;
-
-        if (merchandise) {
-          this.merchandiseForm.reset({
-            merchandiseName: merchandise.name ?? '',
-            merchandiseAlternCode: merchandise.alternCode ?? '',
-            merchandiseBrands: merchandise.brandId ?? null,
-            merchandiseCategories: merchandise.groupId ?? null,
-            merchandisePresentation: merchandise.description ?? '',
-            merchandiseDivisions: merchandise.divisionId ?? null,
-            merchandiseTypes: merchandise.typeId ?? null,
-            // Activo = opposite of Deactivated
-            merchandiseActive: !this.asBool(merchandise.deactivated),
-            merchandiseRegulated: this.asBool(merchandise.regulated),
-            merchandiseReturns: this.asBool(merchandise.acceptsReturns),
-            merchandiseAcceptRebates: this.asBool(merchandise.acceptsRebate),
-            merchandiseReturnsRate: merchandise.acceptsReturnsRate ?? 0,
-            merchandiseStock: merchandise.currentStock ?? 0,
-            merchandiseAvailableStock: merchandise.availableStock ?? 0,
-            serviceType: this.normalizeServiceType(merchandise.serviceType),
-            unidadServicio: merchandise.unidadServicio || 'Unidad',
-          });
+        if (!merchandise || !this.merchandiseForm) {
+          return;
         }
+        this.merchandiseForm.reset({
+          merchandiseName: merchandise.name ?? '',
+          merchandiseAlternCode: merchandise.alternCode ?? '',
+          merchandiseBrands: merchandise.brandId ?? null,
+          merchandiseCategories: merchandise.groupId ?? null,
+          merchandisePresentation: merchandise.description ?? '',
+          merchandiseDivisions: merchandise.divisionId ?? null,
+          merchandiseTypes: merchandise.typeId ?? null,
+          // Activo = opposite of Deactivated
+          merchandiseActive: !this.asBool(merchandise.deactivated),
+          merchandiseRegulated: this.asBool(merchandise.regulated),
+          merchandiseReturns: this.asBool(merchandise.acceptsReturns),
+          merchandiseAcceptRebates: this.asBool(merchandise.acceptsRebate),
+          merchandiseReturnsRate: merchandise.acceptsReturnsRate ?? 0,
+          merchandiseStock: merchandise.currentStock ?? 0,
+          merchandiseAvailableStock: merchandise.availableStock ?? 0,
+          serviceType: this.normalizeServiceType(merchandise.serviceType),
+          unidadServicio: merchandise.unidadServicio || 'Unidad',
+        });
+        this.cdr.markForCheck();
       }),
       catchError((err) => {
         this.errorMessageSubject.next(err);
-        return EMPTY;
+        return of(this.merchandiseService.emptyMerchandise);
       }),
     );
+    this.merchandise$.pipe(takeUntil(this.destroy$)).subscribe();
 
     this.enabled$ = this.merchandiseService.enableMerchandiseFormAction$.pipe(
       tap((enabled) => {

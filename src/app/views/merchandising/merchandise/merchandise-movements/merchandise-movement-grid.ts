@@ -16,7 +16,7 @@ import {
 } from '@syncfusion/ej2-angular-grids';
 import { ChangeEventArgs } from '@syncfusion/ej2-angular-dropdowns';
 import { NgForm } from '@angular/forms';
-import { map, Observable, Subject, of, take, takeUntil } from 'rxjs';
+import { catchError, map, Observable, Subject, of, take, takeUntil } from 'rxjs';
 import { IMerchandiseMovement } from './merchandisemovement';
 import { IMerchandise, IMerchandiseUom } from '../merchandise';
 import { MerchandiseService } from '../merchandise.service';
@@ -26,6 +26,9 @@ import { ToastService } from '@shared/services/toastService';
 import { toastType } from '@shared/enums/enums';
 import { withToolbarTitle } from '@shared/utils/grid-toolbar';
 import { IGroup } from '@shared/models/group';
+
+/** Sales unit for services (Service = 1); they have no UOM catalog. */
+const SERVICE_DEFAULT_UOM = 'UND';
 
 /** Selectable UOM: default first, then each equivalent (e.g. CAJ, UND). */
 export interface MovementUomOption {
@@ -124,7 +127,7 @@ export class MerchandiseMovementComponent
   uomFields: Object = { text: 'code', value: 'code' };
   lotFields: Object = { text: 'lotNumber', value: 'lotNumber' };
 
-  movementData: IMerchandiseMovement = this.createEmptyMovement();
+  movementData!: IMerchandiseMovement;
   private uomList: IMerchandiseUom[] = [];
   private previousUomCode = '';
   private loadedMovements: IMerchandiseMovement[] = [];
@@ -163,7 +166,9 @@ export class MerchandiseMovementComponent
     private organizationService: OrganizationService,
     private toastService: ToastService,
     private cdr: ChangeDetectorRef
-  ) {}
+  ) {
+    this.movementData = this.createEmptyMovement();
+  }
 
   ngOnInit(): void {
     this.movements$ = this.merchandiseService.merchandiseMovements$;
@@ -189,25 +194,44 @@ export class MerchandiseMovementComponent
       );
     });
 
-    this.movements$.pipe(takeUntil(this.destroy$)).subscribe((rows) => {
-      this.loadedMovements = Array.isArray(rows) ? rows : [];
+    this.movements$.pipe(takeUntil(this.destroy$)).subscribe({
+      next: (rows) => {
+        this.loadedMovements = Array.isArray(rows) ? rows : [];
+      },
+      error: () => {
+        this.loadedMovements = [];
+      },
     });
 
     this.merchandiseService.merchandiseUom$
       .pipe(takeUntil(this.destroy$))
-      .subscribe((rows) => {
-        this.uomList = rows ?? [];
-        this.rebuildUomOptions();
-        this.cdr.markForCheck();
+      .subscribe({
+        next: (rows) => {
+          this.uomList = rows ?? [];
+          this.rebuildUomOptions();
+          this.applyDefaultUomIfMissing();
+          this.cdr.markForCheck();
+        },
+        error: () => {
+          this.uomList = [];
+          this.rebuildUomOptions();
+          this.cdr.markForCheck();
+        },
       });
 
     this.merchandiseService.merchandiseSelected$
       .pipe(takeUntil(this.destroy$))
-      .subscribe((merchandise) => {
-        this.selectedMerchandise = merchandise?.merchandiseId
-          ? merchandise
-          : null;
-        this.cdr.markForCheck();
+      .subscribe({
+        next: (merchandise) => {
+          this.selectedMerchandise = merchandise?.merchandiseId
+            ? merchandise
+            : null;
+          this.cdr.markForCheck();
+        },
+        error: () => {
+          this.selectedMerchandise = null;
+          this.cdr.markForCheck();
+        },
       });
 
     this.merchandiseService.merchandiseSelectedAction$
@@ -303,7 +327,7 @@ export class MerchandiseMovementComponent
           : 0;
 
       this.rebuildUomOptions();
-      const defaultUom = this.uomOptions[0]?.code || '';
+      const defaultUom = this.defaultSalesUnit();
 
       this.movementData = {
         ...this.createEmptyMovement(),
@@ -333,6 +357,7 @@ export class MerchandiseMovementComponent
       this.previousUomCode = this.movementData.uom || '';
       this.prefilledUnitCost = isAdd ? Number(this.movementData.unitCost) || 0 : null;
       this.recalculateTotals();
+      this.loadUomOptionsForDialog(isAdd ? '' : (row.uom || ''));
 
       if (isAdd) {
         this.prefillLastUnitCost();
@@ -428,12 +453,16 @@ export class MerchandiseMovementComponent
   ): IMerchandiseMovement {
     const documentNumber = movement.documentNumber || '';
     const origin = this.resolveOrigin(movement.origin);
+    const uom = this.isServiceMerchandise()
+      ? SERVICE_DEFAULT_UOM
+      : movement.uom || '';
     return {
       ...movement,
       merchandiseId: this.selectedMerchandiseId,
       organizationId: this.organizationId,
       origin,
       documentOrigin: documentNumber,
+      uom,
     };
   }
 
@@ -465,6 +494,8 @@ export class MerchandiseMovementComponent
       }
 
       setTimeout(() => {
+        this.applyDefaultUomIfMissing();
+        this.cdr.detectChanges();
         const form = args.form as HTMLFormElement | undefined;
         const field = form?.elements.namedItem(
           'movementType'
@@ -477,8 +508,14 @@ export class MerchandiseMovementComponent
   /**
    * Builds dropdown as [default UOM, ...equivalents].
    * Example: default CAJ + eq UND → ['CAJ','UND'].
+   * Services, or merchandise without UOMs yet, default to UND.
    */
   private rebuildUomOptions(): void {
+    if (this.isServiceMerchandise()) {
+      this.uomOptions = [this.serviceUomOption()];
+      return;
+    }
+
     const rows = this.uomList ?? [];
     const defaultRow =
       rows.find((r) => r.defaultUnit) ||
@@ -486,7 +523,7 @@ export class MerchandiseMovementComponent
       rows[0];
 
     if (!defaultRow?.uom) {
-      this.uomOptions = [];
+      this.uomOptions = [this.serviceUomOption()];
       return;
     }
 
@@ -640,6 +677,70 @@ export class MerchandiseMovementComponent
     });
   }
 
+  private isServiceMerchandise(): boolean {
+    return (
+      this.merchandiseService?.isServiceCatalog === true ||
+      this.selectedMerchandise?.service === true
+    );
+  }
+
+  private serviceUomOption(): MovementUomOption {
+    return { code: SERVICE_DEFAULT_UOM, weight: 0, unitsPerDefault: 1 };
+  }
+
+  private defaultSalesUnit(): string {
+    return this.uomOptions[0]?.code || SERVICE_DEFAULT_UOM;
+  }
+
+  private applyDefaultUomIfMissing(): void {
+    const defaultUom = this.defaultSalesUnit();
+    const current = (this.movementData?.uom || '').trim();
+    const known = this.uomOptions.some((o) => o.code === current);
+    if (!current || !known) {
+      this.movementData = {
+        ...this.movementData,
+        uom: defaultUom,
+      };
+      this.previousUomCode = defaultUom;
+    }
+  }
+
+  /** First dialog open often happens before GET uom returns — load and bind then. */
+  private loadUomOptionsForDialog(preferredUom: string): void {
+    if (this.isServiceMerchandise()) {
+      this.rebuildUomOptions();
+      this.applyDefaultUomIfMissing();
+      this.cdr.markForCheck();
+      return;
+    }
+
+    if (this.selectedMerchandiseId <= 0) {
+      return;
+    }
+
+    this.merchandiseService
+      .getMerchandiseUom(this.selectedMerchandiseId)
+      .pipe(
+        take(1),
+        catchError(() => of([] as IMerchandiseUom[]))
+      )
+      .subscribe((rows) => {
+        this.uomList = rows ?? [];
+        this.rebuildUomOptions();
+        const preferred = (preferredUom || '').trim();
+        this.movementData = {
+          ...this.movementData,
+          uom:
+            (preferred && this.uomOptions.some((o) => o.code === preferred)
+              ? preferred
+              : this.defaultSalesUnit()),
+        };
+        this.previousUomCode = this.movementData.uom || '';
+        this.recalculateTotals();
+        this.cdr.detectChanges();
+      });
+  }
+
   private createEmptyMovement(): IMerchandiseMovement {
     return {
       movementId: 0,
@@ -648,7 +749,7 @@ export class MerchandiseMovementComponent
       movementType: '',
       documentNumber: '',
       quantity: 1,
-      uom: '',
+      uom: this.isServiceMerchandise() ? SERVICE_DEFAULT_UOM : '',
       weight: null,
       organizationId: this.organizationId,
       unitCost: 0,

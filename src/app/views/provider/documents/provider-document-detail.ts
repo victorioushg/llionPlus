@@ -61,6 +61,7 @@ export class ProviderDocumentDetailComponent
   enabled$!: Observable<boolean>;
   visible$!: Observable<boolean>;
   warehouses$!: Observable<IGroup[]>;
+  merchandises: { merchandiseId: number; name: string }[] = [];
   warehouseFields: Object = { text: 'fullName', value: 'groupId' };
   creditCashFields: Object = { text: 'text', value: 'value' };
   creditCashOptions = [
@@ -145,6 +146,11 @@ export class ProviderDocumentDetailComponent
     this.enabled$ = this.documentService.enableFormAction$;
     this.order$ = this.documentService.documentSelected$;
     this.warehouses$ = this.documentService.warehouses$;
+    this.documentService.merchandises$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((rows) => {
+        this.merchandises = rows ?? [];
+      });
     this.visible$ = combineLatest([this.enabled$, this.order$]).pipe(
       map(([editing, order]) => editing || (order?.documentId ?? 0) > 0)
     );
@@ -207,6 +213,7 @@ export class ProviderDocumentDetailComponent
       this.lineMerchDiscPct = this.toPercent(this.lineData.merchandiseDiscount);
       this.lineVendorDiscPct = this.toPercent(this.lineData.vendorDiscount);
       this.lineAcceptancePct = this.toPercent(this.lineData.acceptanceRate);
+      this.applyMerchandiseName();
       this.cdr.markForCheck();
     }
     if (args.requestType === 'save') {
@@ -214,6 +221,7 @@ export class ProviderDocumentDetailComponent
         args.cancel = true;
         return;
       }
+      this.applyMerchandiseName();
       this.lineData.merchandiseDiscount = this.fromPercent(this.lineMerchDiscPct);
       this.lineData.vendorDiscount = this.fromPercent(this.lineVendorDiscPct);
       this.lineData.acceptanceRate = this.fromPercent(this.lineAcceptancePct);
@@ -419,6 +427,22 @@ export class ProviderDocumentDetailComponent
       totalCost: 0,
       billRowTypeName: 'Normal',
     };
+  }
+
+  private applyMerchandiseName(): void {
+    const merchandiseId = Number(this.lineData.merchandiseId) || 0;
+    if (merchandiseId <= 0) {
+      return;
+    }
+    const name = this.merchandises
+      .find((row) => row.merchandiseId === merchandiseId)
+      ?.name?.trim();
+    if (name) {
+      this.lineData = {
+        ...this.lineData,
+        description: name,
+      };
+    }
   }
 
   private createEmptyDiscount(): IProviderDocumentDiscount {

@@ -20,6 +20,8 @@ import { ProviderDetailComponent } from './provider-detail/provider-detail';
 import { ProviderMovementsComponent } from './provider-movements/provider-movements';
 import { PurchaseOrderComponent } from './purchase-orders/purchase-order-grid';
 import { PurchaseOrderDetailComponent } from './purchase-orders/purchase-order-detail/purchase-order-detail';
+import { GoodsReceiptComponent } from './goods-receipts/goods-receipt-grid';
+import { GoodsReceiptDetailComponent } from './goods-receipts/goods-receipt-detail/goods-receipt-detail';
 import { ProviderDocumentGridComponent } from './documents/provider-document-grid';
 import { ProviderDocumentDetailComponent } from './documents/provider-document-detail';
 
@@ -32,6 +34,8 @@ enableRipple(true);
     ProviderMovementsComponent,
     PurchaseOrderComponent,
     PurchaseOrderDetailComponent,
+    GoodsReceiptComponent,
+    GoodsReceiptDetailComponent,
     ProviderDocumentGridComponent,
     ProviderDocumentDetailComponent,
   ],

@@ -1,0 +1,48 @@
+@use "variables" as *;
+
+.e-grid td:first-child.e-selectionbackground {
+  border-left: 7px solid $llion-color-primary;
+}
+
+.e-grid td:first-child:not(.e-selectionbackground) {
+  border-left: 7px solid $llion-color-white;
+}
+
+#goods-receipt-grid .e-toolbar {
+  background-color: $llion-color-primary-container;
+}
+
+.e-toolbar .e-toolbar-items .e-tbar-btn {
+  background: $llion-color-white;
+  border: 1px solid #5a70cc;
+}
+
+::ng-deep #goods-receipt-grid .e-toolbar-item.e-search-wrapper {
+  padding-top: 7px;
+}
+
+::ng-deep
+  #goods-receipt-grid
+  .e-grid
+  .e-toolbar-items
+  .e-toolbar-item.e-search-wrapper
+  .e-search {
+  background-color: $llion-color-primary-container;
+}
+
+::ng-deep #goods-receipt-grid .e-grid {
+  table-layout: fixed;
+
+  .e-rowcell {
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+  }
+}
+
+.goods-receipt-detail-col {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}

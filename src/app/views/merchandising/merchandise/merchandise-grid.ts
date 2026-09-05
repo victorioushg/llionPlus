@@ -145,13 +145,11 @@ export class MerchandiseComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   ngAfterViewInit(): void {
-    if (this.tabObj) {
-      (this.tabObj as TabComponent).element.classList.add('e-fill');
-    }
     setTimeout(() => {
+      this.applyServiceTabVisibility();
       this.markReady();
       this.updateGridHeights();
-    }, 700);
+    }, 0);
     bindGridSearchAsYouType(
       () => this.grid,
       (value) => this.searchStringSubject.next(value),
@@ -180,6 +178,14 @@ export class MerchandiseComponent implements OnInit, AfterViewInit, OnDestroy {
         this.cdr.markForCheck();
       }, 100);
     }
+  }
+
+  private applyServiceTabVisibility(): void {
+    if (!this.tabObj || !this.isServiceCatalog) {
+      return;
+    }
+    this.tabObj.hideTab(4, true);
+    this.tabObj.hideTab(5, true);
   }
 
   private markReady(): void {
@@ -233,6 +239,8 @@ export class MerchandiseComponent implements OnInit, AfterViewInit, OnDestroy {
         { text: 'movimientos' },
         { text: 'compras' },
         { text: 'ventas' },
+        { text: 'existencias' },
+        { text: 'expediente y Media' },
       ];
     }
 

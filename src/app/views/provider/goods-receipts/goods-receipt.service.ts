@@ -17,19 +17,20 @@ import { ErrorHandlerService } from '@shared/services/errorHandlerService';
 import { ToastService } from '@shared/services/toastService';
 import { toastType } from '@shared/enums/enums';
 import { IOrganizationTax } from '@views/application/organization/organization';
-import { IPurchaseOrder, IPurchaseOrderMerchandise, IPurchaseOrderUnit } from './purchase-order';
+import { IGroup } from '@shared/models/group';
+import { IGoodsReceipt, IGoodsReceiptMerchandise, IGoodsReceiptUnit } from './goods-receipt';
 
 @Injectable({
   providedIn: 'root',
 })
-export class PurchaseOrderService {
-  private readonly purchaseOrderUrl = environment.API_URL + 'purchaseorders';
+export class GoodsReceiptService {
+  private readonly goodsReceiptUrl = environment.API_URL + 'goodsreceipts';
   private readonly headers = new HttpHeaders({
     'Content-Type': 'application/json',
   });
   private readonly refreshSubject = new BehaviorSubject<number>(0);
-  private readonly selectedPoIdSource = new BehaviorSubject<number>(0);
-  private readonly draftOrderSource = new BehaviorSubject<IPurchaseOrder | null>(
+  private readonly selectedGrIdSource = new BehaviorSubject<number>(0);
+  private readonly draftOrderSource = new BehaviorSubject<IGoodsReceipt | null>(
     null
   );
   private readonly enabledFormSource = new BehaviorSubject<boolean>(false);
@@ -38,18 +39,21 @@ export class PurchaseOrderService {
   );
   readonly taxCatalog$ = this.taxCatalogSource.asObservable();
   private readonly merchandiseCatalogSource = new BehaviorSubject<
-    IPurchaseOrderMerchandise[]
+    IGoodsReceiptMerchandise[]
   >([]);
   readonly merchandises$ = this.merchandiseCatalogSource.asObservable();
+  warehouses$!: Observable<IGroup[]>;
 
-  readonly emptyPurchaseOrder: IPurchaseOrder = {
-    poId: 0,
-    poNumber: '',
+  readonly emptyGoodsReceipt: IGoodsReceipt = {
+    grId: 0,
+    grNumber: '',
     providerId: null,
     providerCode: '',
     providerName: '',
     issueDate: null,
-    deliveryDate: null,
+    issueDateTax: null,
+    warehouseId: null,
+    referenceNumber: '',
     comment: '',
     statusName: '',
     organizationId: 0,
@@ -58,10 +62,10 @@ export class PurchaseOrderService {
     discounts: [],
   };
 
-  purchaseOrders$!: Observable<IPurchaseOrder[]>;
-  selectedPoId$ = this.selectedPoIdSource.asObservable();
+  goodsReceipts$!: Observable<IGoodsReceipt[]>;
+  selectedGrId$ = this.selectedGrIdSource.asObservable();
   enableFormAction$ = this.enabledFormSource.asObservable();
-  purchaseOrderSelected$!: Observable<IPurchaseOrder>;
+  goodsReceiptSelected$!: Observable<IGoodsReceipt>;
 
   get currentOrganizationId(): number {
     return this.applicationService.workingOrganization?.organizationId ?? 0;
@@ -73,23 +77,53 @@ export class PurchaseOrderService {
     private toastService: ToastService,
     private errorHandlerService: ErrorHandlerService
   ) {
-    this.purchaseOrders$ = this.applicationService.workingOrganization$.pipe(
+    this.warehouses$ = this.applicationService.workingOrganization$.pipe(
+      switchMap((org) => {
+        const organizationId = org?.organizationId ?? 0;
+        if (organizationId <= 0) {
+          return of([] as IGroup[]);
+        }
+        return this.http
+          .get<IApiResponse<IGroup[]>>(
+            `${environment.API_URL}merchandise/warehouses/${organizationId}`
+          )
+          .pipe(
+            map((data) => this.normalizeWarehouses(data.result ?? [])),
+            catchError(() =>
+              this.http
+                .get<IApiResponse<IGroup[]>>(
+                  `${environment.API_URL}application/groups/Warehouse/3/${organizationId}`
+                )
+                .pipe(
+                  map((data) => this.normalizeWarehouses(data.result ?? [])),
+                  catchError((err) => {
+                    this.errorHandlerService.handleError(err);
+                    return of([] as IGroup[]);
+                  })
+                )
+            )
+          );
+      }),
+      shareReplay(1)
+    );
+
+    this.goodsReceipts$ = this.applicationService.workingOrganization$.pipe(
       switchMap((workingOrg) =>
         this.refreshSubject.pipe(
           switchMap(() => {
             const organizationId = workingOrg?.organizationId ?? 0;
             if (organizationId <= 0) {
-              return of([] as IPurchaseOrder[]);
+              return of([] as IGoodsReceipt[]);
             }
             return this.http
-              .get<IApiResponse<IPurchaseOrder[]>>(
-                `${this.purchaseOrderUrl}/${organizationId}/0`
+              .get<IApiResponse<IGoodsReceipt[]>>(
+                `${this.goodsReceiptUrl}/${organizationId}/0`
               )
               .pipe(
                 map((data) => data.result ?? []),
                 catchError((err) => {
                   this.errorHandlerService.handleError(err);
-                  return of([] as IPurchaseOrder[]);
+                  return of([] as IGoodsReceipt[]);
                 })
               );
           })
@@ -98,15 +132,15 @@ export class PurchaseOrderService {
       shareReplay(1)
     );
 
-    this.purchaseOrderSelected$ = combineLatest([
-      this.selectedPoIdSource,
+    this.goodsReceiptSelected$ = combineLatest([
+      this.selectedGrIdSource,
       this.draftOrderSource,
     ]).pipe(
-      switchMap(([poId, draft]) => {
-        if (poId <= 0) {
-          return of(draft ?? this.createEmptyPurchaseOrder());
+      switchMap(([grId, draft]) => {
+        if (grId <= 0) {
+          return of(draft ?? this.createEmptyGoodsReceipt());
         }
-        return this.getPurchaseOrderDocument(poId);
+        return this.getGoodsReceiptDocument(grId);
       }),
       shareReplay({ bufferSize: 1, refCount: true })
     );
@@ -118,7 +152,7 @@ export class PurchaseOrderService {
       )
       .subscribe((organizationId) => {
         this.draftOrderSource.next(null);
-        this.setSelectedPoId(0);
+        this.setSelectedGrId(0);
         this.enableForm(false);
         this.loadTaxCatalog(organizationId);
         this.loadMerchandiseCatalog(organizationId);
@@ -164,11 +198,11 @@ export class PurchaseOrderService {
     return (taxCode ?? '').toString().trim().charAt(0).toUpperCase();
   }
 
-  setSelectedPoId(poId: number): void {
-    if ((poId ?? 0) > 0) {
+  setSelectedGrId(grId: number): void {
+    if ((grId ?? 0) > 0) {
       this.draftOrderSource.next(null);
     }
-    this.selectedPoIdSource.next(poId ?? 0);
+    this.selectedGrIdSource.next(grId ?? 0);
   }
 
   enableForm(enabled: boolean): void {
@@ -176,17 +210,17 @@ export class PurchaseOrderService {
   }
 
   cancelEdit(): void {
-    const poId = this.selectedPoIdSource.value;
+    const grId = this.selectedGrIdSource.value;
     this.enableForm(false);
-    if (poId <= 0) {
+    if (grId <= 0) {
       this.draftOrderSource.next(null);
       return;
     }
-    this.selectedPoIdSource.next(0);
-    this.selectedPoIdSource.next(poId);
+    this.selectedGrIdSource.next(0);
+    this.selectedGrIdSource.next(grId);
   }
 
-  beginNewPurchaseOrder(): void {
+  beginNewGoodsReceipt(): void {
     const organizationId = this.currentOrganizationId;
     if (organizationId <= 0) {
       this.toastService.showMyToast(
@@ -196,35 +230,35 @@ export class PurchaseOrderService {
       return;
     }
 
-    this.getNextPoNumber(organizationId)
+    this.getNextGrNumber(organizationId)
       .pipe(take(1))
       .subscribe((code) => {
         if (!code) {
           this.toastService.showMyToast(
-            'No se pudo obtener el número de orden de compra',
+            'No se pudo obtener el número de recepción de mercancías',
             toastType.warning
           );
           return;
         }
         this.draftOrderSource.next({
-          ...this.createEmptyPurchaseOrder(),
-          poNumber: code,
+          ...this.createEmptyGoodsReceipt(),
+          grNumber: code,
           statusName: 'Tránsito',
           status: 0,
         });
-        this.setSelectedPoId(0);
+        this.setSelectedGrId(0);
         this.enableForm(true);
       });
   }
 
   /**
-   * Next PONumber from app_counters (CounterDescription = Purchase Order):
-   * CONCAT(Module, Counter), e.g. ORD + 00000193.
+   * Next GRNumber from app_counters (CounterDescription = Goods Receipt):
+   * CONCAT(Module, Counter).
    */
-  getNextPoNumber(organizationId: number): Observable<string> {
+  getNextGrNumber(organizationId: number): Observable<string> {
     return this.http
       .get<IApiResponse<{ code: string } | string>>(
-        `${this.purchaseOrderUrl}/next/${organizationId}`
+        `${this.goodsReceiptUrl}/next/${organizationId}`
       )
       .pipe(
         map((data) => {
@@ -241,13 +275,14 @@ export class PurchaseOrderService {
       );
   }
 
-  createEmptyPurchaseOrder(): IPurchaseOrder {
+  createEmptyGoodsReceipt(): IGoodsReceipt {
     const today = this.startOfDay(new Date());
-    const delivery = this.addDays(today, 7);
     return {
-      ...this.emptyPurchaseOrder,
+      ...this.emptyGoodsReceipt,
       issueDate: today,
-      deliveryDate: delivery,
+      issueDateTax: today,
+      warehouseId: null,
+      referenceNumber: '',
       statusName: 'Tránsito',
       status: 0,
       organizationId: this.currentOrganizationId,
@@ -261,23 +296,17 @@ export class PurchaseOrderService {
     return new Date(value.getFullYear(), value.getMonth(), value.getDate());
   }
 
-  private addDays(value: Date, days: number): Date {
-    const next = this.startOfDay(value);
-    next.setDate(next.getDate() + days);
-    return next;
-  }
-
   refresh(): void {
     this.refreshSubject.next(this.refreshSubject.value + 1);
   }
 
-  savePurchaseOrder(order: IPurchaseOrder): Observable<number> {
+  saveGoodsReceipt(order: IGoodsReceipt): Observable<number> {
     const request$ =
-      (order.poId ?? 0) > 0
-        ? this.http.put<IApiResponse<number>>(this.purchaseOrderUrl, order, {
+      (order.grId ?? 0) > 0
+        ? this.http.put<IApiResponse<number>>(this.goodsReceiptUrl, order, {
             headers: this.headers,
           })
-        : this.http.post<IApiResponse<number>>(this.purchaseOrderUrl, order, {
+        : this.http.post<IApiResponse<number>>(this.goodsReceiptUrl, order, {
             headers: this.headers,
           });
 
@@ -286,16 +315,16 @@ export class PurchaseOrderService {
         const savedId = Number(data.result) || 0;
         if (savedId > 0) {
           this.toastService.showMyToast(
-            'Orden de compra guardada',
+            'Recepción de mercancías guardada',
             toastType.success
           );
           this.enableForm(false);
           this.refresh();
-          this.selectedPoIdSource.next(0);
-          this.selectedPoIdSource.next(savedId);
+          this.selectedGrIdSource.next(0);
+          this.selectedGrIdSource.next(savedId);
         } else {
           this.toastService.showMyToast(
-            'No se pudo guardar la orden de compra',
+            'No se pudo guardar la recepción de mercancías',
             toastType.warning
           );
         }
@@ -305,9 +334,9 @@ export class PurchaseOrderService {
     );
   }
 
-  deletePurchaseOrder(item: IPurchaseOrder): Observable<number> {
+  deleteGoodsReceipt(item: IGoodsReceipt): Observable<number> {
     return this.http
-      .delete<IApiResponse<number>>(`${this.purchaseOrderUrl}/${item.poId}`, {
+      .delete<IApiResponse<number>>(`${this.goodsReceiptUrl}/${item.grId}`, {
         headers: this.headers,
       })
       .pipe(
@@ -315,15 +344,15 @@ export class PurchaseOrderService {
           const deletedId = Number(data.result) || 0;
           if (deletedId > 0) {
             this.toastService.showMyToast(
-              'Orden de compra eliminada',
+              'Recepción de mercancías eliminada',
               toastType.success
             );
-            this.setSelectedPoId(0);
+            this.setSelectedGrId(0);
             this.enableForm(false);
             this.refresh();
           } else {
             this.toastService.showMyToast(
-              'No se pudo eliminar la orden de compra',
+              'No se pudo eliminar la recepción de mercancías',
               toastType.warning
             );
           }
@@ -333,19 +362,19 @@ export class PurchaseOrderService {
       );
   }
 
-  private getPurchaseOrderDocument(poId: number): Observable<IPurchaseOrder> {
+  private getGoodsReceiptDocument(grId: number): Observable<IGoodsReceipt> {
     return this.http
-      .get<IApiResponse<IPurchaseOrder>>(
-        `${this.purchaseOrderUrl}/document/${poId}`
+      .get<IApiResponse<IGoodsReceipt>>(
+        `${this.goodsReceiptUrl}/document/${grId}`
       )
       .pipe(
         map((data) => this.normalizeDocument(data.result)),
         catchError((err) => {
           if (err instanceof HttpErrorResponse && err.status === 404) {
-            return of(this.createEmptyPurchaseOrder());
+            return of(this.createEmptyGoodsReceipt());
           }
           this.errorHandlerService.handleError(err);
-          return of(this.createEmptyPurchaseOrder());
+          return of(this.createEmptyGoodsReceipt());
         })
       );
   }
@@ -372,14 +401,14 @@ export class PurchaseOrderService {
       return;
     }
     this.http
-      .get<IApiResponse<IPurchaseOrderMerchandise[]>>(
+      .get<IApiResponse<IGoodsReceiptMerchandise[]>>(
         `${environment.API_URL}merchandise/${organizationId}/0`
       )
       .pipe(
         map((data) =>
           (data.result ?? [])
             .map((row) => {
-              const anyRow = row as IPurchaseOrderMerchandise & {
+              const anyRow = row as IGoodsReceiptMerchandise & {
                 IvaRateType?: string | null;
                 UnidadServicio?: string | null;
               };
@@ -411,19 +440,19 @@ export class PurchaseOrderService {
               a.name.localeCompare(b.name, 'es', { sensitivity: 'base' })
             )
         ),
-        catchError(() => of([] as IPurchaseOrderMerchandise[]))
+        catchError(() => of([] as IGoodsReceiptMerchandise[]))
       )
       .subscribe((rows) => this.merchandiseCatalogSource.next(rows));
   }
 
   getMerchandiseLineDefaults(merchandiseId: number): Observable<{
-    units: IPurchaseOrderUnit[];
+    units: IGoodsReceiptUnit[];
     unit: string;
     taxCode: string;
     weight: number | null;
   }> {
     const empty = {
-      units: [] as IPurchaseOrderUnit[],
+      units: [] as IGoodsReceiptUnit[],
       unit: '',
       taxCode: '',
       weight: null as number | null,
@@ -495,7 +524,7 @@ export class PurchaseOrderService {
 
   private mapMerchandiseUnits(
     rows: Record<string, unknown>[]
-  ): IPurchaseOrderUnit[] {
+  ): IGoodsReceiptUnit[] {
     const normalized = (rows ?? [])
       .map((row) => ({
         uom: String(row['uom'] ?? row['UOM'] ?? '').trim(),
@@ -518,7 +547,7 @@ export class PurchaseOrderService {
       normalized.find((row) => !row.uomEquivalent) ||
       normalized[0];
 
-    const units: IPurchaseOrderUnit[] = [];
+    const units: IGoodsReceiptUnit[] = [];
     const add = (code: string, weight: number, wholesale: boolean) => {
       if (!code || units.some((item) => item.code === code)) {
         return;
@@ -559,17 +588,54 @@ export class PurchaseOrderService {
     return `${value.getFullYear()}-${month}-${day}`;
   }
 
-  private normalizeDocument(row: IPurchaseOrder | null | undefined): IPurchaseOrder {
+  private normalizeDocument(row: IGoodsReceipt | null | undefined): IGoodsReceipt {
     if (!row) {
-      return this.createEmptyPurchaseOrder();
+      return this.createEmptyGoodsReceipt();
     }
     return {
-      ...this.emptyPurchaseOrder,
+      ...this.emptyGoodsReceipt,
       ...row,
-      poId: Number(row.poId) || 0,
+      grId: Number(row.grId) || 0,
+      warehouseId: Number(row.warehouseId) || null,
       lines: row.lines ?? [],
       taxes: row.taxes ?? [],
       discounts: row.discounts ?? [],
     };
+  }
+
+  private normalizeWarehouses(rows: IGroup[]): IGroup[] {
+    return (rows ?? []).map((row) => {
+      const anyRow = row as IGroup & Record<string, unknown>;
+      const description = String(
+        anyRow.description ?? anyRow['Description'] ?? ''
+      );
+      const fullName = String(
+        anyRow.fullName ??
+          anyRow['FullName'] ??
+          anyRow['fullDescription'] ??
+          anyRow['FullDescription'] ??
+          description
+      );
+      return {
+        ...row,
+        groupId: Number(anyRow.groupId ?? anyRow['GroupId'] ?? 0),
+        description,
+        fullName: fullName || description,
+        altern_GroupCode: String(
+          anyRow.altern_GroupCode ??
+            anyRow['Altern_GroupCode'] ??
+            anyRow['altern_groupCode'] ??
+            ''
+        ),
+        parent_GroupCode: Number(
+          anyRow.parent_GroupCode ?? anyRow['Parent_GroupCode'] ?? 0
+        ),
+        groupModule: String(anyRow.groupModule ?? anyRow['GroupModule'] ?? ''),
+        entityId: Number(anyRow.entityId ?? anyRow['EntityId'] ?? 0),
+        organizationId: Number(
+          anyRow.organizationId ?? anyRow['OrganizationId'] ?? 0
+        ),
+      };
+    });
   }
 }

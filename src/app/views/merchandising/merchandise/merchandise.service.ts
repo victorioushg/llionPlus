@@ -27,6 +27,7 @@ import {
   map,
   scan,
   shareReplay,
+  startWith,
   switchMap,
   tap,
   BehaviorSubject,
@@ -35,8 +36,6 @@ import {
   Observable,
   of,
   Subject,
-  EMPTY,
-  forkJoin,
 } from 'rxjs';
 import { IApiResponse } from '@shared/models/api-response';
 import { ApplicationService } from '@shared/services/applicattionService';
@@ -237,8 +236,11 @@ export class MerchandiseService {
         `${this.merchandiseUrl}/brands/${this.organizationId}`,
       )
       .pipe(
-        map((data) => data.result),
-        catchError(this.errorHandlerService.handleError),
+        map((data) => data.result ?? []),
+        catchError((err) => {
+          this.errorHandlerService.handleError(err);
+          return of([] as IGroup[]);
+        }),
         shareReplay(1),
       );
 
@@ -247,8 +249,11 @@ export class MerchandiseService {
         `${this.merchandiseUrl}/categories/${this.organizationId}`,
       )
       .pipe(
-        map((data) => data.result),
-        catchError(this.errorHandlerService.handleError),
+        map((data) => data.result ?? []),
+        catchError((err) => {
+          this.errorHandlerService.handleError(err);
+          return of([] as IGroup[]);
+        }),
         shareReplay(1),
       );
 
@@ -257,16 +262,22 @@ export class MerchandiseService {
         `${this.merchandiseUrl}/divisions/${this.organizationId}`,
       )
       .pipe(
-        map((data) => data.result),
-        catchError(this.errorHandlerService.handleError),
+        map((data) => data.result ?? []),
+        catchError((err) => {
+          this.errorHandlerService.handleError(err);
+          return of([] as IGroup[]);
+        }),
         shareReplay(1),
       );
 
     this.merchandiseTypes$ = this.http
       .get<IApiResponse<IGroup[]>>(`${this.merchandiseUrl}/types`)
       .pipe(
-        map((data) => data.result),
-        catchError(this.errorHandlerService.handleError),
+        map((data) => data.result ?? []),
+        catchError((err) => {
+          this.errorHandlerService.handleError(err);
+          return of([] as IGroup[]);
+        }),
         shareReplay(1),
       );
 
@@ -296,13 +307,14 @@ export class MerchandiseService {
         if (!merchandiseId || merchandiseId <= 0) {
           return of({
             merchandise: this.emptyMerchandise,
-            movements: [],
+            movements: [] as IMerchandiseMovement[],
           });
         }
 
-        return forkJoin({
+        return combineLatest({
           merchandise: this.getMerchandise(merchandiseId),
           movements: this.getMerchandiseMovements(merchandiseId).pipe(
+            startWith([] as IMerchandiseMovement[]),
             catchError(() => of([] as IMerchandiseMovement[])),
           ),
         });
@@ -310,7 +322,6 @@ export class MerchandiseService {
       shareReplay(1),
     );
 
-    // optional separated streams for UI binding
     this.merchandiseSelected$ = this.merchandiseWithMovements$.pipe(
       map((x) => x.merchandise),
     );
@@ -361,7 +372,10 @@ export class MerchandiseService {
       .get<IApiResponse<IGroup[]>>(`${this.merchandiseUrl}/codetypes`)
       .pipe(
         map((data) => data.result ?? []),
-        catchError(this.errorHandlerService.handleError),
+        catchError((err) => {
+          this.errorHandlerService.handleError(err);
+          return of([] as IGroup[]);
+        }),
         shareReplay(1),
       );
 
@@ -369,7 +383,9 @@ export class MerchandiseService {
       switchMap((merchandiseId) =>
         !merchandiseId || merchandiseId <= 0
           ? of([])
-          : this.getMerchandiseUom(merchandiseId),
+          : this.getMerchandiseUom(merchandiseId).pipe(
+              catchError(() => of([] as IMerchandiseUom[])),
+            ),
       ),
       shareReplay(1),
     );
@@ -381,7 +397,9 @@ export class MerchandiseService {
       switchMap(([merchandiseId]) =>
         !merchandiseId || merchandiseId <= 0
           ? of([])
-          : this.getMerchandiseCodes(merchandiseId),
+          : this.getMerchandiseCodes(merchandiseId).pipe(
+              catchError(() => of([] as IMerchandiseCode[])),
+            ),
       ),
       shareReplay(1),
     );
@@ -393,7 +411,9 @@ export class MerchandiseService {
       switchMap(([merchandiseId]) =>
         !merchandiseId || merchandiseId <= 0
           ? of([])
-          : this.getMerchandiseTaxes(merchandiseId),
+          : this.getMerchandiseTaxes(merchandiseId).pipe(
+              catchError(() => of([] as IMerchandiseTax[])),
+            ),
       ),
       shareReplay(1),
     );
@@ -405,7 +425,9 @@ export class MerchandiseService {
       switchMap(([merchandiseId]) =>
         !merchandiseId || merchandiseId <= 0
           ? of([])
-          : this.getMerchandiseMedia(merchandiseId),
+          : this.getMerchandiseMedia(merchandiseId).pipe(
+              catchError(() => of([] as IMerchandiseMedia[])),
+            ),
       ),
       shareReplay(1),
     );
@@ -417,7 +439,9 @@ export class MerchandiseService {
       switchMap(([merchandiseId]) =>
         !merchandiseId || merchandiseId <= 0
           ? of([])
-          : this.getMerchandiseProfiles(merchandiseId),
+          : this.getMerchandiseProfiles(merchandiseId).pipe(
+              catchError(() => of([] as IMerchandiseProfile[])),
+            ),
       ),
       shareReplay(1),
     );
@@ -426,7 +450,9 @@ export class MerchandiseService {
       switchMap((merchandiseId) =>
         !merchandiseId || merchandiseId <= 0
           ? of([])
-          : this.getMerchandisePrices(merchandiseId),
+          : this.getMerchandisePrices(merchandiseId).pipe(
+              catchError(() => of([] as IMerchandisePrice[])),
+            ),
       ),
       shareReplay(1),
     );

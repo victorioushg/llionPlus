@@ -54,7 +54,7 @@ export const PROVIDER_DOCUMENT_KINDS: Record<
     showTaxControl: false,
     showCreditCash: false,
     showCreditTerm: false,
-    taxDateField: 'issueDate',
+    taxDateField: 'issueDateTax',
     showDiscounts: true,
     showTransit: true,
     showAcceptanceRate: false,
