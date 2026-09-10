@@ -15,6 +15,7 @@ export interface ICustomerMovement {
   paymentReceipt?: string | null;
   origin?: string | null;
   originDocument?: string | null;
+  originDocumentId?: number | null;
   debitCredit: number;
   salesPersonId?: number | null;
   collectorId?: number | null;
@@ -42,4 +43,11 @@ export interface ICustomer {
   comment?: string | null;
   createdON?: Date | string | null;
   organizationId: number;
+}
+
+export interface ISalesman {
+  salesmanId: number;
+  alternCode?: string | null;
+  description?: string | null;
+  organizationId?: number | null;
 }

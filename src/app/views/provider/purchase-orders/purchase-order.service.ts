@@ -17,7 +17,7 @@ import { ErrorHandlerService } from '@shared/services/errorHandlerService';
 import { ToastService } from '@shared/services/toastService';
 import { toastType } from '@shared/enums/enums';
 import { IOrganizationTax } from '@views/application/organization/organization';
-import { IPurchaseOrder, IPurchaseOrderMerchandise, IPurchaseOrderUnit } from './purchase-order';
+import { IPurchaseOrder, IPurchaseOrderMerchandise, IPurchaseOrderUnit, isPurchaseOrderReadOnly } from './purchase-order';
 
 @Injectable({
   providedIn: 'root',
@@ -272,6 +272,14 @@ export class PurchaseOrderService {
   }
 
   savePurchaseOrder(order: IPurchaseOrder): Observable<number> {
+    if ((order.poId ?? 0) > 0 && isPurchaseOrderReadOnly(order)) {
+      this.toastService.showMyToast(
+        'La orden de compra procesada no se puede modificar',
+        toastType.warning
+      );
+      return of(0);
+    }
+
     const request$ =
       (order.poId ?? 0) > 0
         ? this.http.put<IApiResponse<number>>(this.purchaseOrderUrl, order, {

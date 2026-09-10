@@ -1,13 +1,14 @@
-import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { EMPTY, Observable, Subject, catchError, tap } from 'rxjs';
 import { ProviderService } from '../provider.service';
-import { IProvider } from '../provider';
+import { IPaymentTerm, IProvider } from '../provider';
 import { ApplicationService } from '@shared/services/applicattionService';
 
 @Component({
   selector: 'llion-provider-detail',
   templateUrl: './provider-detail.html',
+  styleUrls: ['./provider-detail.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: false,
 })
@@ -19,11 +20,16 @@ export class ProviderDetailComponent implements OnInit {
   provider!: IProvider;
   provider$!: Observable<IProvider>;
   enabled$!: Observable<boolean>;
+  terms$!: Observable<IPaymentTerm[]>;
+  termFields = { text: 'termsDescription', value: 'termsId' };
+  termFilterType: 'Contains' = 'Contains';
+  private savingNew = false;
 
   constructor(
     private formBuilder: FormBuilder,
     private providerService: ProviderService,
-    private applicationService: ApplicationService
+    private applicationService: ApplicationService,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
@@ -37,11 +43,19 @@ export class ProviderDetailComponent implements OnInit {
       debitAvailable: [null],
       deactivated: [true],
       comment: [''],
+      termsId: [null],
       createdON: [new Date()],
     });
 
     this.provider$ = this.providerService.providerSelected$.pipe(
       tap((data: IProvider) => {
+        const incomingId = Number(data?.providerId) || 0;
+        if (incomingId <= 0 && this.savingNew) {
+          this.cdr.markForCheck();
+          return;
+        }
+
+        this.savingNew = false;
         this.provider = data;
         this.providerForm.patchValue({
           description: data.description,
@@ -53,14 +67,18 @@ export class ProviderDetailComponent implements OnInit {
           debitAvailable: data.debitAvailable,
           deactivated: !data.deactivated,
           comment: data.comment,
+          termsId: data.termsId || null,
           createdON: data.createdON ? new Date(data.createdON) : new Date(),
         });
+        this.cdr.markForCheck();
       }),
       catchError((err) => {
         this.errorMessageSubject.next(err);
         return EMPTY;
       })
     );
+
+    this.terms$ = this.providerService.terms$;
 
     this.enabled$ = this.providerService.enableProviderFormAction$.pipe(
       tap((enabled) => {
@@ -82,6 +100,7 @@ export class ProviderDetailComponent implements OnInit {
     if (!this.provider?.providerId) {
       this.providerForm.reset({
         deactivated: true,
+        termsId: null,
         createdON: new Date(),
       });
     }
@@ -102,21 +121,30 @@ export class ProviderDetailComponent implements OnInit {
       return;
     }
 
+    const form = this.providerForm.getRawValue();
+    const rawTermsId = form.termsId;
+    const termsId =
+      rawTermsId == null || rawTermsId === '' || Number(rawTermsId) <= 0
+        ? null
+        : Number(rawTermsId);
+
     const payload: IProvider = {
       providerId: this.provider?.providerId ?? 0,
-      description: this.providerForm.value.description,
-      alternCode: this.providerForm.value.alternCode,
-      taxRegistrationID: this.providerForm.value.taxRegistrationID,
-      taxRegistrationID2: this.providerForm.value.taxRegistrationID2,
-      providerAssignedCode: this.providerForm.value.providerAssignedCode,
-      debitLimit: this.providerForm.value.debitLimit,
-      debitAvailable: this.providerForm.value.debitAvailable,
-      deactivated: !this.providerForm.value.deactivated,
-      comment: this.providerForm.value.comment,
-      createdON: this.providerForm.value.createdON,
+      description: form.description,
+      alternCode: form.alternCode,
+      taxRegistrationID: form.taxRegistrationID,
+      taxRegistrationID2: form.taxRegistrationID2,
+      providerAssignedCode: form.providerAssignedCode,
+      debitLimit: form.debitLimit,
+      debitAvailable: form.debitAvailable,
+      termsId,
+      deactivated: !form.deactivated,
+      comment: form.comment,
+      createdON: form.createdON,
       organizationId,
     };
 
+    this.savingNew = payload.providerId <= 0;
     if (payload.providerId > 0) {
       this.providerService.updateProvider(payload);
     } else {

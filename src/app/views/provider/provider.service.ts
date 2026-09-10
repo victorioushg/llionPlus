@@ -24,7 +24,7 @@ import { ToastService } from '@shared/services/toastService';
 import { ErrorHandlerService } from '@shared/services/errorHandlerService';
 import { toastType } from '@shared/enums/enums';
 import { Action } from '@shared/models/edit-action';
-import { IProvider, IProviderMovement } from './provider';
+import { IProvider, IProviderMovement, IPaymentTerm } from './provider';
 
 @Injectable({
   providedIn: 'root',
@@ -46,6 +46,9 @@ export class ProviderService {
     debitAvailable: null,
     deactivated: false,
     comment: '',
+    termsId: null,
+    accountId: null,
+    classId: null,
     organizationId: 0,
   };
 
@@ -75,6 +78,7 @@ export class ProviderService {
   providerSelected$!: Observable<IProvider>;
   providerWithCRUD$!: Observable<IProvider[]>;
   providerMovements$!: Observable<IProviderMovement[]>;
+  terms$!: Observable<IPaymentTerm[]>;
 
   get currentOrganizationId(): number {
     return this.applicationService.workingOrganization?.organizationId ?? 0;
@@ -131,6 +135,9 @@ export class ProviderService {
                 ...row,
                 providerId: Number(row.providerId) || 0,
                 organizationId: Number(row.organizationId) || organizationId,
+                termsId: Number(row.termsId) || null,
+                accountId: Number(row.accountId) || null,
+                classId: Number(row.classId) || null,
               }))
             ),
             catchError(this.errorHandlerService.handleError)
@@ -138,8 +145,29 @@ export class ProviderService {
       })
     );
 
-    this.providerSelected$ = combineLatest([
+    this.providerWithCRUD$ = merge(
       this.providers$,
+      this.providerModifiedAction$.pipe(
+        concatMap((operation) => this.saveProvider(operation)),
+        tap((operation) => {
+          if (operation.action === 'add' && operation.item.providerId > 0) {
+            queueMicrotask(() =>
+              this.setProviderContext(operation.item.providerId)
+            );
+          }
+        })
+      )
+    ).pipe(
+      scan(
+        (acc, value) =>
+          value instanceof Array ? [...value] : this.modifyProviders(acc, value),
+        [] as IProvider[]
+      ),
+      shareReplay({ bufferSize: 1, refCount: true })
+    );
+
+    this.providerSelected$ = combineLatest([
+      this.providerWithCRUD$,
       this.providerContextIdAction$,
     ]).pipe(
       map(([providers, providerId]) => {
@@ -158,19 +186,6 @@ export class ProviderService {
       })
     );
 
-    this.providerWithCRUD$ = merge(
-      this.providers$,
-      this.providerModifiedAction$.pipe(
-        concatMap((operation) => this.saveProvider(operation))
-      )
-    ).pipe(
-      scan(
-        (acc, value) =>
-          value instanceof Array ? [...value] : this.modifyProviders(acc, value),
-        [] as IProvider[]
-      )
-    );
-
     this.providerMovements$ = combineLatest([
       this.providerContextIdAction$,
       this.applicationService.workingOrganization$,
@@ -183,6 +198,40 @@ export class ProviderService {
           return of([] as IProviderMovement[]);
         }
         return this.getProviderMovements(providerId, organizationId, historic);
+      }),
+      shareReplay({ bufferSize: 1, refCount: true })
+    );
+
+    this.terms$ = this.applicationService.workingOrganization$.pipe(
+      switchMap((workingOrg) => {
+        const organizationId = workingOrg?.organizationId ?? 0;
+        if (organizationId <= 0) {
+          return of([] as IPaymentTerm[]);
+        }
+        return this.http
+          .get<IApiResponse<IPaymentTerm[]>>(
+            `${environment.API_URL}application/terms/${organizationId}`
+          )
+          .pipe(
+            map((data) =>
+              ((data.result ?? []) as IPaymentTerm[]).map((row) => {
+                const anyRow = row as IPaymentTerm & {
+                  RangeDays?: number;
+                  range_days?: number;
+                };
+                return {
+                  termsId: Number(row.termsId) || 0,
+                  termsDescription: String(row.termsDescription ?? '').trim(),
+                  rangeDays:
+                    Number(
+                      anyRow.rangeDays ?? anyRow.RangeDays ?? anyRow.range_days
+                    ) || 0,
+                  organizationId: Number(row.organizationId) || organizationId,
+                };
+              })
+            ),
+            catchError(this.errorHandlerService.handleError)
+          );
       }),
       shareReplay({ bufferSize: 1, refCount: true })
     );

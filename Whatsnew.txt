@@ -1,17 +1,72 @@
 llionPlus
-Versión: 202609041
-Fecha: 04/09/2026
+Versión: 202609051
+Fecha: 05/09/2026
 Estado: pendiente de subir al repositorio
 
 ==============================================================================
 RESUMEN
 ==============================================================================
-Alta de recepción de mercancías desde Incluir, con el mismo flujo que la
-orden de compra. El número se toma de app_counters (fila Goods Receipt)
-como CONCAT(Module, Counter), por ejemplo RCP00000002. El almacén de
-entrada es obligatorio (WarehouseId). El proveedor se elige en un
-dropdown. Alta: estatus Tránsito. En renglones, la mercancía se elige
-por nombre y se guarda MerchandiseId.
+Pantalla dedicada de compras, notas crédito (NCC) y notas débito (NDC)
+con vencimiento calculado desde condiciones de crédito y fecha de emisión.
+Recepción de mercancías, términos de pago en proveedor y órdenes de compra
+se mantienen. En clientes: presupuestos, pedidos, notas de entrega, facturas,
+notas crédito y notas débito de venta (listado + edición).
+
+==============================================================================
+COMPRAS
+==============================================================================
+- Incluir abre un documento nuevo (billId = 0) con el formulario habilitado.
+- Número de compra: campo bloqueado. Al Incluir se llama a
+  purchases/next/{organizationId}.
+- Origen: app_counters, CounterDescription = Bill.
+  BillNumber = CONCAT(Module, Counter) (Module COM + contador a 8 dígitos).
+- Si al guardar el número viene vacío, prv_bill_save asigna uno
+  con la misma regla.
+- Proveedor: dropdown con el nombre visible; se guarda VendorId. En alta
+  se puede elegir; en consulta/modificar queda bloqueado.
+- Condición de crédito: dropdown CREDITO (0) / CONTADO (1) sobre
+  CreditCash. En CONTADO, Vence = Emisión.
+- Plazo: se copia del proveedor (TermsId). Si el proveedor no tiene
+  término, el campo queda vacío. En CREDITO, Vence = Emisión +
+  Range_days; si el plazo es nulo o 0 días, Vence = Emisión.
+- Cuenta contable y Clase: se copian del proveedor al incluir; se
+  pueden cambiar. La fecha de asiento contable no se muestra; al
+  guardar queda igual a la emisión.
+- Vence no se edita; se recalcula al cambiar proveedor, condición,
+  plazo o fecha de emisión.
+- Almacén: dropdown de almacenes de la organización. Obligatorio.
+- Estatus: no editable. En incluir queda en Pendiente.
+- Emisión y emisión fiscal por defecto = hoy.
+- Renglón: mercancía por nombre, IVA RateType, UOM (sin cantidad en tránsito).
+
+==============================================================================
+NOTAS CRÉDITO / DÉBITO (NCC / NDC)
+==============================================================================
+- Incluir abre un documento nuevo con el formulario habilitado.
+- Número: campo bloqueado. Al Incluir se llama a
+  creditnotes/next o debitnotes/next.
+- Origen: app_counters, CounterDescription = Credit Note Purchases (NCC)
+  o Debit Note Purchases (NDC). Número = CONCAT(Module, Counter).
+- Proveedor, condición CREDITO/CONTADO, plazo, cuenta y clase como
+  en compras. Vence = Emisión en CONTADO; en CREDITO, Emisión +
+  Range_days; si no hay plazo, Vence = Emisión.
+- Factura / compra relacionada (BillId) opcional. Almacén obligatorio.
+- Emisión y emisión fiscal por defecto = hoy. Sin fecha contable
+  en pantalla (queda igual a la emisión).
+- Renglones con % aceptación. En notas débito también Motivo (ReasonNDB).
+- Sin descuentos de factura. IVA por RateType e IssueDateTax.
+
+==============================================================================
+PROVEEDORES
+==============================================================================
+- Etiquetas flotantes (incluso deshabilitadas) usan el color de fuente
+  de la aplicación, sin el gris de Syncfusion.
+- Dropdown Condiciones de crédito (`col-md-6`): valor TermsId, texto
+  TermsDescription. Código asignado a la izquierda.
+- Fecha ingreso y Proveedor activo encima de contactos; comentario al final.
+- Límite de débito y débito disponible sin flechas de spin.
+- Catálogo: GET application/terms/{organizationId} sobre app_terms.
+- prv_provider_add inserta y actualiza TermsId.
 
 ==============================================================================
 RECEPCIONES DE MERCANCÍAS
@@ -50,7 +105,7 @@ RECEPCIONES DE MERCANCÍAS
   proveedor de esa orden. En alta se puede elegir; en consulta/modificar
   queda bloqueado.
 - Estatus: no editable. En incluir queda en Tránsito.
-- Campos editables en alta/modificar: emisión, entrega y comentario.
+- Una orden Procesada (Status = 2) no se modifica ni se elimina.
 - Emisión por defecto = hoy. Entrega por defecto = hoy + 7 días.
 - La fecha de entrega no puede ser menor que la de emisión.
 - Renglón: en el popup, Mercancía es un dropdown (nombre visible). Se
@@ -77,8 +132,7 @@ API / BASE DE DATOS (llionAPI, no va en este repositorio)
 ==============================================================================
 PENDIENTE
 ==============================================================================
-- Guardar compras, notas de crédito y débito.
-- Reiniciar llionAPI (IIS Express) para cargar el controlador de recepciones.
+- Reiniciar llionAPI (IIS Express) para cargar compras y notas NCC/NDC.
 - Subir este trabajo al repositorio.
 
 ==============================================================================
@@ -141,3 +195,65 @@ Procedimientos locales usados por esa versión:
   prv_purchaseorder_document_get
   prv_purchaseorder_next_number
   prv_purchaseorder_taxes_calc
+
+==============================================================================
+PRESUPUESTOS
+==============================================================================
+Pantalla dedicada de presupuestos (clientes / documentos), mismo esquema
+que compras: listado a la izquierda y edición a la derecha.
+
+- Incluir abre un documento nuevo (quoteId = 0) con el formulario habilitado.
+- Número de presupuesto: campo bloqueado. Al Incluir se llama a
+  quotes/next/{organizationId}.
+- Origen: app_counters, CounterDescription = Quotes.
+  QuoteNumber = CONCAT(Module, Counter) (Module COT + contador a 8 dígitos).
+- Cliente: dropdown con el nombre visible; se guarda CustomerId. En alta
+  se puede elegir; en consulta/modificar queda bloqueado.
+- Asesor comercial: dropdown de cus_salesforce_salesman
+  (GET customers/salesmen/{organizationId}). El SalesmanId del encabezado
+  se guarda y se lee contra esa tabla en presupuesto, pedido, NE,
+  factura, NC y ND.
+- Tarifa: se muestra la del cliente (BillingPrice), no editable.
+- Emisión y vencimiento editables. Estatus de solo lectura.
+- Renglón: mercancía, IVA, cantidad, UND, precio unitario, desc. artículo,
+  desc. cliente y desc. oferta (cascada). Tipo renglón.
+- Pie: Neto, Descuentos, Total mercancías sin descuento, IVA,
+  TOTAL PRESUPUESTO.
+- Los presupuestos con LockedDate no se modifican ni se eliminan.
+
+Procedimientos: cus_quotes_get, cus_quote_document_get, cus_quote_save,
+cus_quote_delete, cus_quote_next_number, cus_salesmen_get.
+
+==============================================================================
+PEDIDOS / NOTAS DE ENTREGA / FACTURAS / NC Y ND VENTAS
+==============================================================================
+Mismo esquema que presupuestos: listado a la izquierda (últimos 500 por
+fecha de emisión) y edición a la derecha. Menú Clientes / Documentos.
+
+Pedidos          /customer/sales-orders     api/salesorders
+Notas de entrega /customer/delivery-notes    api/deliverynotes
+Facturas         /customer/invoices          api/salesinvoices
+Notas crédito    /customer/credit-notes     api/salescreditnotes
+Notas débito     /customer/debit-notes       api/salesdebitnotes
+
+- Incluir abre documento nuevo (id = 0) y pide el siguiente número.
+- Números: app_counters (Module + 8 dígitos)
+  Pedidos PED, Delivery Notes ENT, Invoices FAC,
+  Credit Note Sales NCV, Debit Note Sales NDV.
+- Cliente y asesor comercial como en presupuestos. Tarifa del cliente,
+  no editable. Emisión y vencimiento editables. Estatus de solo lectura.
+- Pedido: fecha de Entrega (DeliveryDate).
+- Nota de entrega, factura, NC y ND: almacén y referencia.
+- NC y ND: factura afectada (InvoiceId).
+- Renglón: mercancía, IVA, cantidad, UND, precio, desc. artículo,
+  desc. cliente y desc. oferta (cascada). Tipo renglón.
+- Pie: Neto, Descuentos, Total mercancías sin descuento, IVA y total
+  del documento (TOTAL PEDIDO / Nota de Entrega / Factura /
+  Nota Crédito / Nota Débito).
+- NC no tiene tabla de descuentos de encabezado.
+- Documentos con LockedDate: consulta sí, modificar/eliminar no.
+- No se migró N° Control ni catálogo de transporte.
+
+Procedimientos: cus_salesorder_*, cus_deliverynote_*, cus_invoice_*,
+cus_creditnote_*, cus_debitnote_* (_get, _document_get, _save, _delete,
+_next_number).

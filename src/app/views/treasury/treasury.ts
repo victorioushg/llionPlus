@@ -27,6 +27,7 @@ export interface ITreasuryMovement {
   amount?: number | null;
   origin?: string | null;
   originDocument?: string | null;
+  originDocumentId?: number | null;
   originType?: string | null;
   beneficiary?: string | null;
   paymentReceipt?: string | null;

@@ -6,10 +6,11 @@
           #grid
           [dataSource]="(purchaseOrders$ | async) || []"
           [allowFiltering]="false"
-          [allowSorting]="false"
+          [allowSorting]="true"
           [toolbar]="toolbar"
           [height]="screenHeight"
           [searchSettings]="searchSettings"
+          [sortSettings]="sortSettings"
           [selectionSettings]="selectionSettings"
           [allowTextWrap]="false"
           clipMode="EllipsisWithTooltip"

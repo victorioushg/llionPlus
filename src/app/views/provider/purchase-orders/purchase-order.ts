@@ -77,3 +77,29 @@ export interface IPurchaseOrder {
   taxes?: IPurchaseOrderTax[] | null;
   discounts?: IPurchaseOrderDiscount[] | null;
 }
+
+export function isPurchaseOrderProcessed(
+  order: IPurchaseOrder | null | undefined
+): boolean {
+  const name = (order?.statusName ?? '').trim().toLowerCase();
+  if (name === 'procesada') {
+    return true;
+  }
+  return Number(order?.status) === 2;
+}
+
+export function isPurchaseOrderReadOnly(
+  order: IPurchaseOrder | null | undefined
+): boolean {
+  if (!order) {
+    return false;
+  }
+  if (order.lockedDate) {
+    return true;
+  }
+  const name = (order.statusName ?? '').trim().toLowerCase();
+  if (name === 'cerrada') {
+    return true;
+  }
+  return isPurchaseOrderProcessed(order);
+}

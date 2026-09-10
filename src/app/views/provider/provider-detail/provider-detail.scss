@@ -1,0 +1,21 @@
+@use 'variables' as *;
+
+:host {
+  display: block;
+  width: 100%;
+}
+
+:host ::ng-deep #provider-detail-form {
+  .e-float-input .e-float-text,
+  .e-float-input label.e-float-text,
+  .e-control-wrapper .e-float-text,
+  .e-date-wrapper .e-float-text,
+  .e-ddl.e-control-wrapper .e-float-text,
+  .e-input-group.e-control-wrapper .e-float-text,
+  .e-disabled .e-float-text,
+  .e-input-group.e-disabled .e-float-text {
+    color: $llion-color-font !important;
+    opacity: 1 !important;
+    -webkit-text-fill-color: $llion-color-font;
+  }
+}

@@ -1,0 +1,29 @@
+---
+description: Antes de cada commit, subir la versión de llionPlus y llionAPI
+alwaysApply: true
+---
+
+# Versión antes de commit
+
+Cuando el usuario pida un commit, **primero** actualiza la versión en app y API, **después** haz el commit. No hagas commit si las versiones no coinciden o no se bumpearon.
+
+## Número
+
+- Formato `YYYYMMDD` + dígito del día (`202609051` = 05/09/2026, entrega 1).
+- Misma versión en llionPlus y llionAPI.
+- Si ese número ya se commitió hoy, incrementa el último dígito (`202609052`).
+- Si el trabajo sigue sin commit, actualiza el `Whatsnew.txt` actual; no inventes otra versión.
+
+## Archivos (obligatorios)
+
+App (`d:\DESARROLLO\Angular\llionPlus`):
+
+- `Whatsnew.txt` — Versión, Fecha, resumen de lo pendiente de subir
+- `src/environments/environment.ts` — `version`
+- `src/environments/environment.prod.ts` — `version`
+
+API (`D:\DESARROLLO\WebON_DotNet\llion\llionAPI`):
+
+- `Whatsnew.txt` — misma Versión/Fecha; campo `Acompañante: llionPlus YYYYMMDDN`
+
+No cambies `package.json` (sigue en semver `1.0.0`). El footer de la app usa `environment.version`.

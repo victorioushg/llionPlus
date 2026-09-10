@@ -350,9 +350,9 @@ export class MerchandiseMovementComponent
         origin: isAdd
           ? this.inventoryOrigin
           : (row.origin ?? this.inventoryOrigin),
-        documentOrigin: isAdd
+        originDocument: isAdd
           ? ''
-          : (row.documentOrigin || row.documentNumber || ''),
+          : (row.originDocument || row.documentNumber || ''),
       };
       this.previousUomCode = this.movementData.uom || '';
       this.prefilledUnitCost = isAdd ? Number(this.movementData.unitCost) || 0 : null;
@@ -369,7 +369,7 @@ export class MerchandiseMovementComponent
               this.movementData = {
                 ...this.movementData,
                 documentNumber: doc,
-                documentOrigin: doc,
+                originDocument: doc,
                 origin: this.resolveOrigin(this.movementData.origin),
               };
               this.cdr.markForCheck();
@@ -461,7 +461,7 @@ export class MerchandiseMovementComponent
       merchandiseId: this.selectedMerchandiseId,
       organizationId: this.organizationId,
       origin,
-      documentOrigin: documentNumber,
+      originDocument: documentNumber,
       uom,
     };
   }
@@ -756,7 +756,8 @@ export class MerchandiseMovementComponent
       totalCost: 0,
       totalCostWithDiscount: null,
       origin: this.inventoryOrigin,
-      documentOrigin: '',
+      originDocument: '',
+      originDocumentId: null,
       customer_Provider: null,
       totalSale: null,
       totalSaleWithDiscount: null,

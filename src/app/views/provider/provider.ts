@@ -42,11 +42,34 @@ export interface IProviderMovement {
   beneficiary?: string | null;
   origin?: string | null;
   originDocument?: string | null;
+  originDocumentId?: number | null;
   cancellationDocumentType?: string | null;
   creditDebit: number;
   historic?: number | null;
   fiscalPeriod?: number | null;
   organizationId: number;
+}
+
+export const CREDIT_CASH_OPTIONS = [
+  { text: 'CREDITO', value: 0 },
+  { text: 'CONTADO', value: 1 },
+];
+
+export function toCreditCash(value: unknown): number {
+  if (value === true || value === 1 || value === '1' || value === 'true') {
+    return 1;
+  }
+  if (typeof value === 'string' && value.length > 0 && value.charCodeAt(0) === 1) {
+    return 1;
+  }
+  return 0;
+}
+
+export interface IPaymentTerm {
+  termsId: number;
+  termsDescription: string;
+  rangeDays?: number;
+  organizationId?: number;
 }
 
 export interface IProvider {
@@ -62,6 +85,8 @@ export interface IProvider {
   debitLimit?: number | null;
   debitAvailable?: number | null;
   termsId?: number | null;
+  accountId?: number | null;
+  classId?: number | null;
   deactivated?: boolean | null;
   status?: string | null;
   comment?: string | null;

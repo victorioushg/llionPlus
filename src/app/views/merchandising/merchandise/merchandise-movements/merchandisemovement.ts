@@ -15,7 +15,8 @@ export interface IMerchandiseMovement {
   totalCost?: number | null;
   totalCostWithDiscount?: number | null;
   origin?: string | null;
-  documentOrigin?: string | null;
+  originDocument?: string | null;
+  originDocumentId?: number | null;
   customer_Provider?: number | string | null;
   totalSale?: number | null;
   totalSaleWithDiscount?: number | null;

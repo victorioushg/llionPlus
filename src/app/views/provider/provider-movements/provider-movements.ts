@@ -477,6 +477,7 @@ export class ProviderMovementsComponent
       beneficiary: '',
       origin: '',
       originDocument: '',
+      originDocumentId: null,
       cancellationDocumentType: '',
       creditDebit: 0,
       historic: 0,

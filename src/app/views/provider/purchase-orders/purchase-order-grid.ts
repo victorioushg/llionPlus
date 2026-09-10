@@ -17,6 +17,7 @@ import {
   SearchEventArgs,
   SearchSettingsModel,
   SelectionSettingsModel,
+  SortSettingsModel,
 } from '@syncfusion/ej2-angular-grids';
 import { ClickEventArgs } from '@syncfusion/ej2-angular-navigations';
 import {
@@ -38,7 +39,7 @@ import { contentGridHeight } from '@shared/utils/layout';
 import { ToastService } from '@shared/services/toastService';
 import { toastType } from '@shared/enums/enums';
 import { PurchaseOrderService } from './purchase-order.service';
-import { IPurchaseOrder } from './purchase-order';
+import { IPurchaseOrder, isPurchaseOrderReadOnly } from './purchase-order';
 
 @Component({
   selector: 'llion-content',
@@ -74,6 +75,9 @@ export class PurchaseOrderComponent implements OnInit, AfterViewInit, OnDestroy 
     'Órdenes de compra'
   );
   searchSettings?: SearchSettingsModel;
+  sortSettings: SortSettingsModel = {
+    columns: [{ field: 'issueDate', direction: 'Descending' }],
+  };
   selectionSettings: SelectionSettingsModel = {
     type: 'Single',
     mode: 'Row',
@@ -243,6 +247,13 @@ export class PurchaseOrderComponent implements OnInit, AfterViewInit, OnDestroy 
       );
       return;
     }
+    if (isPurchaseOrderReadOnly(selected)) {
+      this.toastService.showMyToast(
+        'La orden de compra procesada no se puede modificar',
+        toastType.warning
+      );
+      return;
+    }
     this.purchaseOrderService.setSelectedPoId(selected.poId);
     this.selectOrderRow(selected.poId);
     this.purchaseOrderService.enableForm(true);
@@ -278,6 +289,13 @@ export class PurchaseOrderComponent implements OnInit, AfterViewInit, OnDestroy 
   }
 
   private deleteOrder(order: IPurchaseOrder): void {
+    if (isPurchaseOrderReadOnly(order)) {
+      this.toastService.showMyToast(
+        'La orden de compra procesada no se puede eliminar',
+        toastType.warning
+      );
+      return;
+    }
     this.purchaseOrderService
       .deletePurchaseOrder(order)
       .pipe(take(1))

@@ -313,6 +313,7 @@ export class TreasuryMovementsComponent
       amount: null,
       origin: this.defaultOrigin,
       originDocument: '',
+      originDocumentId: null,
       originType: '',
       beneficiary: '',
       paymentReceipt: '',

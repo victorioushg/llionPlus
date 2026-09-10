@@ -22,6 +22,12 @@ import { PurchaseOrderComponent } from './purchase-orders/purchase-order-grid';
 import { PurchaseOrderDetailComponent } from './purchase-orders/purchase-order-detail/purchase-order-detail';
 import { GoodsReceiptComponent } from './goods-receipts/goods-receipt-grid';
 import { GoodsReceiptDetailComponent } from './goods-receipts/goods-receipt-detail/goods-receipt-detail';
+import { PurchaseComponent } from './purchases/purchase-grid';
+import { PurchaseDetailComponent } from './purchases/purchase-detail/purchase-detail';
+import { CreditNoteComponent } from './credit-notes/credit-note-grid';
+import { CreditNoteDetailComponent } from './credit-notes/credit-note-detail/credit-note-detail';
+import { DebitNoteComponent } from './debit-notes/debit-note-grid';
+import { DebitNoteDetailComponent } from './debit-notes/debit-note-detail/debit-note-detail';
 import { ProviderDocumentGridComponent } from './documents/provider-document-grid';
 import { ProviderDocumentDetailComponent } from './documents/provider-document-detail';
 
@@ -36,6 +42,12 @@ enableRipple(true);
     PurchaseOrderDetailComponent,
     GoodsReceiptComponent,
     GoodsReceiptDetailComponent,
+    PurchaseComponent,
+    PurchaseDetailComponent,
+    CreditNoteComponent,
+    CreditNoteDetailComponent,
+    DebitNoteComponent,
+    DebitNoteDetailComponent,
     ProviderDocumentGridComponent,
     ProviderDocumentDetailComponent,
   ],

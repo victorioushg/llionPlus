@@ -14,6 +14,7 @@ import {
   concatMap,
   map,
   scan,
+  shareReplay,
   switchMap,
   tap,
 } from 'rxjs/operators';
@@ -23,6 +24,7 @@ import { ToastService } from '@shared/services/toastService';
 import { ErrorHandlerService } from '@shared/services/errorHandlerService';
 import { toastType } from '@shared/enums/enums';
 import { Action } from '@shared/models/edit-action';
+import { IAccountClass } from '@views/accounting/classes/class';
 import { IAccount } from './account';
 
 /** Raw API row — supports both C# names and legacy Angular aliases. */
@@ -95,6 +97,7 @@ export class AccountsService {
   enableAccountFormAction$ = this.enabledAccountFormSource.asObservable();
 
   accounts$!: Observable<IAccount[]>;
+  classes$!: Observable<IAccountClass[]>;
   accountSelected$!: Observable<IAccount>;
   accountWithCRUD$!: Observable<IAccount[]>;
 
@@ -236,6 +239,38 @@ export class AccountsService {
             catchError(this.errorHandlerService.handleError)
           );
       })
+    );
+
+    this.classes$ = this.applicationService.workingOrganization$.pipe(
+      switchMap((workingOrg) => {
+        if ((workingOrg?.organizationId ?? 0) <= 0) {
+          return of([] as IAccountClass[]);
+        }
+        return this.http
+          .get<IApiResponse<IAccountClass[]>>(`${this.accountUrl}/classes/0`)
+          .pipe(
+            map((data) =>
+              ((data.result ?? []) as Array<IAccountClass & Record<string, unknown>>)
+                .map((row) => {
+                  const classId = Number(row.classId ?? row['ClassId']) || 0;
+                  const name = String(row.name ?? row['Name'] ?? '').trim();
+                  const fullName = String(
+                    row.fullName ?? row['FullName'] ?? name
+                  ).trim();
+                  const isActive = row.isActive ?? row['IsActive'];
+                  return {
+                    classId,
+                    name,
+                    fullName: fullName || name,
+                    isActive: isActive !== false && isActive !== 0,
+                  } as IAccountClass;
+                })
+                .filter((row) => row.classId > 0)
+            ),
+            catchError(this.errorHandlerService.handleError)
+          );
+      }),
+      shareReplay({ bufferSize: 1, refCount: true })
     );
 
     this.accountSelected$ = combineLatest([

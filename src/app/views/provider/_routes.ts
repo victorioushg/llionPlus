@@ -2,7 +2,9 @@ import { Routes } from '@angular/router';
 import { ProviderComponent } from './provider-grid';
 import { PurchaseOrderComponent } from './purchase-orders/purchase-order-grid';
 import { GoodsReceiptComponent } from './goods-receipts/goods-receipt-grid';
-import { ProviderDocumentGridComponent } from './documents/provider-document-grid';
+import { PurchaseComponent } from './purchases/purchase-grid';
+import { CreditNoteComponent } from './credit-notes/credit-note-grid';
+import { DebitNoteComponent } from './debit-notes/debit-note-grid';
 
 export const routes: Routes = [
   {
@@ -19,17 +21,14 @@ export const routes: Routes = [
   },
   {
     path: 'purchases',
-    component: ProviderDocumentGridComponent,
-    data: { kind: 'purchase' },
+    component: PurchaseComponent,
   },
   {
     path: 'credit-notes',
-    component: ProviderDocumentGridComponent,
-    data: { kind: 'creditNote' },
+    component: CreditNoteComponent,
   },
   {
     path: 'debit-notes',
-    component: ProviderDocumentGridComponent,
-    data: { kind: 'debitNote' },
+    component: DebitNoteComponent,
   },
 ];

@@ -24,7 +24,7 @@ import { ToastService } from '@shared/services/toastService';
 import { ErrorHandlerService } from '@shared/services/errorHandlerService';
 import { toastType } from '@shared/enums/enums';
 import { Action } from '@shared/models/edit-action';
-import { ICustomer, ICustomerMovement } from './customer';
+import { ICustomer, ICustomerMovement, ISalesman } from './customer';
 
 @Injectable({
   providedIn: 'root',
@@ -68,6 +68,7 @@ export class CustomerService {
   private readonly movementsRefreshSubject = new BehaviorSubject<number>(0);
 
   customers$!: Observable<ICustomer[]>;
+  salesmen$!: Observable<ISalesman[]>;
   customerSelected$!: Observable<ICustomer>;
   customerWithCRUD$!: Observable<ICustomer[]>;
   customerMovements$!: Observable<ICustomerMovement[]>;
@@ -131,6 +132,45 @@ export class CustomerService {
             catchError(this.errorHandlerService.handleError)
           );
       })
+    );
+
+    this.salesmen$ = this.applicationService.workingOrganization$.pipe(
+      switchMap((workingOrg) => {
+        const organizationId = workingOrg?.organizationId ?? 0;
+        if (organizationId <= 0) {
+          return of([] as ISalesman[]);
+        }
+        return this.http
+          .get<IApiResponse<ISalesman[]>>(
+            `${this.customerUrl}/salesmen/${organizationId}`
+          )
+          .pipe(
+            map((data) =>
+              (data.result ?? [])
+                .map((row) => {
+                  const salesmanId = Number(row.salesmanId) || 0;
+                  const description = (row.description ?? '').trim();
+                  return {
+                    ...row,
+                    salesmanId,
+                    alternCode: (row.alternCode ?? '').trim(),
+                    description,
+                  };
+                })
+                .filter((row) => row.salesmanId > 0)
+                .sort((a, b) =>
+                  (a.description ?? '').localeCompare(b.description ?? '', 'es', {
+                    sensitivity: 'base',
+                  })
+                )
+            ),
+            catchError((err) => {
+              this.errorHandlerService.handleError(err);
+              return of([] as ISalesman[]);
+            })
+          );
+      }),
+      shareReplay(1)
     );
 
     this.customerSelected$ = combineLatest([

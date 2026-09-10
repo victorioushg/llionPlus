@@ -143,8 +143,40 @@
       },
       {
         "nodeId": "06-02",
-        "nodeText": "reportes clientes",
-        "image": "../../assets/images/transparent-icon.png"
+        "nodeText": "documentos",
+        "image": "../../assets/images/transparent-icon.png",
+        "nodeChild": [
+          {
+            "nodeId": "06-02-01",
+            "nodeText": "presupuesto",
+            "image": "../../assets/images/transparent-icon.png"
+          },
+          {
+            "nodeId": "06-02-02",
+            "nodeText": "pedidos",
+            "image": "../../assets/images/transparent-icon.png"
+          },
+          {
+            "nodeId": "06-02-03",
+            "nodeText": "notas de entrega",
+            "image": "../../assets/images/transparent-icon.png"
+          },
+          {
+            "nodeId": "06-02-04",
+            "nodeText": "facturas",
+            "image": "../../assets/images/transparent-icon.png"
+          },
+          {
+            "nodeId": "06-02-05",
+            "nodeText": "notas crédito",
+            "image": "../../assets/images/transparent-icon.png"
+          },
+          {
+            "nodeId": "06-02-06",
+            "nodeText": "notas débito",
+            "image": "../../assets/images/transparent-icon.png"
+          }
+        ]
       }
     ]
   },
