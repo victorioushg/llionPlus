@@ -43,6 +43,11 @@ export class InvoiceService {
     dueDate: null,
     warehouseId: null,
     reference: '',
+    creditCash: 0,
+    creditTerm: null,
+    paymentTreasuryId: null,
+    paymentDocument: '',
+    updateInventory: 1,
     comment: '',
     salesmanId: null,
     salesmanName: '',
@@ -293,6 +298,13 @@ export class InvoiceService {
     return new Date(value.getFullYear(), value.getMonth(), value.getDate());
   }
 
+  private isTrue(value: unknown): boolean {
+    if (value === true || value === 1 || value === '1' || value === 'true') {
+      return true;
+    }
+    return typeof value === 'string' && value.length > 0 && value.charCodeAt(0) === 1;
+  }
+
   private normalizeDocument(row: IInvoice | null | undefined): IInvoice {
     if (!row) {
       return this.createEmptyInvoice();
@@ -303,6 +315,10 @@ export class InvoiceService {
       invoiceId: Number(row.invoiceId) || 0,
       warehouseId: Number(row.warehouseId) || null,
       reference: row.reference ?? '',
+      creditCash: this.isTrue(row.creditCash) ? 1 : 0,
+      creditTerm: Number(row.creditTerm) || null,
+      paymentTreasuryId: Number(row.paymentTreasuryId) || null,
+      paymentDocument: row.paymentDocument ?? '',
       customerId: Number(row.customerId) || null,
       salesmanId: Number(row.salesmanId) || null,
       accountId: Number(row.accountId) || null,

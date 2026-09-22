@@ -10,4 +10,9 @@ export class User {
   defaultOrganizationName?: string;
   workingOrganizationId?: number;
   workingOrganizationName?: string;
+  sessionId?: number;
+  machineName?: string;
+  fiscalPrinterId?: number;
+  fiscalPrinterCode?: string;
+  fiscalPrinterLabel?: string;
 }

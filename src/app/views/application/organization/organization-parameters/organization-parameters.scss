@@ -20,13 +20,8 @@
   max-width: 100%;
 }
 
-.detail-section-title {
-  margin: 0 0 8px;
-  font-weight: 600;
-  color: $llion-color-font;
-}
-
-::ng-deep #organization-parameters-grid .e-grid {
+::ng-deep #organization-parameters-grid .e-grid,
+::ng-deep #organization-parameters-grid .e-treegrid {
   width: 100% !important;
   max-width: 100%;
   table-layout: fixed;
@@ -55,6 +50,79 @@
     overflow: hidden;
     text-overflow: ellipsis;
   }
+
+  .e-rowcell.e-treerowcell {
+    overflow: visible !important;
+  }
+
+  .e-treecolumn-container {
+    display: block !important;
+    white-space: nowrap;
+    overflow: visible !important;
+  }
+
+  .e-treegridindent,
+  .e-treegridexpand,
+  .e-treegridcollapse,
+  .e-icons.e-none {
+    display: inline-block !important;
+    width: 18px !important;
+    min-width: 18px !important;
+    height: 18px !important;
+    vertical-align: middle;
+    box-sizing: border-box;
+  }
+
+  .e-treegridexpand,
+  .e-treegridcollapse {
+    visibility: visible !important;
+    opacity: 1 !important;
+    transform: none !important;
+    cursor: pointer;
+    color: $llion-color-font !important;
+    font-size: 12px !important;
+    line-height: 18px !important;
+    text-align: center;
+  }
+
+  .e-treegridcollapse::before {
+    content: '\25B6' !important;
+    font-family: 'Segoe UI Symbol', 'Arial Unicode MS', sans-serif !important;
+  }
+
+  .e-treegridexpand::before {
+    content: '\25BC' !important;
+    font-family: 'Segoe UI Symbol', 'Arial Unicode MS', sans-serif !important;
+  }
+
+  .e-icons.e-none::before {
+    content: none !important;
+  }
+
+  .e-treecolumn-container .e-treecell {
+    display: inline !important;
+  }
+
+  .parameter-folder-row .e-treecell {
+    font-weight: 700;
+  }
+
+  .parameter-editable-row .e-treecell {
+    font-weight: 400 !important;
+  }
+
+  .parameter-value-numeric {
+    text-align: right;
+  }
+}
+
+::ng-deep #organization-parameters-grid .e-gridcontent .e-row[aria-selected='true'] .e-rowcell,
+::ng-deep #organization-parameters-grid .e-gridcontent .e-row[aria-selected='true'] .e-rowcell *,
+::ng-deep #organization-parameters-grid .e-gridcontent .e-rowcell.e-selectionbackground,
+::ng-deep #organization-parameters-grid .e-gridcontent .e-rowcell.e-selectionbackground *,
+::ng-deep #organization-parameters-grid .e-gridcontent .e-rowcell.e-active,
+::ng-deep #organization-parameters-grid .e-gridcontent .e-rowcell.e-active * {
+  color: $llion-color-white !important;
 }
 
 @include toolbar.child-grid-toolbar('organization-parameters-grid');
@@ -70,5 +138,12 @@
   .e-control-wrapper,
   .e-dropdownlist {
     width: 100%;
+  }
+
+  .value-hint {
+    margin-top: -4px;
+    color: $llion-color-font;
+    opacity: 0.75;
+    font-size: 12px;
   }
 }

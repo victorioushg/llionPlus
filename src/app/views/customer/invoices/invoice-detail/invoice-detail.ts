@@ -39,8 +39,27 @@ import {
   IPurchaseMerchandise,
   IPurchaseUnit,
 } from '../../../provider/purchases/purchase';
+import {
+  CREDIT_CASH_OPTIONS,
+  IPaymentTerm,
+  toCreditCash,
+} from '../../../provider/provider';
+import { ProviderService } from '../../../provider/provider.service';
+import { AccountsService } from '@views/accounting/accounts/accounts.service';
+import { IAccount } from '@views/accounting/accounts/account';
+import { IAccountClass } from '@views/accounting/classes/class';
+import { ApplicationService } from '@shared/services/applicattionService';
+import { TreasuryService } from '@views/treasury/treasury.service';
+import {
+  ITreasury,
+  TREASURY_TYPE_CASHBOX,
+} from '@views/treasury/treasury';
 import { InvoiceService } from '../invoice.service';
 import { IInvoice, IInvoiceDiscount, IInvoiceLine, IInvoiceTax, ISalesman } from '../invoice';
+import {
+  dueDateFromCredit,
+  headerFromCustomer,
+} from '../../sales-document-header';
 
 @Component({
   selector: 'llion-invoice-detail',
@@ -65,7 +84,17 @@ export class InvoiceDetailComponent implements OnInit, AfterViewInit, OnDestroy 
   customers$!: Observable<ICustomer[]>;
   salesmen$!: Observable<ISalesman[]>;
   warehouses$!: Observable<IGroup[]>;
+  terms$!: Observable<IPaymentTerm[]>;
+  accounts$!: Observable<IAccount[]>;
+  classes$!: Observable<IAccountClass[]>;
+  treasuries$!: Observable<Array<ITreasury & { group: string }>>;
   warehouseFields = { text: 'fullName', value: 'groupId' };
+  termFields = { text: 'termsDescription', value: 'termsId' };
+  accountFields = { text: 'fullName', value: 'accountId' };
+  classFields = { text: 'fullName', value: 'classId' };
+  creditCashFields = { text: 'text', value: 'value' };
+  creditCashOptions = CREDIT_CASH_OPTIONS;
+  treasuryFields = { text: 'treasuryName', value: 'treasuryId', groupBy: 'group' };
   merchandises$!: Observable<IPurchaseMerchandise[]>;
   customerFields = { text: 'description', value: 'customerId' };
   salesmanFields = { text: 'description', value: 'salesmanId' };
@@ -122,6 +151,7 @@ export class InvoiceDetailComponent implements OnInit, AfterViewInit, OnDestroy 
   currentInvoiceId = 0;
   private currentOrder: IInvoice | null = null;
   private customers: ICustomer[] = [];
+  private terms: IPaymentTerm[] = [];
   private merchandises: IPurchaseMerchandise[] = [];
   private taxCatalogRows: { taxType?: string; description?: string; rateType?: string }[] =
     [];
@@ -134,11 +164,19 @@ export class InvoiceDetailComponent implements OnInit, AfterViewInit, OnDestroy 
     return this.gridEnabled && this.currentInvoiceId <= 0;
   }
 
+  get isCashSale(): boolean {
+    return toCreditCash(this.orderForm?.getRawValue()?.creditCash) === 1;
+  }
+
   constructor(
     private formBuilder: FormBuilder,
     private invoiceService: InvoiceService,
     private customerService: CustomerService,
     private purchaseService: PurchaseService,
+    private providerService: ProviderService,
+    private accountsService: AccountsService,
+    private treasuryService: TreasuryService,
+    private applicationService: ApplicationService,
     private toastService: ToastService,
     private cdr: ChangeDetectorRef
   ) {}
@@ -146,14 +184,21 @@ export class InvoiceDetailComponent implements OnInit, AfterViewInit, OnDestroy 
   ngOnInit(): void {
     this.orderForm = this.formBuilder.group({
       invoiceNumber: [''],
+      invoiceSeriesCode: [''],
       issueDate: [null as Date | null],
       dueDate: [null as Date | null],
       statusName: [''],
       customerId: [null as number | null],
       salesmanId: [null as number | null],
       billingPrice: [''],
-      comment: [''],
+      creditCash: [0],
+      creditTerm: [null as number | null],
+      accountId: [null as number | null],
+      classId: [null as number | null],
       warehouseId: [null as number | null],
+      paymentTreasuryId: [null as number | null],
+      paymentDocument: [''],
+      comment: [''],
       reference: [''],
     });
     this.orderForm.disable({ emitEvent: false });
@@ -162,6 +207,28 @@ export class InvoiceDetailComponent implements OnInit, AfterViewInit, OnDestroy 
     this.order$ = this.invoiceService.invoiceSelected$;
     this.salesmen$ = this.customerService.salesmen$;
     this.warehouses$ = this.purchaseService.warehouses$;
+    this.terms$ = this.providerService.terms$;
+    this.terms$.pipe(takeUntil(this.destroy$)).subscribe((rows) => {
+      this.terms = rows ?? [];
+      this.cdr.markForCheck();
+    });
+    this.accounts$ = this.accountsService.accounts$;
+    this.classes$ = this.accountsService.classes$;
+    this.treasuries$ = this.applicationService.workingOrganization$.pipe(
+      switchMap((org) =>
+        this.treasuryService.getOrganizationTreasuries(org?.organizationId ?? 0)
+      ),
+      map((rows) =>
+        (rows ?? []).map((row) => ({
+          ...row,
+          group:
+            (row.treasuryType ?? '').toUpperCase() === TREASURY_TYPE_CASHBOX
+              ? 'Cajas'
+              : 'Bancos',
+        }))
+      ),
+      shareReplay({ bufferSize: 1, refCount: true })
+    );
     this.customers$ = this.customerService.customers$.pipe(
       map((rows) =>
         [...(rows ?? [])]
@@ -269,14 +336,51 @@ export class InvoiceDetailComponent implements OnInit, AfterViewInit, OnDestroy 
   }
 
   onCustomerChange(args?: ChangeEventArgs): void {
+    if (!this.gridEnabled) {
+      return;
+    }
     const customerId =
       Number(args?.value) || Number(this.orderForm.getRawValue().customerId) || 0;
     const customer = this.customers.find((row) => row.customerId === customerId);
+    this.orderForm.patchValue(headerFromCustomer(customer), { emitEvent: false });
+    this.applyDueDateFromCreditTerm();
+    this.cdr.markForCheck();
+  }
+
+  onIssueDateChange(): void {
+    this.applyDueDateFromCreditTerm();
+    this.cdr.markForCheck();
+  }
+
+  onCreditCashChange(): void {
+    if (!this.gridEnabled) {
+      return;
+    }
+    this.applyDueDateFromCreditTerm();
+    this.cdr.markForCheck();
+  }
+
+  onCreditTermChange(): void {
+    if (!this.gridEnabled) {
+      return;
+    }
+    this.applyDueDateFromCreditTerm();
+    this.cdr.markForCheck();
+  }
+
+  private applyDueDateFromCreditTerm(): void {
+    const form = this.orderForm.getRawValue();
     this.orderForm.patchValue(
-      { billingPrice: customer?.billingPrice ?? '' },
+      {
+        dueDate: dueDateFromCredit(
+          this.asDate(form.issueDate),
+          form.creditCash,
+          Number(form.creditTerm) || 0,
+          this.terms
+        ),
+      },
       { emitEvent: false }
     );
-    this.cdr.markForCheck();
   }
 
   onAcceptClick(): void {
@@ -300,6 +404,22 @@ export class InvoiceDetailComponent implements OnInit, AfterViewInit, OnDestroy 
     const customerId = Number(form.customerId) || 0;
     if (customerId <= 0) {
       this.toastService.showMyToast('Seleccione un cliente', toastType.warning);
+      return;
+    }
+
+    const warehouseId = Number(form.warehouseId) || 0;
+    if (warehouseId <= 0) {
+      this.toastService.showMyToast('Seleccione el almacén', toastType.warning);
+      return;
+    }
+
+    const creditCash = toCreditCash(form.creditCash);
+    const paymentTreasuryId = Number(form.paymentTreasuryId) || 0;
+    if (creditCash === 1 && paymentTreasuryId <= 0) {
+      this.toastService.showMyToast(
+        'Seleccione la caja o el banco',
+        toastType.warning
+      );
       return;
     }
 
@@ -332,7 +452,15 @@ export class InvoiceDetailComponent implements OnInit, AfterViewInit, OnDestroy 
       issueDate: form.issueDate,
       dueDate: form.dueDate ?? form.issueDate,
       salesmanId: Number(form.salesmanId) || null,
-      warehouseId: Number(form.warehouseId) || null,
+      invoiceSeriesCode: form.invoiceSeriesCode ?? '',
+      creditCash,
+      creditTerm: Number(form.creditTerm) || null,
+      accountId: Number(form.accountId) || null,
+      classId: Number(form.classId) || null,
+      warehouseId,
+      paymentTreasuryId: creditCash === 1 ? paymentTreasuryId : null,
+      paymentDocument: form.paymentDocument ?? '',
+      updateInventory: 1,
       reference: form.reference ?? '',
       comment: form.comment ?? '',
       status: isNew ? 0 : this.currentOrder?.status ?? 0,
@@ -519,6 +647,7 @@ export class InvoiceDetailComponent implements OnInit, AfterViewInit, OnDestroy 
     this.orderForm.patchValue(
       {
         invoiceNumber: order.invoiceNumber ?? '',
+        invoiceSeriesCode: order.invoiceSeriesCode ?? '',
         issueDate,
         dueDate: this.asDate(order.dueDate) ?? issueDate,
         statusName:
@@ -528,7 +657,16 @@ export class InvoiceDetailComponent implements OnInit, AfterViewInit, OnDestroy 
         salesmanId:
           Number(order.salesmanId) > 0 ? Number(order.salesmanId) : null,
         billingPrice: order.billingPrice ?? '',
+        creditCash: toCreditCash(order.creditCash),
+        creditTerm: Number(order.creditTerm) > 0 ? Number(order.creditTerm) : null,
+        accountId: Number(order.accountId) > 0 ? Number(order.accountId) : null,
+        classId: Number(order.classId) > 0 ? Number(order.classId) : null,
         warehouseId: Number(order.warehouseId) > 0 ? Number(order.warehouseId) : null,
+        paymentTreasuryId:
+          Number(order.paymentTreasuryId) > 0
+            ? Number(order.paymentTreasuryId)
+            : null,
+        paymentDocument: order.paymentDocument ?? '',
         reference: order.reference ?? '',
         comment: order.comment ?? '',
       },
@@ -719,11 +857,17 @@ export class InvoiceDetailComponent implements OnInit, AfterViewInit, OnDestroy 
       return;
     }
     this.orderForm.get('issueDate')?.enable({ emitEvent: false });
-    this.orderForm.get('dueDate')?.enable({ emitEvent: false });
     this.orderForm.get('salesmanId')?.enable({ emitEvent: false });
     this.orderForm.get('comment')?.enable({ emitEvent: false });
     this.orderForm.get('warehouseId')?.enable({ emitEvent: false });
     this.orderForm.get('reference')?.enable({ emitEvent: false });
+    this.orderForm.get('creditCash')?.enable({ emitEvent: false });
+    this.orderForm.get('creditTerm')?.enable({ emitEvent: false });
+    this.orderForm.get('accountId')?.enable({ emitEvent: false });
+    this.orderForm.get('classId')?.enable({ emitEvent: false });
+    this.orderForm.get('invoiceSeriesCode')?.enable({ emitEvent: false });
+    this.orderForm.get('paymentTreasuryId')?.enable({ emitEvent: false });
+    this.orderForm.get('paymentDocument')?.enable({ emitEvent: false });
     if (this.currentInvoiceId <= 0) {
       this.orderForm.get('customerId')?.enable({ emitEvent: false });
     }

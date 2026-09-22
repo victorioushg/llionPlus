@@ -303,6 +303,12 @@ export class DeliveryNoteDetailComponent implements OnInit, AfterViewInit, OnDes
       return;
     }
 
+    const warehouseId = Number(form.warehouseId) || 0;
+    if (warehouseId <= 0) {
+      this.toastService.showMyToast('Seleccione el almacén', toastType.warning);
+      return;
+    }
+
     this.lines = this.lines.map((line, index) => {
       const amounts = this.computeLineAmounts(line);
       return {
@@ -332,7 +338,7 @@ export class DeliveryNoteDetailComponent implements OnInit, AfterViewInit, OnDes
       issueDate: form.issueDate,
       dueDate: form.dueDate ?? form.issueDate,
       salesmanId: Number(form.salesmanId) || null,
-      warehouseId: Number(form.warehouseId) || null,
+      warehouseId,
       reference: form.reference ?? '',
       comment: form.comment ?? '',
       status: isNew ? 0 : this.currentOrder?.status ?? 0,

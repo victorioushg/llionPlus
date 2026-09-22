@@ -26,6 +26,7 @@
           floatLabelType="Always"
           formControlName="issueDate"
           [enabled]="enabled$ | async"
+          (change)="onIssueDateChange()"
         ></ejs-datepicker>
       </div>
       <div class="col-md-3">
@@ -34,7 +35,7 @@
           placeholder="Vence"
           floatLabelType="Always"
           formControlName="dueDate"
-          [enabled]="enabled$ | async"
+          [enabled]="false"
         ></ejs-datepicker>
       </div>
       <div class="col-md-3">
@@ -62,6 +63,36 @@
           (change)="onCustomerChange($event)"
         ></ejs-dropdownlist>
       </div>
+      <div class="col-md-3">
+        <ejs-dropdownlist
+          placeholder="Condición de crédito"
+          floatLabelType="Always"
+          formControlName="creditCash"
+          [dataSource]="creditCashOptions"
+          [fields]="creditCashFields"
+          popupHeight="140px"
+          [enabled]="enabled$ | async"
+          (change)="onCreditCashChange()"
+        ></ejs-dropdownlist>
+      </div>
+      <div class="col-md-3">
+        <ejs-dropdownlist
+          placeholder="Plazo"
+          floatLabelType="Always"
+          formControlName="creditTerm"
+          [dataSource]="(terms$ | async) || []"
+          [fields]="termFields"
+          [allowFiltering]="true"
+          [filterType]="filterType"
+          [showClearButton]="true"
+          popupHeight="240px"
+          [enabled]="enabled$ | async"
+          (change)="onCreditTermChange()"
+        ></ejs-dropdownlist>
+      </div>
+    </div>
+
+    <div class="row">
       <div class="col-md-4">
         <ejs-dropdownlist
           placeholder="Asesor comercial"
@@ -83,11 +114,15 @@
           [enabled]="false"
         ></ejs-textbox>
       </div>
-    </div>
-
-
-    <div class="row">
-      <div class="col-md-6">
+      <div class="col-md-3">
+        <ejs-textbox
+          placeholder="Serie"
+          floatLabelType="Always"
+          formControlName="invoiceSeriesCode"
+          [enabled]="enabled$ | async"
+        ></ejs-textbox>
+      </div>
+      <div class="col-md-3">
         <ejs-dropdownlist
           placeholder="Almacén"
           floatLabelType="Always"
@@ -100,13 +135,68 @@
           [enabled]="enabled$ | async"
         ></ejs-dropdownlist>
       </div>
+    </div>
+
+    <div class="row" *ngIf="isCashSale">
       <div class="col-md-6">
+        <ejs-dropdownlist
+          placeholder="Caja / Banco"
+          floatLabelType="Always"
+          formControlName="paymentTreasuryId"
+          [dataSource]="(treasuries$ | async) || []"
+          [fields]="treasuryFields"
+          [allowFiltering]="true"
+          [filterType]="filterType"
+          popupHeight="240px"
+          [enabled]="enabled$ | async"
+        ></ejs-dropdownlist>
+      </div>
+      <div class="col-md-6">
+        <ejs-textbox
+          placeholder="Documento de pago"
+          floatLabelType="Always"
+          formControlName="paymentDocument"
+          [enabled]="enabled$ | async"
+        ></ejs-textbox>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col-md-3">
         <ejs-textbox
           placeholder="Referencia"
           floatLabelType="Always"
           formControlName="reference"
           [enabled]="enabled$ | async"
         ></ejs-textbox>
+      </div>
+      <div class="col-md-5">
+        <ejs-dropdownlist
+          placeholder="Cuenta contable"
+          floatLabelType="Always"
+          formControlName="accountId"
+          [dataSource]="(accounts$ | async) || []"
+          [fields]="accountFields"
+          [allowFiltering]="true"
+          [filterType]="filterType"
+          [showClearButton]="true"
+          popupHeight="280px"
+          [enabled]="enabled$ | async"
+        ></ejs-dropdownlist>
+      </div>
+      <div class="col-md-4">
+        <ejs-dropdownlist
+          placeholder="Clase"
+          floatLabelType="Always"
+          formControlName="classId"
+          [dataSource]="(classes$ | async) || []"
+          [fields]="classFields"
+          [allowFiltering]="true"
+          [filterType]="filterType"
+          [showClearButton]="true"
+          popupHeight="280px"
+          [enabled]="enabled$ | async"
+        ></ejs-dropdownlist>
       </div>
     </div>
     <div class="row">

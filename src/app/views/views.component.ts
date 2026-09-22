@@ -22,6 +22,8 @@ import { HttpClient } from '@angular/common/http';
 import { environment } from '@environments/environment';
 import { IApiResponse } from '@shared/models/api-response';
 import { take } from 'rxjs';
+import { SessionService } from '@shared/services/session.service';
+import { sessionPrinterLabel } from '@shared/models/user-session';
 
 @Component({
   selector: 'llion-views',
@@ -55,6 +57,8 @@ export class ViewsComponent implements OnInit {
     localStorage.getItem('currentLlionUser') as string
   ) as User;
   workingOrganizationName = '';
+  machineName = '';
+  fiscalPrinterLabel = '';
   menuItems: MenuItemModel[] = [];
 
   public data: any[] = MenuJson;
@@ -72,6 +76,7 @@ export class ViewsComponent implements OnInit {
   constructor(
     private router: Router,
     private applicationService: ApplicationService,
+    private sessionService: SessionService,
     private http: HttpClient
   ) {
     enableRipple(true);
@@ -82,10 +87,15 @@ export class ViewsComponent implements OnInit {
 
   ngOnInit(): void {
     this.restoreWorkingOrganization();
+    this.restoreWorkingSession();
     this.buildUserMenu();
 
     this.applicationService.workingOrganization$.subscribe((org) => {
       this.workingOrganizationName = org?.name ?? '';
+    });
+    this.applicationService.workingSession$.subscribe((session) => {
+      this.machineName = session?.machineName ?? '';
+      this.fiscalPrinterLabel = session?.fiscalPrinterLabel ?? '';
     });
   }
 
@@ -137,6 +147,101 @@ export class ViewsComponent implements OnInit {
           }
           this.buildUserMenu();
         },
+      });
+  }
+
+  private restoreWorkingSession(): void {
+    const sessionId = this.user?.sessionId ?? 0;
+    const machineName = this.user?.machineName ?? '';
+    const fiscalPrinterId = this.user?.fiscalPrinterId ?? 0;
+    const fiscalPrinterLabel = this.user?.fiscalPrinterLabel ?? '';
+
+    if (sessionId > 0 && machineName) {
+      this.applicationService.setWorkingSession(
+        sessionId,
+        machineName,
+        fiscalPrinterId,
+        fiscalPrinterLabel
+      );
+      this.machineName = machineName;
+      this.fiscalPrinterLabel = fiscalPrinterLabel;
+    }
+  }
+
+  private persistUserSession(
+    sessionId: number,
+    machineName: string,
+    fiscalPrinterId: number,
+    fiscalPrinterCode: string | undefined,
+    fiscalPrinterLabel: string
+  ): void {
+    this.user.sessionId = sessionId;
+    this.user.machineName = machineName;
+    this.user.fiscalPrinterId = fiscalPrinterId;
+    this.user.fiscalPrinterCode = fiscalPrinterCode;
+    this.user.fiscalPrinterLabel = fiscalPrinterLabel;
+    localStorage.setItem('currentLlionUser', JSON.stringify(this.user));
+    this.applicationService.setWorkingSession(
+      sessionId,
+      machineName,
+      fiscalPrinterId,
+      fiscalPrinterLabel
+    );
+    this.sessionService.storeMachineName(machineName);
+    const organizationId = this.user.workingOrganizationId ?? 0;
+    if (organizationId) {
+      this.sessionService.storePrinterId(organizationId, fiscalPrinterId);
+      this.sessionService.storeOrganizationId(organizationId);
+    }
+  }
+
+  private bindSessionForOrganization(organizationId: number): void {
+    const userId = this.user?.userId ?? 0;
+    const machineName =
+      this.user?.machineName || this.sessionService.getStoredMachineName();
+
+    if (!userId || !organizationId || !machineName) {
+      return;
+    }
+
+    this.sessionService
+      .getFiscalPrinters(organizationId)
+      .pipe(take(1))
+      .subscribe((printers) => {
+        this.sessionService
+          .getLastSession(userId, organizationId)
+          .pipe(take(1))
+          .subscribe((lastSession) => {
+            const storedPrinterId =
+              this.sessionService.getStoredPrinterId(organizationId);
+            const fiscalPrinterId =
+              lastSession?.fiscalPrinterId ||
+              storedPrinterId ||
+              printers[0]?.fiscalPrinterId ||
+              0;
+
+            if (!fiscalPrinterId) {
+              return;
+            }
+
+            this.sessionService
+              .openSession({
+                userId,
+                organizationId,
+                machineName,
+                fiscalPrinterId,
+              })
+              .pipe(take(1))
+              .subscribe((session) => {
+                this.persistUserSession(
+                  session.sessionId,
+                  session.machineName,
+                  session.fiscalPrinterId,
+                  session.fiscalPrinterCode,
+                  sessionPrinterLabel(session)
+                );
+              });
+          });
       });
   }
 
@@ -326,11 +431,21 @@ export class ViewsComponent implements OnInit {
           organization.organizationId,
           organization.name
         );
+        this.bindSessionForOrganization(organization.organizationId);
       }
     }
   }
 
   private logout(): void {
+    const sessionId = this.user?.sessionId ?? 0;
+    this.sessionService.closeSession(sessionId).pipe(take(1)).subscribe({
+      next: () => this.clearClientSession(),
+      error: () => this.clearClientSession(),
+    });
+  }
+
+  private clearClientSession(): void {
+    this.applicationService.clearWorkingSession();
     localStorage.removeItem('jwt');
     localStorage.removeItem('currentLlionUser');
     localStorage.removeItem('currentUser');

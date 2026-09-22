@@ -1,45 +1,48 @@
 <div class="wrapper" [class.parameters-grid-disabled]="!parametersGridEnabled">
   <div id="organization-parameters-grid">
-    <ejs-grid
+    <ejs-treegrid
       #parametersgrid
-      [dataSource]="(parameters$ | async) || []"
+      [dataSource]="parameterRows"
+      childMapping="subtasks"
+      [loadChildOnDemand]="false"
+      [treeColumnIndex]="0"
       [toolbar]="parametersToolbar"
       [editSettings]="parametersEditSettings"
-      [cssClass]="parametersGridEnabled ? '' : 'disablegrid'"
       [height]="parametersGridHeight"
       [rowHeight]="parametersGridRowHeight"
-      [headerHeight]="parametersGridHeaderHeight"
       [width]="'100%'"
-      clipMode="EllipsisWithTooltip"
+      [allowSelection]="true"
       (actionBegin)="actionBegin($event)"
       (actionComplete)="actionComplete($event)"
+      (toolbarClick)="onToolbarClick($event)"
+      (rowDataBound)="rowDataBound($event)"
+      (queryCellInfo)="queryCellInfo($event)"
+      (dataBound)="onDataBound()"
     >
       <e-columns>
         <e-column
-          field="module"
-          headerText="Módulo"
-          width="18%"
-        ></e-column>
-        <e-column
           field="description"
           headerText="Descripción"
-          width="34%"
-        ></e-column>
-        <e-column
-          field="parameterType"
-          headerText="Tipo"
-          width="18%"
+          width="70%"
         ></e-column>
         <e-column
           field="value"
           headerText="Valor"
           width="30%"
+          [valueAccessor]="valueAccessor"
+          clipMode="EllipsisWithTooltip"
         ></e-column>
         <e-column
-          field="parameterId"
+          field="treeId"
           [isPrimaryKey]="true"
           [visible]="false"
         ></e-column>
+        <e-column field="parameterId" [visible]="false"></e-column>
+        <e-column field="parameterCode" [visible]="false"></e-column>
+        <e-column field="parameterType" [visible]="false"></e-column>
+        <e-column field="module" [visible]="false"></e-column>
+        <e-column field="parentId" [visible]="false"></e-column>
+        <e-column field="parameterLevel" [visible]="false"></e-column>
         <e-column field="organizationId" [visible]="false"></e-column>
       </e-columns>
 
@@ -52,39 +55,9 @@
           />
           <input
             type="hidden"
-            name="organizationId"
-            [(ngModel)]="parameterData.organizationId"
+            name="parameterType"
+            [(ngModel)]="parameterData.parameterType"
           />
-
-          <div class="row">
-            <div class="col-md-6">
-              <ejs-dropdownlist
-                id="module"
-                name="module"
-                [(ngModel)]="parameterData.module"
-                [dataSource]="(origins$ | async) || []"
-                [fields]="moduleFields"
-                placeholder="Módulo"
-                floatLabelType="Always"
-                [allowFiltering]="true"
-                popupWidth="320px"
-                [required]="true"
-              ></ejs-dropdownlist>
-            </div>
-            <div class="col-md-6">
-              <ejs-dropdownlist
-                id="parameterType"
-                name="parameterType"
-                [(ngModel)]="parameterData.parameterType"
-                [dataSource]="(parameterTypes$ | async) || []"
-                [fields]="parameterTypeFields"
-                placeholder="Tipo"
-                floatLabelType="Always"
-                [allowFiltering]="true"
-                [required]="true"
-              ></ejs-dropdownlist>
-            </div>
-          </div>
 
           <div class="row">
             <div class="col-md-12">
@@ -94,7 +67,7 @@
                 [(ngModel)]="parameterData.description"
                 placeholder="Descripción"
                 floatLabelType="Always"
-                [required]="true"
+                [enabled]="false"
               ></ejs-textbox>
             </div>
           </div>
@@ -102,6 +75,78 @@
           <div class="row">
             <div class="col-md-12">
               <ejs-textbox
+                [value]="selectedType?.description || parameterData.parameterType"
+                placeholder="Tipo"
+                floatLabelType="Always"
+                [enabled]="false"
+              ></ejs-textbox>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-md-12">
+              <ejs-dropdownlist
+                *ngIf="valueEditorKind === 'bit'"
+                id="value"
+                name="value"
+                [(ngModel)]="parameterData.value"
+                [dataSource]="yesNoOptions"
+                [fields]="yesNoFields"
+                placeholder="Valor"
+                floatLabelType="Always"
+                [required]="true"
+              ></ejs-dropdownlist>
+
+              <ejs-dropdownlist
+                *ngIf="parameterData.parameterType === '3'"
+                id="value"
+                name="value"
+                [(ngModel)]="parameterData.value"
+                [dataSource]="weekdayOptions"
+                [fields]="yesNoFields"
+                placeholder="Valor"
+                floatLabelType="Always"
+                [required]="true"
+              ></ejs-dropdownlist>
+
+              <ejs-numerictextbox
+                *ngIf="valueEditorKind === 'int' && parameterData.parameterType !== '3'"
+                id="value"
+                name="value"
+                [(ngModel)]="numericValue"
+                placeholder="Valor"
+                floatLabelType="Always"
+                format="n0"
+                [decimals]="0"
+                [validateDecimalOnType]="true"
+                [showSpinButton]="false"
+              ></ejs-numerictextbox>
+
+              <ejs-numerictextbox
+                *ngIf="valueEditorKind === 'decimal'"
+                id="value"
+                name="value"
+                [(ngModel)]="numericValue"
+                placeholder="Valor"
+                floatLabelType="Always"
+                [format]="'n' + decimalPlaces"
+                [decimals]="decimalPlaces"
+                [validateDecimalOnType]="true"
+                [showSpinButton]="false"
+              ></ejs-numerictextbox>
+
+              <ejs-datepicker
+                *ngIf="valueEditorKind === 'date'"
+                id="value"
+                name="value"
+                [(ngModel)]="dateValue"
+                placeholder="Valor"
+                floatLabelType="Always"
+                format="dd/MM/yyyy"
+              ></ejs-datepicker>
+
+              <ejs-textbox
+                *ngIf="valueEditorKind === 'text'"
                 id="value"
                 name="value"
                 [(ngModel)]="parameterData.value"
@@ -111,8 +156,10 @@
               ></ejs-textbox>
             </div>
           </div>
+
+          <div class="value-hint" *ngIf="valueHint">{{ valueHint }}</div>
         </div>
       </ng-template>
-    </ejs-grid>
+    </ejs-treegrid>
   </div>
 </div>

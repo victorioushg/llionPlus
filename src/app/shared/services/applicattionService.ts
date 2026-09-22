@@ -62,6 +62,37 @@ export class ApplicationService {
     return this.workingOrganizationSource.value;
   }
 
+  // Working session (máquina + impresora fiscal)
+  private workingSessionSource = new BehaviorSubject<{
+    sessionId: number;
+    machineName: string;
+    fiscalPrinterId: number;
+    fiscalPrinterLabel: string;
+  } | null>(null);
+  workingSession$ = this.workingSessionSource.asObservable();
+
+  setWorkingSession(
+    sessionId: number,
+    machineName: string,
+    fiscalPrinterId: number,
+    fiscalPrinterLabel: string
+  ) {
+    this.workingSessionSource.next({
+      sessionId,
+      machineName,
+      fiscalPrinterId,
+      fiscalPrinterLabel,
+    });
+  }
+
+  clearWorkingSession() {
+    this.workingSessionSource.next(null);
+  }
+
+  get workingSession() {
+    return this.workingSessionSource.value;
+  }
+
   // Entity Selected 
   private entitySelectedSource = new BehaviorSubject<number>(0);
   entitySelectedAction$ = this.entitySelectedSource.asObservable();

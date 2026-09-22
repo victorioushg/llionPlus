@@ -35,6 +35,8 @@ export interface ICustomer {
   creditLimit?: number | null;
   creditAvailable?: number | null;
   termsId?: number | null;
+  accountId?: number | null;
+  classId?: number | null;
   billingPrice?: string | null;
   deactivated?: boolean | null;
   acceptBackOrders?: boolean | null;

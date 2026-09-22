@@ -16,6 +16,10 @@ export interface IPurchaseLine {
   totalCostAndDiscounts?: number | null;
   billRowType?: number | null;
   billRowTypeName?: string | null;
+  purchaseOrderId?: number | null;
+  poRowNumber?: number | null;
+  goodsReceiptId?: number | null;
+  grRowNumber?: number | null;
 }
 
 export interface IPurchaseMerchandise {
@@ -70,6 +74,13 @@ export interface IPurchase {
   classId?: number | null;
   creditCash?: number | null;
   creditTerm?: number | null;
+  paymentType?: number | null;
+  paymentDocument?: string | null;
+  paymentTreasuryId?: number | null;
+  beneficiary?: string | null;
+  updateInventory?: number | null;
+  updatePrices?: number | null;
+  priceDivisionFactor?: number | null;
   journalEntryDate?: Date | string | null;
   comment?: string | null;
   totalItems?: number | null;

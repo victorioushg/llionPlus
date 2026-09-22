@@ -36,6 +36,7 @@
     "@syncfusion/ej2-angular-navigations": "^28.1.33",
     "@syncfusion/ej2-angular-notifications": "^28.1.33",
     "@syncfusion/ej2-angular-popups": "^28.1.33",
+    "@syncfusion/ej2-angular-treegrid": "^28.1.33",
     "bootstrap": "^5.3.3",
     "flag-icons": "^7.2.3",
     "jwt-decode": "^4.0.0",

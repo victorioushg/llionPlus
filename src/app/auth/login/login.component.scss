@@ -27,6 +27,37 @@
   width: 100%;
 }
 
+.workstation-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  margin-top: 16px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: $llion-color-secundary;
+  font-size: 13px;
+  cursor: pointer;
+  text-align: left;
+}
+
+.workstation-chevron {
+  font-size: 12px;
+}
+
+.session-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.session-fields ejs-dropdownlist,
+.session-fields ejs-textbox {
+  width: 100%;
+}
+
 .link-button {
   width: 100%;
   color: $llion-color-secundary;

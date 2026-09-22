@@ -104,7 +104,7 @@ export class ProviderComponent implements OnInit, AfterViewInit, OnDestroy {
     this.clearProviderSelection();
 
     this.applicationService
-      .getEntityId('Provider')
+      .getEntityId('Vendor')
       .pipe(takeUntil(this.destroy$))
       .subscribe((entityId) => {
         this.entityTypeId = entityId ?? 0;

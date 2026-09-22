@@ -3,6 +3,7 @@ import {
   IAssosiationType,
   ICurrency,
   IOrganization,
+  IOrganizationCounter,
   IOrganizationCreditDebit,
   IOrganizationExchangeRate,
   IOrganizationParameter,
@@ -86,6 +87,7 @@ export class OrganizationService {
   organizationExchangeRates$!: Observable<IOrganizationExchangeRate[]>;
   organizationParameters$!: Observable<IOrganizationParameter[]>;
   organizationCredits$!: Observable<IOrganizationCreditDebit[]>;
+  organizationCounters$!: Observable<IOrganizationCounter[]>;
   parameterTypes$!: Observable<IParameterType[]>;
   origins$!: Observable<IOrigin[]>;
   taxTypes$!: Observable<IGroup[]>;
@@ -96,6 +98,7 @@ export class OrganizationService {
   private exchangesRefreshSubject = new BehaviorSubject<number>(0);
   private parametersRefreshSubject = new BehaviorSubject<number>(0);
   private creditsRefreshSubject = new BehaviorSubject<number>(0);
+  private countersRefreshSubject = new BehaviorSubject<number>(0);
 
   /** Organization selected in the organizations grid (child tabs/grids). */
   private organizationContextIdSource = new BehaviorSubject<number>(0);
@@ -287,7 +290,9 @@ export class OrganizationService {
       switchMap(([organizationId]) =>
         !organizationId || organizationId <= 0
           ? of([])
-          : this.getOrganizationParameters(organizationId)
+          : this.getOrganizationParameters(organizationId).pipe(
+              catchError(() => of([] as IOrganizationParameter[]))
+            )
       ),
       shareReplay(1)
     );
@@ -300,6 +305,18 @@ export class OrganizationService {
         !organizationId || organizationId <= 0
           ? of([])
           : this.getOrganizationCredits(organizationId)
+      ),
+      shareReplay(1)
+    );
+
+    this.organizationCounters$ = combineLatest([
+      this.organizationContextIdAction$,
+      this.countersRefreshSubject,
+    ]).pipe(
+      switchMap(([organizationId]) =>
+        !organizationId || organizationId <= 0
+          ? of([])
+          : this.getOrganizationCounters(organizationId)
       ),
       shareReplay(1)
     );
@@ -734,7 +751,38 @@ export class OrganizationService {
         `${this.organizationUrl}/parameters/${id}`
       )
       .pipe(
-        map((data) => data.result ?? []),
+        map((data) =>
+          (data.result ?? []).map((item: any) => {
+            const parentRaw = item.parentId ?? item.ParentId;
+            const parentId =
+              parentRaw === null || parentRaw === undefined || parentRaw === 0
+                ? null
+                : Number(parentRaw);
+            return {
+              parameterId: Number(item.parameterId ?? item.ParameterId ?? 0),
+              parameterCode: String(
+                item.parameterCode ?? item.ParameterCode ?? ''
+              ),
+              description: String(item.description ?? item.Description ?? ''),
+              parameterType: String(
+                item.parameterType
+                  ?? item.ParameterType
+                  ?? item.parameterTypeID
+                  ?? item.ParameterTypeID
+                  ?? ''
+              ),
+              typeName: String(item.typeName ?? item.TypeName ?? ''),
+              format: String(item.format ?? item.Format ?? ''),
+              value: String(item.value ?? item.Value ?? ''),
+              module: String(item.module ?? item.Module ?? ''),
+              parentId,
+              level: Number(item.level ?? item.Level ?? 0),
+              organizationId: Number(
+                item.organizationId ?? item.OrganizationId ?? id
+              ),
+            } as IOrganizationParameter;
+          })
+        ),
         catchError(this.errorHandlerService.handleError)
       );
   }
@@ -746,11 +794,20 @@ export class OrganizationService {
       )
       .pipe(
         map((data) =>
-          (data.result ?? []).map((item: any) => ({
-            parameterType: String(
+          (data.result ?? []).map((item: any) => {
+            const parameterType = String(
               item.parameterType ?? item.ParameterType ?? ''
-            ),
-          }))
+            );
+            const description = String(
+              item.description ?? item.Description ?? parameterType
+            );
+            return {
+              parameterType,
+              description,
+              typeName: String(item.typeName ?? item.TypeName ?? ''),
+              format: String(item.format ?? item.Format ?? ''),
+            };
+          })
         ),
         catchError(this.errorHandlerService.handleError)
       );
@@ -832,12 +889,102 @@ export class OrganizationService {
         { headers: this.headers }
       )
       .pipe(
+        tap((data) => {
+          if (!data.result) {
+            this.toastService.showMyToast(
+              'No se puede eliminar: el parámetro tiene hijos',
+              toastType.warning
+            );
+          } else {
+            this.toastService.showMyToast(
+              'Parámetro eliminado',
+              toastType.success
+            );
+          }
+          this.refreshParameters();
+        }),
+        map((data) => data.result),
+        catchError(this.errorHandlerService.handleError)
+      );
+  }
+
+  getOrganizationCounters(id: number): Observable<IOrganizationCounter[]> {
+    return this.http
+      .get<IApiResponse<IOrganizationCounter[]>>(
+        `${this.organizationUrl}/counters/${id}`
+      )
+      .pipe(
+        map((data) =>
+          (data.result ?? []).map((item: any) => ({
+            counterId: Number(item.counterId ?? item.CounterId ?? 0),
+            counterDescription: String(
+              item.counterDescription ?? item.CounterDescription ?? ''
+            ),
+            counter: String(item.counter ?? item.Counter ?? ''),
+            module: String(item.module ?? item.Module ?? ''),
+            entityId: item.entityId ?? item.EntityId ?? null,
+            organizationId: Number(
+              item.organizationId ?? item.OrganizationId ?? id
+            ),
+          }))
+        ),
+        catchError(this.errorHandlerService.handleError)
+      );
+  }
+
+  refreshCounters(): void {
+    this.countersRefreshSubject.next(this.countersRefreshSubject.value + 1);
+  }
+
+  addCounter(item: IOrganizationCounter): Observable<number> {
+    return this.http
+      .post<IApiResponse<number>>(`${this.organizationUrl}/counter`, item, {
+        headers: this.headers,
+      })
+      .pipe(
         tap(() => {
           this.toastService.showMyToast(
-            'Parámetro eliminado',
+            'Contador almacenado',
             toastType.success
           );
-          this.refreshParameters();
+          this.refreshCounters();
+        }),
+        map((data) => data.result),
+        catchError(this.errorHandlerService.handleError)
+      );
+  }
+
+  updateCounter(item: IOrganizationCounter): Observable<number> {
+    return this.http
+      .put<IApiResponse<number>>(`${this.organizationUrl}/counter`, item, {
+        headers: this.headers,
+      })
+      .pipe(
+        tap(() => {
+          this.toastService.showMyToast(
+            'Contador actualizado',
+            toastType.success
+          );
+          this.refreshCounters();
+        }),
+        map((data) => data.result),
+        catchError(this.errorHandlerService.handleError)
+      );
+  }
+
+  deleteCounter(counterId: number): Observable<number> {
+    return this.http
+      .delete<IApiResponse<number>>(
+        `${this.organizationUrl}/counter/${counterId}`,
+        { headers: this.headers }
+      )
+      .pipe(
+        tap(() => {
+          this.toastService.showMyToast(
+            'Contador eliminado',
+            toastType.success
+          );
+          this.refreshCounters();
         }),
         map((data) => data.result),
         catchError(this.errorHandlerService.handleError)

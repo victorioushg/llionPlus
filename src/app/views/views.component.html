@@ -29,6 +29,12 @@
         <span *ngIf="workingOrganizationName" id="working-organization">
           {{ workingOrganizationName }}
         </span>
+        <span *ngIf="machineName" id="working-machine">
+          {{ machineName }}
+        </span>
+        <span *ngIf="fiscalPrinterLabel" id="working-printer">
+          {{ fiscalPrinterLabel }}
+        </span>
         {{ systemDate | date : "MMM, dd yyyy" }}
         {{ systemDate | date : "h:mm:ss a" }}
       </div>

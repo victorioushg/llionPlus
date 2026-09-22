@@ -170,10 +170,12 @@
   white-space: nowrap;
 }
 
-#working-organization {
+#working-organization,
+#working-machine,
+#working-printer {
   font-weight: 600;
   color: inherit;
-  max-width: 28rem;
+  max-width: 18rem;
   overflow: hidden;
   text-overflow: ellipsis;
 }

@@ -1,0 +1,90 @@
+<div class="wrapper" [class.counters-grid-disabled]="!countersGridEnabled">
+  <div id="organization-counters-grid">
+    <ejs-grid
+      #countersgrid
+      [dataSource]="(counters$ | async) || []"
+      [toolbar]="countersToolbar"
+      [editSettings]="countersEditSettings"
+      [cssClass]="countersGridEnabled ? '' : 'disablegrid'"
+      [height]="countersGridHeight"
+      [rowHeight]="countersGridRowHeight"
+      [headerHeight]="countersGridHeaderHeight"
+      [width]="'100%'"
+      clipMode="EllipsisWithTooltip"
+      (actionBegin)="actionBegin($event)"
+      (actionComplete)="actionComplete($event)"
+    >
+      <e-columns>
+        <e-column
+          field="counterDescription"
+          headerText="Descripción"
+          width="46%"
+        ></e-column>
+        <e-column field="module" headerText="Módulo" width="22%"></e-column>
+        <e-column
+          field="counter"
+          headerText="Contador"
+          width="32%"
+        ></e-column>
+        <e-column
+          field="counterId"
+          [isPrimaryKey]="true"
+          [visible]="false"
+        ></e-column>
+        <e-column field="entityId" [visible]="false"></e-column>
+        <e-column field="organizationId" [visible]="false"></e-column>
+      </e-columns>
+
+      <ng-template #editSettingsTemplate let-data>
+        <div ngForm #counterForm="ngForm" class="counter-edit-dialog">
+          <input
+            type="hidden"
+            name="counterId"
+            [(ngModel)]="counterData.counterId"
+          />
+          <input
+            type="hidden"
+            name="organizationId"
+            [(ngModel)]="counterData.organizationId"
+          />
+
+          <div class="row">
+            <div class="col-md-12">
+              <ejs-textbox
+                id="counterDescription"
+                name="counterDescription"
+                [(ngModel)]="counterData.counterDescription"
+                placeholder="Descripción"
+                floatLabelType="Always"
+                [required]="true"
+              ></ejs-textbox>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-md-6">
+              <ejs-textbox
+                id="module"
+                name="module"
+                [(ngModel)]="counterData.module"
+                placeholder="Módulo"
+                floatLabelType="Always"
+                [required]="true"
+              ></ejs-textbox>
+            </div>
+            <div class="col-md-6">
+              <ejs-textbox
+                id="counter"
+                name="counter"
+                [(ngModel)]="counterData.counter"
+                placeholder="Contador"
+                floatLabelType="Always"
+                [required]="true"
+              ></ejs-textbox>
+            </div>
+          </div>
+        </div>
+      </ng-template>
+    </ejs-grid>
+  </div>
+</div>

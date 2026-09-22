@@ -8,6 +8,7 @@ import { HTTP_INTERCEPTORS, HttpClientModule } from '@angular/common/http';
 import { DialogModule } from '@syncfusion/ej2-angular-popups';
 import { ButtonModule } from '@syncfusion/ej2-angular-buttons';
 import { MaskedTextBoxModule, TextBoxModule } from '@syncfusion/ej2-angular-inputs';
+import { DropDownListModule } from '@syncfusion/ej2-angular-dropdowns';
 import {
   SidebarModule,
   TreeViewModule,
@@ -50,6 +51,7 @@ export function tokenGetter() {
     ButtonModule,
     TextBoxModule,
     MaskedTextBoxModule,
+    DropDownListModule,
     SidebarModule,
     TreeViewModule,
     FontAwesomeModule,

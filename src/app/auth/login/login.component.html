@@ -29,6 +29,38 @@
       >
       </ejs-textbox>
       <button
+        type="button"
+        class="workstation-toggle"
+        (click)="toggleWorkstation($event)"
+        [attr.aria-expanded]="workstationOpen"
+      >
+        <span
+          class="e-icons workstation-chevron"
+          [class.e-chevron-right]="!workstationOpen"
+          [class.e-chevron-down]="workstationOpen"
+        ></span>
+        Estación de trabajo
+      </button>
+      <div class="session-fields" *ngIf="workstationOpen">
+        <ejs-textbox
+          placeholder="Máquina (nombre en la red)"
+          showClearButton="true"
+          floatLabelType="Auto"
+          formControlName="machineName"
+          type="text"
+        >
+        </ejs-textbox>
+        <ejs-dropdownlist
+          placeholder="Impresora fiscal (formularios fiscales)"
+          floatLabelType="Auto"
+          formControlName="fiscalPrinterId"
+          [dataSource]="printers"
+          [fields]="printerFields"
+          [allowFiltering]="true"
+        >
+        </ejs-dropdownlist>
+      </div>
+      <button
         ejs-button
         class="login-button"
         cssClass="e-primary"

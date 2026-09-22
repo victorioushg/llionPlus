@@ -6,11 +6,13 @@ Estado: pendiente de subir al repositorio
 ==============================================================================
 RESUMEN
 ==============================================================================
-Pantalla dedicada de compras, notas crédito (NCC) y notas débito (NDC)
+Al iniciar sesión el usuario indica la máquina y la impresora fiscal de
+facturación; se guardan en la sesión de trabajo. Pantalla dedicada de compras, notas crédito (NCC) y notas débito (NDC)
 con vencimiento calculado desde condiciones de crédito y fecha de emisión.
 Recepción de mercancías, términos de pago en proveedor y órdenes de compra
 se mantienen. En clientes: presupuestos, pedidos, notas de entrega, facturas,
-notas crédito y notas débito de venta (listado + edición).
+notas crédito y notas débito de venta. La factura de venta genera salida de
+inventario y, según CREDITO/CONTADO, CxC o entrada en caja/banco.
 
 ==============================================================================
 COMPRAS
@@ -37,6 +39,11 @@ COMPRAS
 - Almacén: dropdown de almacenes de la organización. Obligatorio.
 - Estatus: no editable. En incluir queda en Pendiente.
 - Emisión y emisión fiscal por defecto = hoy.
+- Al guardar (GuardarTXT): reescribe renglones/IVA/descuentos por BillId,
+  graba encabezado y N° de control (app_control_number, origen COM).
+  Inventario EN/COM si COMPACOM03=1 o si el usuario confirma.
+  CxP FC/COM a crédito; tesorería SA/COM a contado (caja/banco).
+  Precios por ganancia (COMPACOM04/05). Tránsito de órdenes y recepciones.
 - Renglón: mercancía por nombre, IVA RateType, UOM (sin cantidad en tránsito).
 
 ==============================================================================
@@ -244,6 +251,15 @@ Notas débito     /customer/debit-notes       api/salesdebitnotes
   no editable. Emisión y vencimiento editables. Estatus de solo lectura.
 - Pedido: fecha de Entrega (DeliveryDate).
 - Nota de entrega, factura, NC y ND: almacén y referencia.
+- Factura: condición CREDITO/CONTADO, plazo del cliente y Vence
+  calculado (igual que compras). Almacén obligatorio.
+  CONTADO exige caja o banco; genera entrada EN (caja) o DP (banco)
+  en tre_treasury_movements, origen FAC.
+  CREDITO genera CxC FC/FAC en cus_customer_movements.
+  Inventario SA/FAC (omite servicios y renglones ya salidos por NE).
+- Nota de entrega: salida de inventario SA/ENT (almacén obligatorio).
+- Nota crédito: entrada inventario EN/NCV y CxC NC/NCV.
+- Nota débito: CxC ND/NDV.
 - NC y ND: factura afectada (InvoiceId).
 - Renglón: mercancía, IVA, cantidad, UND, precio, desc. artículo,
   desc. cliente y desc. oferta (cascada). Tipo renglón.
@@ -256,4 +272,13 @@ Notas débito     /customer/debit-notes       api/salesdebitnotes
 
 Procedimientos: cus_salesorder_*, cus_deliverynote_*, cus_invoice_*,
 cus_creditnote_*, cus_debitnote_* (_get, _document_get, _save, _delete,
-_next_number).
+_next_number) y cus_sales_post_save (inventario y CxC/tesorería).
+
+==============================================================================
+SESIÓN DE TRABAJO
+==============================================================================
+Al Sign In, después de validar usuario, se pide Máquina e Impresora Fiscal.
+Continuar abre una sesión en app_user_sessions (máquina + impresora de
+app_fiscal_printers). Quedan en currentLlionUser, en cabecera, y se
+cierran al Log out. Al cambiar de organización se reabre sesión con la
+impresora de esa empresa.

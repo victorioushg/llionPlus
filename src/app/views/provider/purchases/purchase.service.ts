@@ -315,6 +315,48 @@ export class PurchaseService {
     this.refreshSubject.next(this.refreshSubject.value + 1);
   }
 
+  getPurchaseSaveOptions(organizationId: number): Observable<{
+    autoInventory: boolean;
+    autoPrices: boolean;
+    divisionFactor: boolean;
+  }> {
+    const empty = {
+      autoInventory: false,
+      autoPrices: false,
+      divisionFactor: false,
+    };
+    if (!organizationId) {
+      return of(empty);
+    }
+
+    return this.http
+      .get<IApiResponse<Record<string, unknown>[]>>(
+        `${environment.API_URL}organization/parameters/${organizationId}`
+      )
+      .pipe(
+        map((data) => {
+          const rows = data.result ?? [];
+          const flag = (code: string) => {
+            const row = rows.find(
+              (item) =>
+                String(item['parameterCode'] ?? item['ParameterCode'] ?? '') ===
+                code
+            );
+            const value = String(
+              row?.['value'] ?? row?.['Value'] ?? '0'
+            ).trim();
+            return value === '1' || value.toLowerCase() === 'true';
+          };
+          return {
+            autoInventory: flag('COMPACOM03'),
+            autoPrices: flag('COMPACOM04'),
+            divisionFactor: flag('COMPACOM05'),
+          };
+        }),
+        catchError(() => of(empty))
+      );
+  }
+
   savePurchase(order: IPurchase): Observable<number> {
     const request$ =
       (order.billId ?? 0) > 0

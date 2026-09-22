@@ -635,6 +635,49 @@ export class PurchaseDetailComponent
       taxes: this.taxes,
     };
 
+    this.purchaseService
+      .getPurchaseSaveOptions(payload.organizationId)
+      .pipe(take(1))
+      .subscribe((options) => {
+        payload.updateInventory = options.autoInventory ? 1 : 0;
+        payload.updatePrices = options.autoPrices ? 1 : 0;
+        payload.priceDivisionFactor = options.divisionFactor ? 1 : 0;
+
+        if (!options.autoInventory) {
+          payload.updateInventory = window.confirm(
+            '¿Desea actualizar INVENTARIOS de la mercancía incluida en esta COMPRA?'
+          )
+            ? 1
+            : 0;
+        }
+
+        if (!options.autoPrices) {
+          payload.updatePrices = window.confirm(
+            '¿Desea actualizar precios según ganancia estipulada?'
+          )
+            ? 1
+            : 0;
+          if (payload.updatePrices === 1) {
+            payload.priceDivisionFactor = window.confirm(
+              '¿PARA ACTUALIZAR PRECIOS DESEA CALCULO DE GANANCIAS CON FACTOR DIVISION?'
+            )
+              ? 1
+              : 0;
+          }
+        }
+
+        if (payload.updateInventory !== 1) {
+          this.toastService.showMyToast(
+            'La mercancía de esta compra NO se actualizó en inventarios.',
+            toastType.warning
+          );
+        }
+
+        this.persistPurchase(payload);
+      });
+  }
+
+  private persistPurchase(payload: IPurchase): void {
     this.saving = true;
     this.purchaseService
       .savePurchase(payload)

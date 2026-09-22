@@ -8,8 +8,9 @@ import { OrganizationDetailComponent } from './organization-detail/organization-
 import { OrganizationTaxesComponent } from './organization-taxes/organization-taxes';
 import { OrganizationRetentionsComponent } from './organization-retentions/organization-retentions';
 import { OrganizationExchangesComponent } from './organization-exchanges/organization-exchanges';
-import { OrganizationParametersComponent } from './organization-parameters/organization-parameters';
+import { OrganizationParametersModule } from './organization-parameters/organization-parameters.module';
 import { OrganizationCreditsComponent } from './organization-credits/organization-credits';
+import { OrganizationCountersComponent } from './organization-counters/organization-counters';
 // Syncfusion
 import { GridAllModule } from '@syncfusion/ej2-angular-grids';
 import {
@@ -36,12 +37,13 @@ enableRipple(true);
     OrganizationTaxesComponent,
     OrganizationRetentionsComponent,
     OrganizationExchangesComponent,
-    OrganizationParametersComponent,
     OrganizationCreditsComponent,
+    OrganizationCountersComponent,
   ],
   imports: [
     CommonModule,
     RouterModule.forChild(routes),
+    OrganizationParametersModule,
     FontAwesomeModule,
     ToolbarModule,
     TabModule, 

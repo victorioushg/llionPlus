@@ -89,11 +89,19 @@ export interface IOrganizationExchangeRate {
 
 export interface IOrganizationParameter {
   parameterId: number;
+  parameterCode?: string | null;
   description: string;
   parameterType: string;
+  typeName?: string;
+  format?: string;
   value: string;
   module: string;
+  parentId: number | null;
+  level: number;
+  parameterLevel?: number;
   organizationId: number;
+  treeId?: number;
+  treeParentId?: number | null;
 }
 
 /** Causas de créditos (0) / débitos (1) por organización */
@@ -110,8 +118,20 @@ export interface IOrganizationCreditDebit {
   organizationId: number;
 }
 
+export interface IOrganizationCounter {
+  counterId: number;
+  counterDescription: string;
+  counter: string;
+  module: string;
+  entityId?: number | null;
+  organizationId: number;
+}
+
 export interface IParameterType {
   parameterType: string;
+  description?: string;
+  typeName?: string;
+  format?: string;
 }
 
 export interface IOrigin {

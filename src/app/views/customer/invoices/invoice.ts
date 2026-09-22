@@ -49,6 +49,11 @@ export interface IInvoice {
   dueDate?: Date | string | null;
   warehouseId?: number | null;
   reference?: string | null;
+  creditCash?: number | null;
+  creditTerm?: number | null;
+  paymentTreasuryId?: number | null;
+  paymentDocument?: string | null;
+  updateInventory?: number | null;
   comment?: string | null;
   salesmanId?: number | null;
   salesmanName?: string | null;
