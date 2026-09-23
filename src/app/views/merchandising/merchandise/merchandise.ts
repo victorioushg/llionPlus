@@ -12,6 +12,7 @@ export interface IMerchandise {
   acceptsReturnsRate: number;
   currentStock: number;
   availableStock: number;
+  onOrderQuantity?: number | null;
   marketShare: number;
   regulated: boolean;
   acceptsRebate: boolean;

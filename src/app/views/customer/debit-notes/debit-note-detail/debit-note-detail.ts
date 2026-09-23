@@ -41,6 +41,7 @@ import {
 } from '../../../provider/purchases/purchase';
 import { DebitNoteService } from '../debit-note.service';
 import { IDebitNote, IDebitNoteDiscount, IDebitNoteLine, IDebitNoteTax, ISalesman } from '../debit-note';
+import { formatTaxPercent } from '../../sales-document-header';
 
 @Component({
   selector: 'llion-debit-note-detail',
@@ -162,6 +163,9 @@ export class DebitNoteDetailComponent implements OnInit, AfterViewInit, OnDestro
     this.enabled$ = this.debitNoteService.enableFormAction$;
     this.order$ = this.debitNoteService.debitNoteSelected$;
     this.salesmen$ = this.customerService.salesmen$;
+    this.salesmen$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => this.cdr.markForCheck());
     this.warehouses$ = this.purchaseService.warehouses$;
     this.customers$ = this.customerService.customers$.pipe(
       map((rows) =>
@@ -372,6 +376,10 @@ export class DebitNoteDetailComponent implements OnInit, AfterViewInit, OnDestro
 
   formatRate(rate: number | null | undefined): string {
     return ((Number(rate) || 0) * 100).toFixed(2);
+  }
+
+  formatTaxRate(rate: number | null | undefined): string {
+    return formatTaxPercent(rate);
   }
 
   onLineActionBegin(args: SaveEventArgs): void {

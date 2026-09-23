@@ -249,7 +249,7 @@ export class PurchaseOrderComponent implements OnInit, AfterViewInit, OnDestroy 
     }
     if (isPurchaseOrderReadOnly(selected)) {
       this.toastService.showMyToast(
-        'La orden de compra procesada no se puede modificar',
+        'La orden de compra recibida o cerrada no se puede modificar',
         toastType.warning
       );
       return;
@@ -291,7 +291,7 @@ export class PurchaseOrderComponent implements OnInit, AfterViewInit, OnDestroy 
   private deleteOrder(order: IPurchaseOrder): void {
     if (isPurchaseOrderReadOnly(order)) {
       this.toastService.showMyToast(
-        'La orden de compra procesada no se puede eliminar',
+        'La orden de compra recibida o cerrada no se puede eliminar',
         toastType.warning
       );
       return;

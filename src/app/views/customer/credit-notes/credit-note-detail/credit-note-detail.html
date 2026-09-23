@@ -166,6 +166,7 @@
           field="itemCode"
           headerText="Item"
           width="80"
+          [visible]="false"
         ></e-column>
         <e-column
           field="description"
@@ -181,8 +182,8 @@
         ></e-column>
         <e-column
           field="quantity"
-          headerText="Cantidad"
-          width="70"
+          headerText="Cant."
+          width="58"
           type="number"
           format="N3"
           textAlign="Right"
@@ -195,15 +196,15 @@
         ></e-column>
         <e-column
           field="priceByUnit"
-          headerText="Precio Unitario"
-          width="95"
+          headerText="P. Unit."
+          width="75"
           type="number"
           format="N2"
           textAlign="Right"
         ></e-column>
         <e-column
           field="merchandiseDiscount"
-          headerText="Desc Artículo"
+          headerText="Desc Item"
           width="70"
           textAlign="Right"
         >
@@ -233,7 +234,7 @@
         </e-column>
         <e-column
           field="totalPrice"
-          headerText="Precio Total"
+          headerText="Total"
           width="100"
           type="number"
           format="N2"
@@ -532,7 +533,7 @@
                   textAlign="Right"
                 >
                   <ng-template #template let-data>
-                    {{ formatRate(data?.taxRate) }}
+                    {{ formatTaxRate(data?.taxRate) }}
                   </ng-template>
                 </e-column>
                 <e-column
@@ -565,11 +566,11 @@
       <span class="total-field__value">{{ netTotal | number: '1.2-2' }}</span>
     </div>
     <div class="total-field">
-      <span class="total-field__label">Descuentos</span>
+      <span class="total-field__label">Dscto.</span>
       <span class="total-field__value">{{ discountTotal | number: '1.2-2' }}</span>
     </div>
     <div class="total-field">
-      <span class="total-field__label">Total mercancías sin descuento</span>
+      <span class="total-field__label">S/Dscto.</span>
       <span class="total-field__value">{{ goodsWithoutDiscount | number: '1.2-2' }}</span>
     </div>
     <div class="total-field">
@@ -577,7 +578,7 @@
       <span class="total-field__value">{{ taxTotal | number: '1.2-2' }}</span>
     </div>
     <div class="total-field total-field--grand">
-      <span class="total-field__label">TOTAL Nota Crédito</span>
+      <span class="total-field__label">Total</span>
       <span class="total-field__value">{{ grandTotal | number: '1.2-2' }}</span>
     </div>
   </div>

@@ -19,6 +19,13 @@ export const ROUTES: Routes = [
           ),
       },
       {
+        path: 'accounting/classes',
+        loadChildren: () =>
+          import('@views/accounting/classes/classes.module').then(
+            (m) => m.ClassesModule
+          ),
+      },
+      {
         path: 'treasury',
         loadChildren: () =>
           import('@views/treasury/treasury.module').then(

@@ -74,7 +74,7 @@
           [dataSource]="creditCashOptions"
           [fields]="creditCashFields"
           popupHeight="140px"
-          [enabled]="enabled$ | async"
+          [enabled]="false"
           (change)="onCreditCashChange()"
         ></ejs-dropdownlist>
       </div>
@@ -89,7 +89,7 @@
           [filterType]="providerFilterType"
           [showClearButton]="true"
           popupHeight="240px"
-          [enabled]="enabled$ | async"
+          [enabled]="false"
           (change)="onCreditTermChange()"
         ></ejs-dropdownlist>
       </div>
@@ -702,3 +702,183 @@
     Seleccione una compra
   </div>
 </ng-template>
+
+<ejs-dialog
+  #paymentDialog
+  cssClass="payment-condition-dialog"
+  [visible]="paymentDialogVisible"
+  [isModal]="true"
+  [showCloseIcon]="true"
+  width="640px"
+  header="CONDICIÓN DE PAGO"
+  [buttons]="paymentDialogButtons"
+  (close)="cancelPaymentDialog()"
+>
+  <form [formGroup]="paymentForm" class="payment-condition-form">
+    <div class="row">
+      <div class="col-md-6">
+        <ejs-dropdownlist
+          placeholder="Condición"
+          floatLabelType="Always"
+          formControlName="creditCash"
+          [dataSource]="creditCashOptions"
+          [fields]="creditCashFields"
+          popupHeight="140px"
+          (change)="onPaymentConditionChange()"
+        ></ejs-dropdownlist>
+      </div>
+      <div class="col-md-6" *ngIf="isPaymentCash">
+        <ejs-dropdownlist
+          placeholder="Caja"
+          floatLabelType="Always"
+          formControlName="paymentTreasuryId"
+          [dataSource]="(treasuries$ | async) || []"
+          [fields]="treasuryFields"
+          [allowFiltering]="true"
+          [filterType]="providerFilterType"
+          popupHeight="220px"
+        ></ejs-dropdownlist>
+      </div>
+    </div>
+
+    <div class="payment-panel" *ngIf="!isPaymentCash">
+      <div class="payment-panel__title">Crédito</div>
+      <ejs-dropdownlist
+        placeholder="Tipo de crédito"
+        floatLabelType="Always"
+        formControlName="creditType"
+        [dataSource]="creditTypeOptions"
+        [fields]="creditCashFields"
+        popupHeight="140px"
+        (change)="onPaymentCreditTypeChange()"
+      ></ejs-dropdownlist>
+      <div class="payment-credit-row" *ngIf="isPaymentVencimiento">
+        <span class="payment-credit-row__label">Con vencimiento al :</span>
+        <ejs-datepicker
+          format="dd/MM/yyyy"
+          placeholder="Vencimiento"
+          floatLabelType="Never"
+          formControlName="dueDate"
+          [min]="paymentDueMinDate"
+        ></ejs-datepicker>
+      </div>
+      <div class="payment-giros" *ngIf="isPaymentGiros">
+        <div class="payment-cash-row">
+          <span class="payment-cash-row__label">Anticipo :</span>
+          <ejs-numerictextbox
+            formControlName="draftDownpayment"
+            format="n2"
+            [decimals]="2"
+            [min]="0"
+            [showSpinButton]="false"
+            (change)="onPaymentDraftChange()"
+          ></ejs-numerictextbox>
+        </div>
+        <div class="payment-cash-row">
+          <span class="payment-cash-row__label">Serie numérica :</span>
+          <ejs-textbox formControlName="draftSerieNumber"></ejs-textbox>
+        </div>
+        <div class="payment-cash-row">
+          <span class="payment-cash-row__label">Número de giros :</span>
+          <ejs-numerictextbox
+            formControlName="draftsNumber"
+            format="n0"
+            [decimals]="0"
+            [min]="1"
+            [showSpinButton]="false"
+            (change)="onPaymentDraftChange()"
+          ></ejs-numerictextbox>
+        </div>
+        <div class="payment-cash-row">
+          <span class="payment-cash-row__label">Periodo (días) :</span>
+          <ejs-numerictextbox
+            formControlName="draftsPeriod"
+            format="n0"
+            [decimals]="0"
+            [min]="1"
+            [showSpinButton]="false"
+            (change)="onPaymentDraftChange()"
+          ></ejs-numerictextbox>
+        </div>
+        <div class="payment-cash-row">
+          <span class="payment-cash-row__label">Cálculo de interés :</span>
+          <ejs-dropdownlist
+            formControlName="compoundInterest"
+            [dataSource]="interestCalcOptions"
+            [fields]="creditCashFields"
+            popupHeight="120px"
+            (change)="onPaymentDraftChange()"
+          ></ejs-dropdownlist>
+        </div>
+        <div class="payment-cash-row">
+          <span class="payment-cash-row__label">Tasa de interés (%) :</span>
+          <ejs-numerictextbox
+            formControlName="interestRatePct"
+            format="n4"
+            [decimals]="4"
+            [min]="0"
+            [showSpinButton]="false"
+            (change)="onPaymentDraftChange()"
+          ></ejs-numerictextbox>
+        </div>
+        <div class="payment-cash-row">
+          <span class="payment-cash-row__label">Interés :</span>
+          <ejs-numerictextbox
+            formControlName="interestAmount"
+            format="n2"
+            [decimals]="2"
+            [showSpinButton]="false"
+          ></ejs-numerictextbox>
+        </div>
+        <div class="payment-giros__hint">
+          El interés se calcula sobre el saldo (total − anticipo), a la tasa
+          por giro. Simple: saldo × tasa × giros. Compuesto: saldo × ((1 + tasa)^giros − 1).
+        </div>
+      </div>
+    </div>
+
+    <div class="payment-panel" *ngIf="isPaymentCash">
+      <div class="payment-panel__title">Contado</div>
+      <div class="payment-cash-row">
+        <span class="payment-cash-row__label">Forma de Pago :</span>
+        <ejs-dropdownlist
+          formControlName="paymentType"
+          [dataSource]="purchasePaymentTypes"
+          [fields]="creditCashFields"
+          popupHeight="160px"
+          (change)="onPaymentFormChange()"
+        ></ejs-dropdownlist>
+      </div>
+      <div class="payment-cash-row">
+        <span class="payment-cash-row__label">Nombre de Pago :</span>
+        <ejs-textbox formControlName="paymentName"></ejs-textbox>
+      </div>
+      <div class="payment-cash-row">
+        <span class="payment-cash-row__label">Número de Pago :</span>
+        <ejs-textbox formControlName="paymentDocument"></ejs-textbox>
+      </div>
+      <div class="payment-cash-row">
+        <span class="payment-cash-row__label">Beneficiario :</span>
+        <ejs-textbox formControlName="beneficiary"></ejs-textbox>
+      </div>
+      <div class="payment-cash-row">
+        <span class="payment-cash-row__label">Importe :</span>
+        <ejs-numerictextbox
+          formControlName="amount"
+          format="n2"
+          [decimals]="2"
+          [showSpinButton]="false"
+          [enabled]="false"
+        ></ejs-numerictextbox>
+      </div>
+      <div class="payment-cash-row">
+        <span class="payment-cash-row__label">Fecha vencimiento :</span>
+        <ejs-datepicker
+          format="dd/MM/yyyy"
+          formControlName="paymentDueDate"
+          [min]="paymentDueMinDate"
+        ></ejs-datepicker>
+      </div>
+    </div>
+  </form>
+</ejs-dialog>

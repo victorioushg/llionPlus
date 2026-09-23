@@ -41,6 +41,7 @@ import {
 } from '../../../provider/purchases/purchase';
 import { DeliveryNoteService } from '../delivery-note.service';
 import { IDeliveryNote, IDeliveryNoteDiscount, IDeliveryNoteLine, IDeliveryNoteTax, ISalesman } from '../delivery-note';
+import { formatTaxPercent } from '../../sales-document-header';
 
 @Component({
   selector: 'llion-delivery-note-detail',
@@ -161,6 +162,9 @@ export class DeliveryNoteDetailComponent implements OnInit, AfterViewInit, OnDes
     this.enabled$ = this.deliveryNoteService.enableFormAction$;
     this.order$ = this.deliveryNoteService.deliveryNoteSelected$;
     this.salesmen$ = this.customerService.salesmen$;
+    this.salesmen$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => this.cdr.markForCheck());
     this.warehouses$ = this.purchaseService.warehouses$;
     this.customers$ = this.customerService.customers$.pipe(
       map((rows) =>
@@ -376,6 +380,10 @@ export class DeliveryNoteDetailComponent implements OnInit, AfterViewInit, OnDes
 
   formatRate(rate: number | null | undefined): string {
     return ((Number(rate) || 0) * 100).toFixed(2);
+  }
+
+  formatTaxRate(rate: number | null | undefined): string {
+    return formatTaxPercent(rate);
   }
 
   onLineActionBegin(args: SaveEventArgs): void {

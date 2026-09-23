@@ -70,6 +70,7 @@ export class MerchandiseService {
     acceptsReturnsRate: 0,
     currentStock: 0,
     availableStock: 0,
+    onOrderQuantity: 0,
     marketShare: 0,
     regulated: false,
     acceptsRebate: false,

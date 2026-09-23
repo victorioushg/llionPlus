@@ -25,6 +25,7 @@ import { ErrorHandlerService } from '@shared/services/errorHandlerService';
 import { toastType } from '@shared/enums/enums';
 import { Action } from '@shared/models/edit-action';
 import { IAccountClass } from '@views/accounting/classes/class';
+import { ClassesService } from '@views/accounting/classes/classes.service';
 import { IAccount } from './account';
 
 /** Raw API row — supports both C# names and legacy Angular aliases. */
@@ -104,6 +105,7 @@ export class AccountsService {
   constructor(
     private http: HttpClient,
     private applicationService: ApplicationService,
+    private classesService: ClassesService,
     private toastService: ToastService,
     private errorHandlerService: ErrorHandlerService
   ) {
@@ -241,37 +243,7 @@ export class AccountsService {
       })
     );
 
-    this.classes$ = this.applicationService.workingOrganization$.pipe(
-      switchMap((workingOrg) => {
-        if ((workingOrg?.organizationId ?? 0) <= 0) {
-          return of([] as IAccountClass[]);
-        }
-        return this.http
-          .get<IApiResponse<IAccountClass[]>>(`${this.accountUrl}/classes/0`)
-          .pipe(
-            map((data) =>
-              ((data.result ?? []) as Array<IAccountClass & Record<string, unknown>>)
-                .map((row) => {
-                  const classId = Number(row.classId ?? row['ClassId']) || 0;
-                  const name = String(row.name ?? row['Name'] ?? '').trim();
-                  const fullName = String(
-                    row.fullName ?? row['FullName'] ?? name
-                  ).trim();
-                  const isActive = row.isActive ?? row['IsActive'];
-                  return {
-                    classId,
-                    name,
-                    fullName: fullName || name,
-                    isActive: isActive !== false && isActive !== 0,
-                  } as IAccountClass;
-                })
-                .filter((row) => row.classId > 0)
-            ),
-            catchError(this.errorHandlerService.handleError)
-          );
-      }),
-      shareReplay({ bufferSize: 1, refCount: true })
-    );
+    this.classes$ = this.classesService.classes$;
 
     this.accountSelected$ = combineLatest([
       this.accounts$,

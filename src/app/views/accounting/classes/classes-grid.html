@@ -2,40 +2,105 @@
   <div class="row">
     <div class="col-lg-4">
       <div id="classes-grid">
-        <ejs-grid
+        <ejs-treegrid
           #classesgrid
-          [toolbar]="toolbar"
-          [searchSettings]="searchSettings"
+          [dataSource]="classRows"
+          childMapping="subtasks"
+          [loadChildOnDemand]="false"
+          [treeColumnIndex]="0"
+          [toolbar]="classesToolbar"
+          [editSettings]="classesEditSettings"
+          [height]="classesGridHeight"
+          [rowHeight]="classesGridRowHeight"
+          [allowSelection]="true"
           (actionBegin)="actionBegin($event)"
-          (toolbarClick)="onToolbarClick($event)"
-          (rowSelected)="onRowSelected($event)"
-          (rowDeselected)="onRowDeselected($event)"
-          (recordDoubleClick)="onRecordDoubleClick($event)"
-          (commandClick)="commandClick($event)"
+          (actionComplete)="actionComplete($event)"
+          (rowDataBound)="rowDataBound($event)"
+          (dataBound)="onDataBound()"
         >
           <e-columns>
-            <e-column width="50" [commands]="commands"></e-column>
+            <e-column field="name" headerText="nombre" width="220"></e-column>
             <e-column
-              field="description"
-              headerText="Descripción"
-              width="250"
+              field="isActive"
+              headerText="activa"
+              width="70"
+              type="boolean"
+              [displayAsCheckBox]="true"
+              textAlign="Center"
             ></e-column>
             <e-column
               field="classId"
               [isPrimaryKey]="true"
               [visible]="false"
             ></e-column>
+            <e-column field="fullName" [visible]="false"></e-column>
+            <e-column field="parentId" [visible]="false"></e-column>
+            <e-column field="parentFullName" [visible]="false"></e-column>
+            <e-column field="subLevel" [visible]="false"></e-column>
           </e-columns>
-        </ejs-grid>
+
+          <ng-template #editSettingsTemplate let-data>
+            <div ngForm #classForm="ngForm" class="class-edit-dialog">
+              <input
+                type="hidden"
+                name="classId"
+                [(ngModel)]="classData.classId"
+              />
+              <input
+                type="hidden"
+                name="parentId"
+                [(ngModel)]="classData.parentId"
+              />
+
+              <div class="row">
+                <div class="col-md-12">
+                  <ejs-textbox
+                    [value]="parentLabel"
+                    placeholder="Clase padre"
+                    floatLabelType="Always"
+                    [enabled]="false"
+                  ></ejs-textbox>
+                </div>
+              </div>
+
+              <div class="row">
+                <div class="col-md-12">
+                  <ejs-textbox
+                    name="name"
+                    [(ngModel)]="classData.name"
+                    placeholder="Nombre"
+                    floatLabelType="Always"
+                    [required]="true"
+                  ></ejs-textbox>
+                </div>
+              </div>
+
+              <div class="row">
+                <div class="col-md-6">
+                  <ejs-dropdownlist
+                    name="isActive"
+                    [(ngModel)]="classData.isActive"
+                    [dataSource]="activeOptions"
+                    [fields]="activeFields"
+                    placeholder="Activa"
+                    floatLabelType="Always"
+                  ></ejs-dropdownlist>
+                </div>
+                <div class="col-md-6">
+                  <ejs-numerictextbox
+                    [value]="classData.subLevel ?? 0"
+                    placeholder="Nivel"
+                    floatLabelType="Always"
+                    format="n0"
+                    [decimals]="0"
+                    [enabled]="false"
+                  ></ejs-numerictextbox>
+                </div>
+              </div>
+            </div>
+          </ng-template>
+        </ejs-treegrid>
       </div>
     </div>
-    <div class="col-lg-4">
-      <llion-class-detail></llion-class-detail>
-    </div>
-    <div class="col-lg-4">
-      <llion-class-detail-input></llion-class-detail-input>
-    </div>
   </div>
-  
-  <div id="ej2Toast" #toast></div>
 </div>

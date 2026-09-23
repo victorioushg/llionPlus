@@ -452,3 +452,57 @@
   padding: 16px;
   color: rgba(0, 0, 0, 0.55);
 }
+
+:host ::ng-deep .payment-condition-dialog .e-dlg-header {
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.payment-condition-form {
+  padding: 4px 2px 8px;
+}
+
+.payment-panel {
+  margin-top: 12px;
+  padding: 10px 12px 12px;
+  border: 1px solid rgba(0, 0, 0, 0.16);
+}
+
+.payment-panel__title {
+  margin-bottom: 10px;
+  font-weight: 700;
+}
+
+.payment-credit-row,
+.payment-cash-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.payment-credit-row__label,
+.payment-cash-row__label {
+  flex: 0 0 160px;
+  text-align: right;
+  font-weight: 600;
+}
+
+.payment-credit-row ejs-datepicker,
+.payment-cash-row ejs-dropdownlist,
+.payment-cash-row ejs-textbox,
+.payment-cash-row ejs-numerictextbox,
+.payment-cash-row ejs-datepicker {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.payment-giros {
+  margin-top: 4px;
+}
+
+.payment-giros__hint {
+  margin-top: 10px;
+  color: rgba(0, 0, 0, 0.6);
+  line-height: 1.35;
+}

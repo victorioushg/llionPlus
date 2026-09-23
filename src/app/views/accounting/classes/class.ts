@@ -3,13 +3,11 @@ export interface IAccountClass {
   name?: string | null;
   fullName?: string | null;
   isActive?: boolean | null;
+  parentId?: number | null;
+  parentFullName?: string | null;
+  subLevel?: number | null;
 }
 
-export interface IClass {
-  classId: number;
-  classCode: string;
-  description: string;
-  level: number;
-  outcomeAccount: number;
-  organization: number;
+export interface IClassTreeRow extends IAccountClass {
+  subtasks?: IClassTreeRow[];
 }

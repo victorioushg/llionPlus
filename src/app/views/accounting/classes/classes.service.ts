@@ -1,210 +1,154 @@
-import { Injectable, NgZone } from '@angular/core';
-import { IClass }  from './class';
+import { Injectable } from '@angular/core';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { environment } from '@environments/environment';
-import {
-  HttpClient,
-  HttpErrorResponse,
-  HttpHeaders,
-} from '@angular/common/http';
-import {
-  catchError,
-  concatMap,
-  map,
-  scan,
-  shareReplay,
-  switchMap,
-  take,
-  tap,
-} from 'rxjs/operators';
-import {
-  BehaviorSubject,
-  combineLatest,
-  merge,
-  Observable,
-  of,
-  Subject,
-  throwError,
-} from 'rxjs';
-import { IApiResponse } from '@app/shared/models/api-response';
-import { ApplicationService } from '@app/shared/services/applicattionService';
-import { ToastService } from '@app/shared/services/toastService';
-import { toastType } from '@app/shared/enums/enums';
-import { Action } from '@app/shared/models/edit-action';
+import { BehaviorSubject, Observable, of } from 'rxjs';
+import { catchError, map, shareReplay, switchMap, tap } from 'rxjs/operators';
+import { IApiResponse } from '@shared/models/api-response';
+import { ToastService } from '@shared/services/toastService';
+import { ErrorHandlerService } from '@shared/services/errorHandlerService';
+import { toastType } from '@shared/enums/enums';
+import { IAccountClass } from './class';
 
 @Injectable({
   providedIn: 'root',
 })
 export class ClassesService {
-  private apiUrl = environment.API_URL + 'application';
+  private readonly classUrl = environment.API_URL + 'accounts';
+  private readonly headers = new HttpHeaders({
+    'Content-Type': 'application/json',
+  });
+  private readonly refreshSource = new BehaviorSubject<number>(0);
 
-  // private emptyUser: Observable<IUser> = of({
-  //   userId: 0,
-  //   userName: '',
-  //   email: '',
-  //   phoneNumber: '',
-  //   deactivated: 0,
-  //   firstName: '',
-  //   lastName: '',
-  //   displayName: '',
-  // }).pipe(take(1));
-
-  // users$ = this.http.get<IApiResponse<IUser[]>>(this.apiUrl + '/users').pipe(
-  //   map((data) => data.result),
-  //   catchError(this.handleError)
-  // );
-
-  // private userSelectedSubject = new BehaviorSubject<number>(0);
-  // userSelectedAction$ = this.userSelectedSubject.asObservable();
-
-  // userSelected$ = combineLatest([this.users$, this.userSelectedAction$]).pipe(
-  //   switchMap(([users, selectedUserId]) => {
-  //     if (selectedUserId > 0) {
-  //       return this.getUser(selectedUserId);
-  //     } else {
-  //       return this.emptyUser;
-  //     }
-  //   }),
-  //   shareReplay(1)
-  // );
-
-  // private userModifiedSubject = new Subject<Action<IUser>>();
-  // userModifiedAction$ = this.userModifiedSubject.asObservable();
-
-  // userWithCRUD$ = merge(
-  //   this.users$,
-  //   this.userModifiedAction$.pipe(
-  //     concatMap((operation) => this.saveUser(operation))
-  //   )
-  // ).pipe(
-  //   scan(
-  //     (acc, value) =>
-  //       value instanceof Array ? [...value] : this.modifyUsers(acc, value),
-  //     [] as IUser[]
-  //   ),
-  //   shareReplay(1)
-  // );
-
-  // headers = new HttpHeaders({ 'Content-Type': 'application/json' });
-
-  // modifyUsers(users: IUser[], operation: Action<IUser>): IUser[] {
-  //   if (operation.action === 'add') {
-  //     // Return a new array with the added organization pushed to it
-  //     return [...users, operation.item];
-  //   } else if (operation.action === 'update') {
-  //     // Return a new array with the updated organization replaced
-  //     return users.map((user) =>
-  //       user.userId === operation.item.userId ? operation.item : user
-  //     );
-  //   } else if (operation.action === 'delete') {
-  //     // Filter out the deleted organization
-  //     return users.filter((user) => user.userId !== operation.item.userId);
-  //   }
-  //   return [...users];
-  // }
+  readonly classes$: Observable<IAccountClass[]> = this.refreshSource.pipe(
+    switchMap(() =>
+      this.http
+        .get<IApiResponse<IAccountClass[]>>(`${this.classUrl}/classes/0`)
+        .pipe(
+          map((data) =>
+            ((data.result ?? []) as Array<IAccountClass & Record<string, unknown>>)
+              .map((row) => this.normalize(row))
+              .filter((row) => row.classId > 0)
+          ),
+          catchError((err) => {
+            this.errorHandlerService.handleError(err);
+            return of([] as IAccountClass[]);
+          })
+        )
+    ),
+    shareReplay({ bufferSize: 1, refCount: true })
+  );
 
   constructor(
     private http: HttpClient,
-    private applicationService: ApplicationService,
     private toastService: ToastService,
-    private ngZone: NgZone
+    private errorHandlerService: ErrorHandlerService
   ) {}
 
-  // addUser(newUser: IUser): void {
-  //   this.userModifiedSubject.next({
-  //     item: newUser,
-  //     action: 'add',
-  //   });
-  // }
+  refresh(): void {
+    this.refreshSource.next(this.refreshSource.value + 1);
+  }
 
-  // deleteUser(selectedUser: IUser): void {
-  //   this.userModifiedSubject.next({
-  //     item: selectedUser,
-  //     action: 'delete',
-  //   });
-  // }
+  saveClass(item: IAccountClass): Observable<number> {
+    const payload = this.toPayload(item);
+    const isNew = payload.classId <= 0;
+    const request$ = isNew
+      ? this.http.post<IApiResponse<number>>(
+          `${this.classUrl}/class`,
+          payload,
+          { headers: this.headers }
+        )
+      : this.http.put<IApiResponse<number>>(
+          `${this.classUrl}/class`,
+          payload,
+          { headers: this.headers }
+        );
 
-  // updateUser(selectedUser: IUser): void {
-  //   this.userModifiedSubject.next({
-  //     item: selectedUser,
-  //     action: 'update',
-  //   });
-  // }
+    return request$.pipe(
+      tap((data) => {
+        const savedId = Number(data.result) || 0;
+        if (savedId > 0) {
+          this.toastService.showMyToast(
+            `${payload.name}, datos almacenados`,
+            toastType.success
+          );
+          this.refresh();
+        } else {
+          this.toastService.showMyToast(
+            'No se pudo guardar la clase',
+            toastType.warning
+          );
+        }
+      }),
+      map((data) => Number(data.result) || 0),
+      catchError((err) => this.errorHandlerService.handleError(err))
+    );
+  }
 
-  // saveUser(
-  //   operation: Action<IUser>
-  // ): Observable<Action<IUser>> {
-  //   const user: IUser = operation.item;
+  deleteClass(item: IAccountClass): Observable<number> {
+    const classId = Number(item.classId) || 0;
+    return this.http
+      .delete<IApiResponse<number>>(`${this.classUrl}/class/${classId}`, {
+        headers: this.headers,
+      })
+      .pipe(
+        tap((data) => {
+          const result = Number(data.result) || 0;
+          if (result < 0) {
+            this.toastService.showMyToast(
+              'No se puede eliminar: la clase tiene subclases',
+              toastType.warning
+            );
+            return;
+          }
+          if (result > 0) {
+            this.toastService.showMyToast(
+              `${item.name ?? item.fullName}, datos eliminados`,
+              toastType.success
+            );
+            this.refresh();
+            return;
+          }
+          this.toastService.showMyToast(
+            'No se pudo eliminar la clase',
+            toastType.warning
+          );
+        }),
+        map((data) => Number(data.result) || 0),
+        catchError((err) => this.errorHandlerService.handleError(err))
+      );
+  }
 
-  //   if (operation.action === 'delete') {
-  //     const url = `${this.apiUrl}/${user.userId}`;
-  //     return this.http
-  //       .delete<IApiResponse<number>>(url, { headers: this.headers })
-  //       .pipe(
-  //         tap((data) => {
-  //           this.toastService.showMyToast(
-  //             `${user.displayName}, datos eliminados`,
-  //             toastType.success
-  //           );
-  //         }),
+  normalize(row: IAccountClass & Record<string, unknown>): IAccountClass {
+    const classId = Number(row.classId ?? row['ClassId']) || 0;
+    const name = String(row.name ?? row['Name'] ?? '').trim();
+    const fullName = String(row.fullName ?? row['FullName'] ?? name).trim();
+    const parentId = Number(row.parentId ?? row['ParentId']) || null;
+    const parentFullName = String(
+      row.parentFullName ?? row['ParentFullName'] ?? ''
+    ).trim();
+    const isActive = row.isActive ?? row['IsActive'];
+    return {
+      classId,
+      name,
+      fullName: fullName || name,
+      isActive: isActive !== false && isActive !== 0 && isActive !== '0',
+      parentId: parentId && parentId > 0 ? parentId : null,
+      parentFullName: parentFullName || null,
+      subLevel: Number(row.subLevel ?? row['SubLevel']) || 0,
+    };
+  }
 
-  //         map(() => ({ item: user, action: operation.action })),
-  //         catchError((error: HttpErrorResponse) => this.handleError(error))
-  //       );
-  //   }
-  //   if (operation.action === 'add') {
-  //     return this.http
-  //       .post<IApiResponse<number>>( `${this.apiUrl}/user`, { ...user, id: 0 }, { headers: this.headers, } )
-  //       .pipe(
-  //         tap((data) => {
-  //           this.toastService.showMyToast(
-  //             `${user.displayName}, datos almacenados`,
-  //             toastType.success
-  //           );
-  //         }),
-  //         map(() => ({ item: user, action: operation.action })),
-  //         catchError(this.handleError)
-  //       );
-  //   }
-
-  //   if (operation.action === 'update') {
-  //     return this.http
-  //       .put<IApiResponse<number>>( `${this.apiUrl}/user`, user, { headers: this.headers, }
-  //       )
-  //       .pipe(
-  //         tap((data) => {
-  //           this.toastService.showMyToast(
-  //             `${user.displayName}, datos almacenados`,
-  //             toastType.success
-  //           );
-  //         }),
-  //         map(() => ({ item: user, action: operation.action })),
-  //         catchError(this.handleError)
-  //       );
-  //   }
-
-  //   return of(operation);
-  // }
-
-  // selectedUserChanged(selectedUserId: number): void {
-  //   this.userSelectedSubject.next(selectedUserId);
-  // }
-
-  // getUser(id: number): Observable<IUser | undefined> {
-  //   return this.http.get<IApiResponse<IUser>>(`${this.apiUrl}/${id}`).pipe(
-  //     map((data) => data.result),
-  //     catchError(this.handleError)
-  //   );
-  // }
-
-  private handleError(err: HttpErrorResponse) {
-    let errorMessage = '';
-    if (err.error instanceof ErrorEvent) {
-      errorMessage = `An Error ocurred: ${err.error.message} `;
-    } else {
-      errorMessage = `Server returned cod ${err.status}, error message is : ${err.message} `;
-    }
-    console.error(errorMessage);
-    this.toastService.showMyToast(errorMessage, toastType.error);
-    return throwError(errorMessage);
+  private toPayload(item: IAccountClass): IAccountClass {
+    const name = String(item.name ?? '').trim();
+    const parentId = Number(item.parentId) || 0;
+    return {
+      classId: Number(item.classId) || 0,
+      name,
+      fullName: String(item.fullName ?? name).trim(),
+      isActive: item.isActive !== false,
+      parentId: parentId > 0 ? parentId : null,
+      parentFullName: String(item.parentFullName ?? '').trim() || null,
+      subLevel: Number(item.subLevel) || 0,
+    };
   }
 }

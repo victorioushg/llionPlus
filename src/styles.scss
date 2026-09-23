@@ -26,6 +26,45 @@
   border-color: $llion-color-inverse-surface !important;
 }
 
+.title-strip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+  min-height: 40px;
+  padding: 6px 10px;
+  background: $llion-color-primary-container;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+}
+
+.title-strip__label {
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: $llion-color-font;
+}
+
+.e-dialog.payment-condition-dialog .e-dlg-header-content {
+  background-color: $llion-color-primary !important;
+  border-bottom: none !important;
+}
+
+.e-dialog.payment-condition-dialog .e-dlg-header,
+.e-dialog.payment-condition-dialog .e-dlg-header * {
+  color: $llion-color-white !important;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.e-dialog.payment-condition-dialog .e-icon-dlg-close {
+  color: $llion-color-white !important;
+}
+
+.e-dialog.payment-condition-dialog .e-footer-content {
+  text-align: right !important;
+}
+
 .container {
   max-width: 3440px !important;
   margin: 15px !important;
@@ -492,23 +531,29 @@ h6 {
 }
 
 /* Grid toolbars: icons only (hide Add/Edit/Delete/… labels; keep identity title) */
-.e-grid .e-toolbar .e-toolbar-item:not(.e-grid-toolbar-title) .e-tbar-btn-text {
+.e-grid .e-toolbar .e-toolbar-item:not(.e-grid-toolbar-title) .e-tbar-btn-text,
+.e-treegrid .e-toolbar .e-toolbar-item:not(.e-grid-toolbar-title) .e-tbar-btn-text {
   display: none;
 }
 
 /* Grid identity label on the right of the toolbar */
-.e-grid .e-toolbar {
+.e-grid .e-toolbar,
+.e-treegrid .e-toolbar {
   overflow: visible !important;
 }
 
 .e-grid .e-toolbar .e-toolbar-items,
 .e-grid .e-toolbar .e-toolbar-items.e-tbar-pos,
-.e-grid .e-toolbar .e-toolbar-right {
+.e-grid .e-toolbar .e-toolbar-right,
+.e-treegrid .e-toolbar .e-toolbar-items,
+.e-treegrid .e-toolbar .e-toolbar-items.e-tbar-pos,
+.e-treegrid .e-toolbar .e-toolbar-right {
   overflow: visible !important;
   height: 100% !important;
 }
 
-.e-grid .e-toolbar .e-toolbar-item.e-grid-toolbar-title {
+.e-grid .e-toolbar .e-toolbar-item.e-grid-toolbar-title,
+.e-treegrid .e-toolbar .e-toolbar-item.e-grid-toolbar-title {
   position: relative;
   margin-left: auto;
   margin-top: 0 !important;

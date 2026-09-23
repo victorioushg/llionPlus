@@ -80,3 +80,43 @@ export interface IGoodsReceipt {
   taxes?: IGoodsReceiptTax[] | null;
   discounts?: IGoodsReceiptDiscount[] | null;
 }
+
+export function isGoodsReceiptProcessed(
+  order: IGoodsReceipt | null | undefined
+): boolean {
+  const name = (order?.statusName ?? '').trim().toLowerCase();
+  if (name === 'procesada' || name === 'recibida') {
+    return true;
+  }
+  return Number(order?.status) === 2;
+}
+
+export function isGoodsReceiptReadOnly(
+  order: IGoodsReceipt | null | undefined
+): boolean {
+  if (!order) {
+    return false;
+  }
+  if (order.lockedDate) {
+    return true;
+  }
+  const name = (order.statusName ?? '').trim().toLowerCase();
+  if (name === 'cerrada') {
+    return true;
+  }
+  return isGoodsReceiptProcessed(order);
+}
+
+export function isGoodsReceiptLineFullyReceived(
+  line: IGoodsReceiptLine | null | undefined
+): boolean {
+  const quantity = Number(line?.quantity) || 0;
+  if (quantity <= 0) {
+    return false;
+  }
+  const transit = Number(line?.transitQuantity);
+  if (!Number.isFinite(transit)) {
+    return false;
+  }
+  return transit <= 0;
+}

@@ -82,7 +82,7 @@ export function isPurchaseOrderProcessed(
   order: IPurchaseOrder | null | undefined
 ): boolean {
   const name = (order?.statusName ?? '').trim().toLowerCase();
-  if (name === 'procesada') {
+  if (name === 'procesada' || name === 'recibida') {
     return true;
   }
   return Number(order?.status) === 2;
@@ -102,4 +102,18 @@ export function isPurchaseOrderReadOnly(
     return true;
   }
   return isPurchaseOrderProcessed(order);
+}
+
+export function isPurchaseOrderLineFullyReceived(
+  line: IPurchaseOrderLine | null | undefined
+): boolean {
+  const quantity = Number(line?.quantity) || 0;
+  if (quantity <= 0) {
+    return false;
+  }
+  const transit = Number(line?.transitQuantity);
+  if (!Number.isFinite(transit)) {
+    return false;
+  }
+  return transit <= 0;
 }

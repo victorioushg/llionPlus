@@ -5,6 +5,10 @@
     [formGroup]="orderForm"
     *ngIf="order$ | async as order"
   >
+    <div class="title-strip">
+      <span class="title-strip__label">ORDEN DE COMPRA</span>
+    </div>
+
     <div class="row">
       <div class="col-md-3">
         <ejs-textbox
@@ -125,6 +129,14 @@
         <e-column
           field="quantity"
           headerText="Cant."
+          width="70"
+          type="number"
+          format="N3"
+          textAlign="Right"
+        ></e-column>
+        <e-column
+          field="transitQuantity"
+          headerText="Pend."
           width="70"
           type="number"
           format="N3"

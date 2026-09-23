@@ -61,6 +61,18 @@ export class PurchaseService {
     classId: null,
     creditCash: 0,
     creditTerm: null,
+    paymentType: null,
+    paymentDocument: '',
+    paymentTreasuryId: null,
+    beneficiary: '',
+    creditType: null,
+    draftDownpayment: null,
+    draftSerieNumber: '',
+    draftsNumber: null,
+    draftsPeriod: null,
+    interestAmount: null,
+    interestRate: null,
+    compoundInterest: 0,
     journalEntryDate: null,
     comment: '',
     statusName: '',
@@ -191,7 +203,10 @@ export class PurchaseService {
         this.toDateKey(b.taxDateFrom).localeCompare(this.toDateKey(a.taxDateFrom))
     );
     const rate = Number(pool[0].rate);
-    return Number.isFinite(rate) ? rate : rateType === 'E' ? 0 : null;
+    if (!Number.isFinite(rate)) {
+      return rateType === 'E' ? 0 : null;
+    }
+    return Math.abs(rate) > 1 ? rate / 100 : rate;
   }
 
   isExemptRateType(taxCode: string | null | undefined): boolean {
@@ -745,6 +760,18 @@ export class PurchaseService {
       classId: Number(row.classId) || null,
       creditCash: this.isTrue(row.creditCash) ? 1 : 0,
       creditTerm: Number(row.creditTerm) || null,
+      paymentType: Number(row.paymentType) || null,
+      paymentDocument: row.paymentDocument ?? '',
+      paymentTreasuryId: Number(row.paymentTreasuryId) || null,
+      beneficiary: row.beneficiary ?? '',
+      creditType: Number(row.creditType) || 0,
+      draftDownpayment: Number(row.draftDownpayment) || null,
+      draftSerieNumber: row.draftSerieNumber ?? '',
+      draftsNumber: Number(row.draftsNumber) || null,
+      draftsPeriod: Number(row.draftsPeriod) || null,
+      interestAmount: Number(row.interestAmount) || null,
+      interestRate: Number(row.interestRate) || null,
+      compoundInterest: this.isTrue(row.compoundInterest) ? 1 : 0,
       lines: row.lines ?? [],
       taxes: row.taxes ?? [],
       discounts: row.discounts ?? [],

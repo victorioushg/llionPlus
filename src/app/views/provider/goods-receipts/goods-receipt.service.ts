@@ -18,7 +18,7 @@ import { ToastService } from '@shared/services/toastService';
 import { toastType } from '@shared/enums/enums';
 import { IOrganizationTax } from '@views/application/organization/organization';
 import { IGroup } from '@shared/models/group';
-import { IGoodsReceipt, IGoodsReceiptMerchandise, IGoodsReceiptUnit } from './goods-receipt';
+import { IGoodsReceipt, IGoodsReceiptMerchandise, IGoodsReceiptUnit, isGoodsReceiptReadOnly } from './goods-receipt';
 
 @Injectable({
   providedIn: 'root',
@@ -183,7 +183,10 @@ export class GoodsReceiptService {
         this.toDateKey(b.taxDateFrom).localeCompare(this.toDateKey(a.taxDateFrom))
     );
     const rate = Number(pool[0].rate);
-    return Number.isFinite(rate) ? rate : rateType === 'E' ? 0 : null;
+    if (!Number.isFinite(rate)) {
+      return rateType === 'E' ? 0 : null;
+    }
+    return Math.abs(rate) > 1 ? rate / 100 : rate;
   }
 
   isExemptRateType(taxCode: string | null | undefined): boolean {
@@ -243,7 +246,7 @@ export class GoodsReceiptService {
         this.draftOrderSource.next({
           ...this.createEmptyGoodsReceipt(),
           grNumber: code,
-          statusName: 'Tránsito',
+          statusName: 'Pendiente',
           status: 0,
         });
         this.setSelectedGrId(0);
@@ -283,7 +286,7 @@ export class GoodsReceiptService {
       issueDateTax: today,
       warehouseId: null,
       referenceNumber: '',
-      statusName: 'Tránsito',
+      statusName: 'Pendiente',
       status: 0,
       organizationId: this.currentOrganizationId,
       lines: [],
@@ -301,6 +304,14 @@ export class GoodsReceiptService {
   }
 
   saveGoodsReceipt(order: IGoodsReceipt): Observable<number> {
+    if ((order.grId ?? 0) > 0 && isGoodsReceiptReadOnly(order)) {
+      this.toastService.showMyToast(
+        'La recepción recibida o cerrada no se puede modificar',
+        toastType.warning
+      );
+      return of(0);
+    }
+
     const request$ =
       (order.grId ?? 0) > 0
         ? this.http.put<IApiResponse<number>>(this.goodsReceiptUrl, order, {

@@ -153,11 +153,13 @@ export class CustomerService {
               (data.result ?? [])
                 .map((row) => {
                   const salesmanId = Number(row.salesmanId) || 0;
-                  const description = (row.description ?? '').trim();
+                  const alternCode = (row.alternCode ?? '').trim();
+                  const description =
+                    (row.description ?? '').trim() || alternCode;
                   return {
                     ...row,
                     salesmanId,
-                    alternCode: (row.alternCode ?? '').trim(),
+                    alternCode,
                     description,
                   };
                 })
@@ -174,7 +176,7 @@ export class CustomerService {
             })
           );
       }),
-      shareReplay(1)
+      shareReplay({ bufferSize: 1, refCount: true })
     );
 
     this.customerSelected$ = combineLatest([

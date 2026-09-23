@@ -5,6 +5,10 @@
     [formGroup]="orderForm"
     *ngIf="order$ | async as order"
   >
+    <div class="title-strip">
+      <span class="title-strip__label">{{ config.title | uppercase }}</span>
+    </div>
+
     <div class="row">
       <div class="col-md-3">
         <div class="document-number-pair" *ngIf="config.showSeries; else numberOnly">

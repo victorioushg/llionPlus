@@ -12,6 +12,7 @@ import {
 import { ButtonModule, SwitchModule } from '@syncfusion/ej2-angular-buttons';
 import { DatePickerModule } from '@syncfusion/ej2-angular-calendars';
 import { DropDownListModule } from '@syncfusion/ej2-angular-dropdowns';
+import { DialogModule } from '@syncfusion/ej2-angular-popups';
 import { enableRipple } from '@syncfusion/ej2-base';
 import { ContactGridsModule } from '@shared/components/contact-grids.module';
 import { routes } from './_routes';
@@ -63,6 +64,7 @@ enableRipple(true);
     SwitchModule,
     DatePickerModule,
     DropDownListModule,
+    DialogModule,
     ButtonModule,
     FormsModule,
     ReactiveFormsModule,

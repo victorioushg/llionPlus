@@ -38,7 +38,7 @@ import { contentGridHeight } from '@shared/utils/layout';
 import { ToastService } from '@shared/services/toastService';
 import { toastType } from '@shared/enums/enums';
 import { GoodsReceiptService } from './goods-receipt.service';
-import { IGoodsReceipt } from './goods-receipt';
+import { IGoodsReceipt, isGoodsReceiptReadOnly } from './goods-receipt';
 
 @Component({
   selector: 'llion-content',
@@ -243,6 +243,13 @@ export class GoodsReceiptComponent implements OnInit, AfterViewInit, OnDestroy {
       );
       return;
     }
+    if (isGoodsReceiptReadOnly(selected)) {
+      this.toastService.showMyToast(
+        'La recepción recibida o cerrada no se puede modificar',
+        toastType.warning
+      );
+      return;
+    }
     this.goodsReceiptService.setSelectedGrId(selected.grId);
     this.selectOrderRow(selected.grId);
     this.goodsReceiptService.enableForm(true);
@@ -278,6 +285,13 @@ export class GoodsReceiptComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private deleteOrder(order: IGoodsReceipt): void {
+    if (isGoodsReceiptReadOnly(order)) {
+      this.toastService.showMyToast(
+        'La recepción recibida o cerrada no se puede eliminar',
+        toastType.warning
+      );
+      return;
+    }
     this.goodsReceiptService
       .deleteGoodsReceipt(order)
       .pipe(take(1))

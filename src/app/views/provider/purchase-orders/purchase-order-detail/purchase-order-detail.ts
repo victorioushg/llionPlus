@@ -41,6 +41,7 @@ import {
   IPurchaseOrderMerchandise,
   IPurchaseOrderTax,
   IPurchaseOrderUnit,
+  isPurchaseOrderLineFullyReceived,
 } from '../purchase-order';
 
 @Component({
@@ -320,7 +321,7 @@ export class PurchaseOrderDetailComponent
       comment: form.comment ?? '',
       status: isNew ? 0 : this.currentOrder?.status ?? 0,
       statusName: isNew
-        ? 'Tránsito'
+        ? 'Pendiente'
         : this.currentOrder?.statusName ?? form.statusName ?? '',
       organizationId:
         this.currentOrder?.organizationId ||
@@ -358,6 +359,19 @@ export class PurchaseOrderDetailComponent
   onLineActionBegin(args: SaveEventArgs): void {
     if (!this.ensureCanEdit(args)) {
       return;
+    }
+    if (args.requestType === 'beginEdit' || args.requestType === 'delete') {
+      const row = this.firstRow<IPurchaseOrderLine>(
+        args.requestType === 'beginEdit' ? args.rowData : args.data
+      );
+      if (isPurchaseOrderLineFullyReceived(row)) {
+        args.cancel = true;
+        this.toastService.showMyToast(
+          'El renglón recibido no se puede modificar',
+          toastType.warning
+        );
+        return;
+      }
     }
     if (args.requestType === 'add' || args.requestType === 'beginEdit') {
       const row = (args.rowData ?? {}) as Partial<IPurchaseOrderLine>;
@@ -512,7 +526,7 @@ export class PurchaseOrderDetailComponent
         poNumber: order.poNumber ?? '',
         issueDate,
         deliveryDate: this.asDate(order.deliveryDate),
-        statusName: order.statusName ?? (this.currentPoId <= 0 ? 'Tránsito' : ''),
+        statusName: order.statusName ?? (this.currentPoId <= 0 ? 'Pendiente' : ''),
         providerId: Number(order.providerId) > 0 ? Number(order.providerId) : null,
         comment: order.comment ?? '',
       },
@@ -780,6 +794,7 @@ export class PurchaseOrderDetailComponent
       description: '',
       taxCode: '',
       quantity: 0,
+      transitQuantity: 0,
       unit: '',
       weight: 0,
       costByUnit: 0,

@@ -1,5 +1,9 @@
 <div class="wrapper-detail" id="merchandise-detail-section">
-  <h6 class="detail-section-title">{{ isServiceCatalog ? 'Servicio' : 'Mercancía' }}</h6>
+  <div class="title-strip">
+    <span class="title-strip__label">{{
+      isServiceCatalog ? 'SERVICIO' : 'MERCANCÍA'
+    }}</span>
+  </div>
   <form
     id="merchandise-detail-form"
     class="merchandise-detail-form"

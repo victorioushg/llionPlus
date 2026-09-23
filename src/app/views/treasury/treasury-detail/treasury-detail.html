@@ -4,6 +4,9 @@
     class="treasury-detail-form"
     [formGroup]="treasuryForm"
   >
+    <div class="title-strip">
+      <span class="title-strip__label">{{ treasuryTitle(treasury) }}</span>
+    </div>
     <div class="row">
       <div class="col-md-8">
         <ejs-textbox

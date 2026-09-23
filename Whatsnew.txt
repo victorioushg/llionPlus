@@ -26,11 +26,18 @@ COMPRAS
   con la misma regla.
 - Proveedor: dropdown con el nombre visible; se guarda VendorId. En alta
   se puede elegir; en consulta/modificar queda bloqueado.
-- Condición de crédito: dropdown CREDITO (0) / CONTADO (1) sobre
-  CreditCash. En CONTADO, Vence = Emisión.
-- Plazo: se copia del proveedor (TermsId). Si el proveedor no tiene
-  término, el campo queda vacío. En CREDITO, Vence = Emisión +
-  Range_days; si el plazo es nulo o 0 días, Vence = Emisión.
+- Condición de crédito y plazo quedan de consulta (no se editan en
+  el encabezado). Al Aceptar se abre CONDICIÓN DE PAGO: CREDITO o
+  CONTADO. Header primary con letras blancas y botones a la derecha.
+  En crédito, tipo Vencimiento (fecha que pasa a Vence) o Giros
+  (anticipo, serie, número, periodo en días, tasa e interés). El
+  encabezado guarda CompoundInterest (0 Simple / 1 Compuesto):
+  interés sobre saldo (total − anticipo) a la tasa por giro.
+  En contado: caja, forma de pago, nombre, número, beneficiario
+  e importe. CxP: vencimiento crea un FC/COM con Emisión y
+  vencimiento iguales a la fecha de Vence; giros crea un GR/COM
+  por cada giro, vencimiento = emisión + (giro × periodo).
+  Tesorería SA/COM a contado.
 - Cuenta contable y Clase: se copian del proveedor al incluir; se
   pueden cambiar. La fecha de asiento contable no se muestra; al
   guardar queda igual a la emisión.
@@ -42,7 +49,9 @@ COMPRAS
 - Al guardar (GuardarTXT): reescribe renglones/IVA/descuentos por BillId,
   graba encabezado y N° de control (app_control_number, origen COM).
   Inventario EN/COM si COMPACOM03=1 o si el usuario confirma.
-  CxP FC/COM a crédito; tesorería SA/COM a contado (caja/banco).
+  CxP: vencimiento = un FC/COM (Emisión = DueDate = Vence);
+  giros = un GR/COM por giro (vence = emisión + giro × periodo).
+  Tesorería SA/COM a contado (caja/banco).
   Precios por ganancia (COMPACOM04/05). Tránsito de órdenes y recepciones.
 - Renglón: mercancía por nombre, IVA RateType, UOM (sin cantidad en tránsito).
 
@@ -89,12 +98,18 @@ RECEPCIONES DE MERCANCÍAS
   se puede elegir; en consulta/modificar queda bloqueado.
 - Almacén de entrada: dropdown de almacenes de la organización
   (merchandise/warehouses). Obligatorio en alta y modificación.
-- Estatus: no editable. En incluir queda en Tránsito.
+- Estatus: no editable. En incluir queda en Pendiente (0).
+  Parcial (1) sigue editable. Recibida (2) o Cerrada (LockedDate)
+  no se modifica ni se elimina. El listado muestra Pendiente /
+  Parcial / Recibida / Cerrada.
 - Campos editables en alta/modificar: emisión, emisión fiscal, almacén,
   referencia y comentario. Emisión y emisión fiscal por defecto = hoy.
 - Renglón: igual que la orden de compra (mercancía por nombre, IVA
-  RateType, UOM de mer_merchandise_uom). Además se muestra y edita la
-  cantidad en tránsito.
+  RateType, UOM de mer_merchandise_uom).
+- Columna Pend. = cantidad aún no facturada. Un renglón con cantidad > 0
+  y tránsito 0 (ya facturado) no se edita ni se borra.
+- Al guardar, el tránsito no lo pone el usuario: se recalcula como
+  Cantidad − cantidad ya facturada de ese renglón.
 - Los numéricos del popup no tienen flechas; el usuario escribe el valor.
 
 ==============================================================================
@@ -111,8 +126,10 @@ RECEPCIONES DE MERCANCÍAS
   guardado es VendorId. En un documento existente el dropdown muestra el
   proveedor de esa orden. En alta se puede elegir; en consulta/modificar
   queda bloqueado.
-- Estatus: no editable. En incluir queda en Tránsito.
-- Una orden Procesada (Status = 2) no se modifica ni se elimina.
+- Estatus: no editable. En incluir queda en Pendiente (0).
+  Parcial (1) sigue editable. Recibida (2) o Cerrada (LockedDate)
+  no se modifica ni se elimina. El listado muestra Pendiente /
+  Parcial / Recibida / Cerrada.
 - Emisión por defecto = hoy. Entrega por defecto = hoy + 7 días.
 - La fecha de entrega no puede ser menor que la de emisión.
 - Renglón: en el popup, Mercancía es un dropdown (nombre visible). Se
@@ -120,6 +137,10 @@ RECEPCIONES DE MERCANCÍAS
   la mercancía. Al seleccionar se carga el IVA (RateType; si no hay, A) y
   las unidades de mer_merchandise_uom: primero la de venta al mayor y
   luego las equivalencias (p.ej. CAJ, UND).
+- Columna Pend. = cantidad en tránsito. Un renglón con cantidad > 0 y
+  tránsito 0 (ya facturado) no se edita ni se borra.
+- Al guardar, el tránsito no se pone en cero: se recalcula como
+  Cantidad − cantidad ya recibida/facturada de ese renglón.
 - Los numéricos del popup (cantidad, costos, %) no tienen flechas; el
   usuario escribe el valor.
 
@@ -130,11 +151,19 @@ API / BASE DE DATOS (llionAPI, no va en este repositorio)
   incrementa Counter (padding 8) y devuelve CONCAT(Module, Counter).
 - prv_goodsreceipt_save: en alta, si GRNumber está vacío, llama a
   prv_goodsreceipt_next_number. Persiste WarehouseId, IssueDateTax y
-  ReferenceNumber.
+  ReferenceNumber. Conserva el tránsito (Cantidad − facturado previo).
+  Status 0 Pendiente / 1 Parcial / 2 Recibida. IVA: Rate > 1 como %.
 - prv_purchaseorder_next_number: busca Purchase Order en app_counters,
   incrementa Counter (padding 8) y devuelve CONCAT(Module, Counter).
 - prv_purchaseorder_save: en alta, si PONumber está vacío, llama a
-  prv_purchaseorder_next_number.
+  prv_purchaseorder_next_number. Conserva el tránsito (Cantidad −
+  recibido previo). Status 0 Pendiente / 1 Parcial / 2 Recibida.
+  IVA: si app_taxes.Rate > 1 se trata como porcentaje.
+- prv_purchaseorder_refresh_on_order: mer_merchandise.OnOrderQuantity =
+  SUM del tránsito de OC abiertas (no cerradas, Status < 2).
+- prv_purchaseorder_delete y prv_bill_update_transit recalculan
+  OnOrderQuantity. Tras facturar, Status 0/1/2.
+- mer_merchandises_get expone OnOrderQuantity (columna «en orden»).
 
 ==============================================================================
 PENDIENTE
@@ -217,12 +246,13 @@ que compras: listado a la izquierda y edición a la derecha.
 - Cliente: dropdown con el nombre visible; se guarda CustomerId. En alta
   se puede elegir; en consulta/modificar queda bloqueado.
 - Asesor comercial: dropdown de cus_salesforce_salesman
-  (GET customers/salesmen/{organizationId}). El SalesmanId del encabezado
-  se guarda y se lee contra esa tabla en presupuesto, pedido, NE,
-  factura, NC y ND.
+  (GET customers/salesmen/{organizationId}). SalesmanId es unsigned;
+  el SP lo entrega como entero con signo para el combo. El SalesmanId
+  del encabezado se guarda y se lee contra esa tabla en presupuesto,
+  pedido, NE, factura, NC y ND.
 - Tarifa: se muestra la del cliente (BillingPrice), no editable.
 - Emisión y vencimiento editables. Estatus de solo lectura.
-- Renglón: mercancía, IVA, cantidad, UND, precio unitario, desc. artículo,
+- Renglón: mercancía, IVA, cantidad, UND, precio unitario, Desc Item,
   desc. cliente y desc. oferta (cascada). Tipo renglón.
 - Pie: Neto, Descuentos, Total mercancías sin descuento, IVA,
   TOTAL PRESUPUESTO.
@@ -261,11 +291,10 @@ Notas débito     /customer/debit-notes       api/salesdebitnotes
 - Nota crédito: entrada inventario EN/NCV y CxC NC/NCV.
 - Nota débito: CxC ND/NDV.
 - NC y ND: factura afectada (InvoiceId).
-- Renglón: mercancía, IVA, cantidad, UND, precio, desc. artículo,
+- Renglón: mercancía, IVA, cantidad, UND, precio, Desc Item,
   desc. cliente y desc. oferta (cascada). Tipo renglón.
-- Pie: Neto, Descuentos, Total mercancías sin descuento, IVA y total
-  del documento (TOTAL PEDIDO / Nota de Entrega / Factura /
-  Nota Crédito / Nota Débito).
+- Pie: Neto, Dscto., S/Dscto., IVA y Total del documento.
+  Grid IVA: Tasa en porcentaje (16%), no 1600.
 - NC no tiene tabla de descuentos de encabezado.
 - Documentos con LockedDate: consulta sí, modificar/eliminar no.
 - No se migró N° Control ni catálogo de transporte.
@@ -273,6 +302,15 @@ Notas débito     /customer/debit-notes       api/salesdebitnotes
 Procedimientos: cus_salesorder_*, cus_deliverynote_*, cus_invoice_*,
 cus_creditnote_*, cus_debitnote_* (_get, _document_get, _save, _delete,
 _next_number) y cus_sales_post_save (inventario y CxC/tesorería).
+
+==============================================================================
+CENTRO DE COSTOS (CLASES)
+==============================================================================
+TreeGrid de acc_class (Contabilidad / Centro de costos): raíces en
+SubLevel 0, hijos en 1 y siguientes según ParentId. Incluir sin
+selección crea raíz; con una fila seleccionada crea subclase.
+Nombre completo = Padre:Hijo. No se elimina una clase con hijas.
+CRUD: GET/POST/PUT/DELETE api/accounts/class(es).
 
 ==============================================================================
 SESIÓN DE TRABAJO

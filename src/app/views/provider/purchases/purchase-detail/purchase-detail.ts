@@ -11,6 +11,7 @@ import {
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { FormBuilder, FormGroup, NgForm } from '@angular/forms';
 import { ChangeEventArgs } from '@syncfusion/ej2-angular-dropdowns';
+import { ButtonPropsModel } from '@syncfusion/ej2-popups';
 import {
   DialogEditEventArgs,
   EditSettingsModel,
@@ -41,6 +42,12 @@ import { PurchaseService } from '../purchase.service';
 import { AccountsService } from '@views/accounting/accounts/accounts.service';
 import { IAccount } from '@views/accounting/accounts/account';
 import { IAccountClass } from '@views/accounting/classes/class';
+import { ApplicationService } from '@shared/services/applicattionService';
+import { TreasuryService } from '@views/treasury/treasury.service';
+import {
+  ITreasury,
+  TREASURY_TYPE_CASHBOX,
+} from '@views/treasury/treasury';
 import {
   IPurchase,
   IPurchaseDiscount,
@@ -80,12 +87,42 @@ export class PurchaseDetailComponent
   classes$!: Observable<IAccountClass[]>;
   warehouses$!: Observable<IGroup[]>;
   merchandises$!: Observable<IPurchaseMerchandise[]>;
+  treasuries$!: Observable<Array<ITreasury & { group: string }>>;
   providerFields = { text: 'description', value: 'providerId' };
   termFields = { text: 'termsDescription', value: 'termsId' };
   accountFields = { text: 'fullName', value: 'accountId' };
   classFields = { text: 'fullName', value: 'classId' };
   creditCashFields = { text: 'text', value: 'value' };
   creditCashOptions = CREDIT_CASH_OPTIONS;
+  creditTypeOptions = [
+    { text: 'Vencimiento', value: 0 },
+    { text: 'Giros', value: 1 },
+  ];
+  interestCalcOptions = [
+    { text: 'Simple', value: 0 },
+    { text: 'Compuesto', value: 1 },
+  ];
+  paymentDialogButtons: ButtonPropsModel[] = [
+    {
+      click: () => this.cancelPaymentDialog(),
+      buttonModel: { content: 'Cancelar' },
+    },
+    {
+      click: () => this.confirmPaymentDialog(),
+      buttonModel: { content: 'Aceptar', isPrimary: true },
+    },
+  ];
+  purchasePaymentTypes = [
+    { text: 'Efectivo', value: 0 },
+    { text: 'Cheque', value: 1 },
+    { text: 'Tarjeta', value: 2 },
+    { text: 'Transferencia', value: 3 },
+  ];
+  treasuryFields = {
+    text: 'treasuryName',
+    value: 'treasuryId',
+    groupBy: 'group',
+  };
   warehouseFields = { text: 'fullName', value: 'groupId' };
   merchandiseFields = { text: 'name', value: 'merchandiseId' };
   unitFields = { text: 'code', value: 'code' };
@@ -104,6 +141,10 @@ export class PurchaseDetailComponent
   grandTotal = 0;
   linesHeight = 160;
   gridEnabled = false;
+  paymentDialogVisible = false;
+  paymentForm!: FormGroup;
+  paymentDueMinDate: Date | null = null;
+  private pendingPurchase: IPurchase | null = null;
 
   linesToolbar = withToolbarTitle(
     ['Add', 'Edit', 'Delete'],
@@ -150,6 +191,7 @@ export class PurchaseDetailComponent
   private providers: IProvider[] = [];
   private terms: IPaymentTerm[] = [];
   private merchandises: IPurchaseMerchandise[] = [];
+  private treasuries: Array<ITreasury & { group: string }> = [];
   private taxCatalogRows: { taxType?: string; description?: string; rateType?: string }[] =
     [];
   private lastLineMerchandiseId = 0;
@@ -161,11 +203,25 @@ export class PurchaseDetailComponent
     return this.gridEnabled && this.currentBillId <= 0;
   }
 
+  get isPaymentCash(): boolean {
+    return toCreditCash(this.paymentForm?.getRawValue()?.creditCash) === 1;
+  }
+
+  get isPaymentVencimiento(): boolean {
+    return !this.isPaymentCash && Number(this.paymentForm?.getRawValue()?.creditType) === 0;
+  }
+
+  get isPaymentGiros(): boolean {
+    return !this.isPaymentCash && Number(this.paymentForm?.getRawValue()?.creditType) === 1;
+  }
+
   constructor(
     private formBuilder: FormBuilder,
     private purchaseService: PurchaseService,
     private providerService: ProviderService,
     private accountsService: AccountsService,
+    private applicationService: ApplicationService,
+    private treasuryService: TreasuryService,
     private toastService: ToastService,
     private sanitizer: DomSanitizer,
     private cdr: ChangeDetectorRef
@@ -190,6 +246,25 @@ export class PurchaseDetailComponent
       comment: [''],
     });
     this.orderForm.disable({ emitEvent: false });
+    this.paymentForm = this.formBuilder.group({
+      creditCash: [0],
+      creditType: [0],
+      dueDate: [null as Date | null],
+      paymentTreasuryId: [null as number | null],
+      paymentType: [0],
+      paymentName: [''],
+      paymentDocument: [''],
+      beneficiary: [''],
+      amount: [0],
+      paymentDueDate: [null as Date | null],
+      draftDownpayment: [0],
+      draftSerieNumber: [''],
+      draftsNumber: [null as number | null],
+      draftsPeriod: [null as number | null],
+      compoundInterest: [0],
+      interestRatePct: [0],
+      interestAmount: [0],
+    });
 
     this.enabled$ = this.purchaseService.enableFormAction$;
     this.order$ = this.purchaseService.purchaseSelected$;
@@ -238,6 +313,25 @@ export class PurchaseDetailComponent
       ),
       shareReplay({ bufferSize: 1, refCount: true })
     );
+    this.treasuries$ = this.applicationService.workingOrganization$.pipe(
+      switchMap((org) =>
+        this.treasuryService.getOrganizationTreasuries(org?.organizationId ?? 0)
+      ),
+      map((rows) =>
+        (rows ?? []).map((row) => ({
+          ...row,
+          group:
+            (row.treasuryType ?? '').toUpperCase() === TREASURY_TYPE_CASHBOX
+              ? 'Cajas'
+              : 'Bancos',
+        }))
+      ),
+      shareReplay({ bufferSize: 1, refCount: true })
+    );
+    this.treasuries$.pipe(takeUntil(this.destroy$)).subscribe((rows) => {
+      this.treasuries = rows ?? [];
+      this.cdr.markForCheck();
+    });
     this.merchandises$ = this.purchaseService.merchandises$;
     this.merchandises$.pipe(takeUntil(this.destroy$)).subscribe((rows) => {
       this.merchandises = rows;
@@ -635,6 +729,211 @@ export class PurchaseDetailComponent
       taxes: this.taxes,
     };
 
+    this.pendingPurchase = payload;
+    this.openPaymentDialog(payload);
+  }
+
+  onPaymentConditionChange(): void {
+    this.recalculateDraftInterest();
+    this.cdr.markForCheck();
+  }
+
+  onPaymentCreditTypeChange(): void {
+    this.recalculateDraftInterest();
+    this.cdr.markForCheck();
+  }
+
+  onPaymentDraftChange(): void {
+    this.recalculateDraftInterest();
+    this.cdr.markForCheck();
+  }
+
+  onPaymentFormChange(): void {
+    this.paymentForm.patchValue(
+      { paymentName: '', paymentDocument: '', beneficiary: '' },
+      { emitEvent: false }
+    );
+    this.cdr.markForCheck();
+  }
+
+  confirmPaymentDialog(): void {
+    const payload = this.pendingPurchase;
+    if (!payload) {
+      this.cancelPaymentDialog();
+      return;
+    }
+    const payment = this.paymentForm.getRawValue();
+    const creditCash = toCreditCash(payment.creditCash);
+    const issueDate = this.asDate(payload.issueDate) ?? this.startOfToday();
+    if (creditCash === 1) {
+      const treasuryId = Number(payment.paymentTreasuryId) || 0;
+      if (treasuryId <= 0) {
+        this.toastService.showMyToast(
+          'Seleccione la caja o banco',
+          toastType.warning
+        );
+        return;
+      }
+      const paymentType = Number(payment.paymentType) || 0;
+      const paymentName = String(payment.paymentName ?? '').trim();
+      if ((paymentType === 1 || paymentType === 3) && !paymentName) {
+        this.toastService.showMyToast(
+          'Indique el nombre de pago',
+          toastType.warning
+        );
+        return;
+      }
+      payload.creditCash = 1;
+      payload.dueDate = issueDate;
+      payload.paymentTreasuryId = treasuryId;
+      payload.paymentType = paymentType;
+      payload.paymentDocument = String(payment.paymentDocument ?? '').trim();
+      payload.beneficiary = String(payment.beneficiary ?? '').trim();
+      this.clearPurchaseDrafts(payload);
+    } else {
+      const creditType = Number(payment.creditType) || 0;
+      let dueDate = this.asDate(payload.dueDate) ?? issueDate;
+      if (creditType === 0) {
+        dueDate = this.asDate(payment.dueDate) ?? dueDate;
+        if (!dueDate) {
+          this.toastService.showMyToast(
+            'Indique la fecha de vencimiento',
+            toastType.warning
+          );
+          return;
+        }
+        this.clearPurchaseDrafts(payload);
+        payload.creditType = 0;
+      } else {
+        const draftsNumber = Number(payment.draftsNumber) || 0;
+        const draftsPeriod = Number(payment.draftsPeriod) || 0;
+        if (draftsNumber <= 0) {
+          this.toastService.showMyToast(
+            'Indique el número de giros',
+            toastType.warning
+          );
+          return;
+        }
+        if (draftsPeriod <= 0) {
+          this.toastService.showMyToast(
+            'Indique el periodo entre giros',
+            toastType.warning
+          );
+          return;
+        }
+        const draft = this.paymentForm.getRawValue();
+        dueDate = this.addDays(issueDate, draftsNumber * draftsPeriod);
+        payload.creditType = 1;
+        payload.draftDownpayment = this.round2(Number(draft.draftDownpayment) || 0);
+        payload.draftSerieNumber = String(draft.draftSerieNumber ?? '').trim();
+        payload.draftsNumber = draftsNumber;
+        payload.draftsPeriod = draftsPeriod;
+        payload.compoundInterest = Number(draft.compoundInterest) === 1 ? 1 : 0;
+        payload.interestRate = this.fromPercent(draft.interestRatePct);
+        payload.interestAmount = this.round2(Number(draft.interestAmount) || 0);
+      }
+      payload.creditCash = 0;
+      payload.dueDate = dueDate;
+      payload.paymentTreasuryId = null;
+      payload.paymentType = null;
+      payload.paymentDocument = '';
+      payload.beneficiary = '';
+    }
+
+    this.orderForm.patchValue(
+      {
+        creditCash: payload.creditCash,
+        dueDate: payload.dueDate,
+      },
+      { emitEvent: false }
+    );
+    this.paymentDialogVisible = false;
+    this.pendingPurchase = null;
+    this.continuePurchaseSave(payload);
+  }
+
+  cancelPaymentDialog(): void {
+    this.paymentDialogVisible = false;
+    this.pendingPurchase = null;
+    this.cdr.markForCheck();
+  }
+
+  private openPaymentDialog(payload: IPurchase): void {
+    const issueDate = this.asDate(payload.issueDate) ?? this.startOfToday();
+    this.paymentDueMinDate = issueDate;
+    const current = this.currentOrder;
+    const isGiros =
+      toCreditCash(payload.creditCash) !== 1 &&
+      (Number(current?.creditType) === 1 || Number(current?.draftsNumber) > 0);
+    const defaultTreasury =
+      Number(current?.paymentTreasuryId) ||
+      this.treasuries.find(
+        (row) => (row.treasuryType ?? '').toUpperCase() === TREASURY_TYPE_CASHBOX
+      )?.treasuryId ||
+      this.treasuries[0]?.treasuryId ||
+      null;
+    this.paymentForm.patchValue(
+      {
+        creditCash: toCreditCash(payload.creditCash),
+        creditType: isGiros ? 1 : 0,
+        dueDate: this.asDate(payload.dueDate) ?? issueDate,
+        paymentTreasuryId: defaultTreasury,
+        paymentType: Number(current?.paymentType) || 0,
+        paymentName: '',
+        paymentDocument: current?.paymentDocument ?? '',
+        beneficiary: current?.beneficiary ?? '',
+        amount: this.grandTotal,
+        paymentDueDate: issueDate,
+        draftDownpayment: Number(current?.draftDownpayment) || 0,
+        draftSerieNumber: current?.draftSerieNumber ?? '',
+        draftsNumber: Number(current?.draftsNumber) || null,
+        draftsPeriod: Number(current?.draftsPeriod) || null,
+        compoundInterest: current?.compoundInterest ? 1 : 0,
+        interestRatePct: this.toPercent(current?.interestRate),
+        interestAmount: Number(current?.interestAmount) || 0,
+      },
+      { emitEvent: false }
+    );
+    this.recalculateDraftInterest();
+    this.paymentDialogVisible = true;
+    this.cdr.markForCheck();
+  }
+
+  private clearPurchaseDrafts(payload: IPurchase): void {
+    payload.creditType = null;
+    payload.draftDownpayment = null;
+    payload.draftSerieNumber = '';
+    payload.draftsNumber = null;
+    payload.draftsPeriod = null;
+    payload.interestAmount = null;
+    payload.interestRate = null;
+    payload.compoundInterest = 0;
+  }
+
+  private recalculateDraftInterest(): void {
+    if (!this.paymentForm || !this.isPaymentGiros) {
+      return;
+    }
+    const payment = this.paymentForm.getRawValue();
+    const total = this.round2(Number(payment.amount) || this.grandTotal);
+    const downpayment = this.round2(Number(payment.draftDownpayment) || 0);
+    const draftsNumber = Number(payment.draftsNumber) || 0;
+    const rate = this.fromPercent(payment.interestRatePct);
+    const financed = Math.max(0, total - downpayment);
+    let interest = 0;
+    if (financed > 0 && draftsNumber > 0 && rate > 0) {
+      interest =
+        Number(payment.compoundInterest) === 1
+          ? financed * (Math.pow(1 + rate, draftsNumber) - 1)
+          : financed * rate * draftsNumber;
+    }
+    this.paymentForm.patchValue(
+      { interestAmount: this.round2(interest) },
+      { emitEvent: false }
+    );
+  }
+
+  private continuePurchaseSave(payload: IPurchase): void {
     this.purchaseService
       .getPurchaseSaveOptions(payload.organizationId)
       .pipe(take(1))
@@ -675,6 +974,11 @@ export class PurchaseDetailComponent
 
         this.persistPurchase(payload);
       });
+  }
+
+  private startOfToday(): Date {
+    const today = new Date();
+    return new Date(today.getFullYear(), today.getMonth(), today.getDate());
   }
 
   private persistPurchase(payload: IPurchase): void {
@@ -1114,8 +1418,6 @@ export class PurchaseDetailComponent
     }
     this.orderForm.get('issueDate')?.enable({ emitEvent: false });
     this.orderForm.get('issueDateTax')?.enable({ emitEvent: false });
-    this.orderForm.get('creditCash')?.enable({ emitEvent: false });
-    this.orderForm.get('creditTerm')?.enable({ emitEvent: false });
     this.orderForm.get('taxControlNumber')?.enable({ emitEvent: false });
     this.orderForm.get('billSeriesCode')?.enable({ emitEvent: false });
     this.orderForm.get('accountId')?.enable({ emitEvent: false });

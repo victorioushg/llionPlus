@@ -149,7 +149,10 @@ export class PurchaseOrderService {
         this.toDateKey(b.taxDateFrom).localeCompare(this.toDateKey(a.taxDateFrom))
     );
     const rate = Number(pool[0].rate);
-    return Number.isFinite(rate) ? rate : rateType === 'E' ? 0 : null;
+    if (!Number.isFinite(rate)) {
+      return rateType === 'E' ? 0 : null;
+    }
+    return Math.abs(rate) > 1 ? rate / 100 : rate;
   }
 
   isExemptRateType(taxCode: string | null | undefined): boolean {
@@ -209,7 +212,7 @@ export class PurchaseOrderService {
         this.draftOrderSource.next({
           ...this.createEmptyPurchaseOrder(),
           poNumber: code,
-          statusName: 'Tránsito',
+          statusName: 'Pendiente',
           status: 0,
         });
         this.setSelectedPoId(0);
@@ -248,7 +251,7 @@ export class PurchaseOrderService {
       ...this.emptyPurchaseOrder,
       issueDate: today,
       deliveryDate: delivery,
-      statusName: 'Tránsito',
+      statusName: 'Pendiente',
       status: 0,
       organizationId: this.currentOrganizationId,
       lines: [],
@@ -274,7 +277,7 @@ export class PurchaseOrderService {
   savePurchaseOrder(order: IPurchaseOrder): Observable<number> {
     if ((order.poId ?? 0) > 0 && isPurchaseOrderReadOnly(order)) {
       this.toastService.showMyToast(
-        'La orden de compra procesada no se puede modificar',
+        'La orden de compra recibida o cerrada no se puede modificar',
         toastType.warning
       );
       return of(0);

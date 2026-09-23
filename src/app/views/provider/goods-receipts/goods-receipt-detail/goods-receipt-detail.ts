@@ -42,6 +42,7 @@ import {
   IGoodsReceiptMerchandise,
   IGoodsReceiptTax,
   IGoodsReceiptUnit,
+  isGoodsReceiptLineFullyReceived,
 } from '../goods-receipt';
 
 @Component({
@@ -114,6 +115,7 @@ export class GoodsReceiptDetailComponent
   };
 
   lineData: IGoodsReceiptLine = this.createEmptyLine();
+  private lineReceivedQty = 0;
   discountData: IGoodsReceiptDiscount = this.createEmptyDiscount();
   lineMerchDiscPct = 0;
   lineVendorDiscPct = 0;
@@ -317,8 +319,6 @@ export class GoodsReceiptDetailComponent
         grId: this.currentGrId,
         grRowNumber: line.grRowNumber || index + 1,
         taxCode: this.normalizedTaxCode(line.taxCode, false),
-        transitQuantity:
-          Number(line.transitQuantity) || Number(line.quantity) || 0,
         totalCost: amounts.totalCost,
         totalDiscount: amounts.totalDiscount,
         totalCostAndDiscounts: amounts.totalCostAndDiscounts,
@@ -342,7 +342,7 @@ export class GoodsReceiptDetailComponent
       comment: form.comment ?? '',
       status: isNew ? 0 : this.currentOrder?.status ?? 0,
       statusName: isNew
-        ? 'Tránsito'
+        ? 'Pendiente'
         : this.currentOrder?.statusName ?? form.statusName ?? '',
       organizationId:
         this.currentOrder?.organizationId ||
@@ -381,6 +381,19 @@ export class GoodsReceiptDetailComponent
     if (!this.ensureCanEdit(args)) {
       return;
     }
+    if (args.requestType === 'beginEdit' || args.requestType === 'delete') {
+      const row = this.firstRow<IGoodsReceiptLine>(
+        args.requestType === 'beginEdit' ? args.rowData : args.data
+      );
+      if (isGoodsReceiptLineFullyReceived(row)) {
+        args.cancel = true;
+        this.toastService.showMyToast(
+          'El renglón facturado no se puede modificar',
+          toastType.warning
+        );
+        return;
+      }
+    }
     if (args.requestType === 'add' || args.requestType === 'beginEdit') {
       const row = (args.rowData ?? {}) as Partial<IGoodsReceiptLine>;
       this.lineData =
@@ -388,10 +401,17 @@ export class GoodsReceiptDetailComponent
           ? this.createEmptyLine()
           : { ...this.createEmptyLine(), ...row };
       if (args.requestType === 'add') {
+        this.lineReceivedQty = 0;
         this.lineData.grRowNumber = this.nextNumber(
           this.lines,
           (line) => line.grRowNumber
         );
+      } else {
+        const quantity = Number(this.lineData.quantity) || 0;
+        const transit = Number(this.lineData.transitQuantity);
+        this.lineReceivedQty = Number.isFinite(transit)
+          ? Math.max(0, quantity - transit)
+          : 0;
       }
       this.lineMerchDiscPct = this.toPercent(this.lineData.merchandiseDiscount);
       this.lineVendorDiscPct = this.toPercent(this.lineData.vendorDiscount);
@@ -426,10 +446,7 @@ export class GoodsReceiptDetailComponent
         null;
       this.lineData.merchandiseDiscount = this.fromPercent(this.lineMerchDiscPct);
       this.lineData.vendorDiscount = this.fromPercent(this.lineVendorDiscPct);
-      this.lineData.transitQuantity =
-        Number(this.lineData.transitQuantity) ||
-        Number(this.lineData.quantity) ||
-        0;
+      this.syncLineTransitFromQuantity();
       Object.assign(this.lineData, this.computeLineAmounts(this.lineData));
       args.data = { ...this.lineData };
     }
@@ -532,7 +549,7 @@ export class GoodsReceiptDetailComponent
         grNumber: order.grNumber ?? '',
         issueDate,
         issueDateTax: this.asDate(order.issueDateTax) ?? issueDate,
-        statusName: order.statusName ?? (this.currentGrId <= 0 ? 'Tránsito' : ''),
+        statusName: order.statusName ?? (this.currentGrId <= 0 ? 'Pendiente' : ''),
         providerId: Number(order.providerId) > 0 ? Number(order.providerId) : null,
         warehouseId:
           Number(order.warehouseId) > 0 ? Number(order.warehouseId) : null,
@@ -970,11 +987,14 @@ export class GoodsReceiptDetailComponent
   onLineAmountChange(): void {
     this.lineData.merchandiseDiscount = this.fromPercent(this.lineMerchDiscPct);
     this.lineData.vendorDiscount = this.fromPercent(this.lineVendorDiscPct);
-    if (!(Number(this.lineData.transitQuantity) > 0)) {
-      this.lineData.transitQuantity = Number(this.lineData.quantity) || 0;
-    }
+    this.syncLineTransitFromQuantity();
     Object.assign(this.lineData, this.computeLineAmounts(this.lineData));
     this.cdr.markForCheck();
+  }
+
+  private syncLineTransitFromQuantity(): void {
+    const quantity = Number(this.lineData.quantity) || 0;
+    this.lineData.transitQuantity = Math.max(0, quantity - this.lineReceivedQty);
   }
 
   private computeLineAmounts(line: IGoodsReceiptLine): {

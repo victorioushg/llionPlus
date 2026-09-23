@@ -78,6 +78,14 @@ export interface IPurchase {
   paymentDocument?: string | null;
   paymentTreasuryId?: number | null;
   beneficiary?: string | null;
+  creditType?: number | null;
+  draftDownpayment?: number | null;
+  draftSerieNumber?: string | null;
+  draftsNumber?: number | null;
+  draftsPeriod?: number | null;
+  interestAmount?: number | null;
+  interestRate?: number | null;
+  compoundInterest?: number | null;
   updateInventory?: number | null;
   updatePrices?: number | null;
   priceDivisionFactor?: number | null;

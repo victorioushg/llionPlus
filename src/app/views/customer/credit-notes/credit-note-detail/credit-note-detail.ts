@@ -41,6 +41,7 @@ import {
 } from '../../../provider/purchases/purchase';
 import { CreditNoteService } from '../credit-note.service';
 import { ICreditNote, ICreditNoteDiscount, ICreditNoteLine, ICreditNoteTax, ISalesman } from '../credit-note';
+import { formatTaxPercent } from '../../sales-document-header';
 
 @Component({
   selector: 'llion-credit-note-detail',
@@ -162,6 +163,9 @@ export class CreditNoteDetailComponent implements OnInit, AfterViewInit, OnDestr
     this.enabled$ = this.creditNoteService.enableFormAction$;
     this.order$ = this.creditNoteService.creditNoteSelected$;
     this.salesmen$ = this.customerService.salesmen$;
+    this.salesmen$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => this.cdr.markForCheck());
     this.warehouses$ = this.purchaseService.warehouses$;
     this.customers$ = this.customerService.customers$.pipe(
       map((rows) =>
@@ -372,6 +376,10 @@ export class CreditNoteDetailComponent implements OnInit, AfterViewInit, OnDestr
 
   formatRate(rate: number | null | undefined): string {
     return ((Number(rate) || 0) * 100).toFixed(2);
+  }
+
+  formatTaxRate(rate: number | null | undefined): string {
+    return formatTaxPercent(rate);
   }
 
   onLineActionBegin(args: SaveEventArgs): void {

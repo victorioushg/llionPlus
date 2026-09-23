@@ -2,7 +2,11 @@ import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { EMPTY, Observable, Subject, catchError, map, tap } from 'rxjs';
 import { TreasuryService } from '../treasury.service';
-import { ITreasury, TREASURY_TYPE_BANK } from '../treasury';
+import {
+  ITreasury,
+  TREASURY_TYPE_BANK,
+  TREASURY_TYPE_CASHBOX,
+} from '../treasury';
 import { ApplicationService } from '@shared/services/applicattionService';
 import { AccountsService } from '@views/accounting/accounts/accounts.service';
 import { IAccount } from '@views/accounting/accounts/account';
@@ -86,6 +90,11 @@ export class TreasuryDetailComponent implements OnInit {
         }
       })
     );
+  }
+
+  treasuryTitle(treasury: ITreasury | null | undefined): string {
+    const type = (treasury?.treasuryType ?? '').toUpperCase();
+    return type === TREASURY_TYPE_CASHBOX ? 'CAJA' : 'BANCO';
   }
 
   onCancelClick(): void {

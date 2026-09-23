@@ -39,6 +39,15 @@
               clipMode="EllipsisWithTooltip"
             ></e-column>
             <e-column
+              field="onOrderQuantity"
+              headerText="en orden"
+              width="80"
+              type="number"
+              format="N3"
+              textAlign="Right"
+              [visible]="!isServiceCatalog"
+            ></e-column>
+            <e-column
               field="serviceType"
               headerText="tipo"
               width="80"

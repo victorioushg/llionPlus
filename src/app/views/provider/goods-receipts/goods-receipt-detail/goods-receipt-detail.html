@@ -5,6 +5,10 @@
     [formGroup]="orderForm"
     *ngIf="order$ | async as order"
   >
+    <div class="title-strip">
+      <span class="title-strip__label">RECEPCIÓN DE MERCANCÍAS</span>
+    </div>
+
     <div class="row">
       <div class="col-md-3">
         <ejs-textbox
@@ -151,7 +155,7 @@
         ></e-column>
         <e-column
           field="transitQuantity"
-          headerText="Tránsito"
+          headerText="Pend."
           width="70"
           type="number"
           format="N3"
@@ -241,7 +245,7 @@
                 (change)="onTaxCodeChange($event)"
               ></ejs-dropdownlist>
             </div>
-            <div class="col-md-2">
+            <div class="col-md-3">
               <ejs-numerictextbox
                 name="quantity"
                 [(ngModel)]="lineData.quantity"
@@ -251,17 +255,6 @@
                 [decimals]="3"
                 [showSpinButton]="false"
                 (change)="onLineAmountChange()"
-              ></ejs-numerictextbox>
-            </div>
-            <div class="col-md-2">
-              <ejs-numerictextbox
-                name="transitQuantity"
-                [(ngModel)]="lineData.transitQuantity"
-                placeholder="Tránsito"
-                floatLabelType="Always"
-                format="n3"
-                [decimals]="3"
-                [showSpinButton]="false"
               ></ejs-numerictextbox>
             </div>
             <div class="col-md-3">

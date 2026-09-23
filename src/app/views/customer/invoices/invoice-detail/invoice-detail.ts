@@ -58,6 +58,7 @@ import { InvoiceService } from '../invoice.service';
 import { IInvoice, IInvoiceDiscount, IInvoiceLine, IInvoiceTax, ISalesman } from '../invoice';
 import {
   dueDateFromCredit,
+  formatTaxPercent,
   headerFromCustomer,
 } from '../../sales-document-header';
 
@@ -206,6 +207,9 @@ export class InvoiceDetailComponent implements OnInit, AfterViewInit, OnDestroy 
     this.enabled$ = this.invoiceService.enableFormAction$;
     this.order$ = this.invoiceService.invoiceSelected$;
     this.salesmen$ = this.customerService.salesmen$;
+    this.salesmen$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => this.cdr.markForCheck());
     this.warehouses$ = this.purchaseService.warehouses$;
     this.terms$ = this.providerService.terms$;
     this.terms$.pipe(takeUntil(this.destroy$)).subscribe((rows) => {
@@ -498,6 +502,10 @@ export class InvoiceDetailComponent implements OnInit, AfterViewInit, OnDestroy 
 
   formatRate(rate: number | null | undefined): string {
     return ((Number(rate) || 0) * 100).toFixed(2);
+  }
+
+  formatTaxRate(rate: number | null | undefined): string {
+    return formatTaxPercent(rate);
   }
 
   onLineActionBegin(args: SaveEventArgs): void {

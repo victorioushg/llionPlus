@@ -192,7 +192,10 @@ export class DebitNoteService {
         this.toDateKey(b.taxDateFrom).localeCompare(this.toDateKey(a.taxDateFrom))
     );
     const rate = Number(pool[0].rate);
-    return Number.isFinite(rate) ? rate : rateType === 'E' ? 0 : null;
+    if (!Number.isFinite(rate)) {
+      return rateType === 'E' ? 0 : null;
+    }
+    return Math.abs(rate) > 1 ? rate / 100 : rate;
   }
 
   isExemptRateType(taxCode: string | null | undefined): boolean {

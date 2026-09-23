@@ -24,6 +24,22 @@ export function dueDateFromCredit(
   return addDays(issueDate, days);
 }
 
+/** Catalog/document tax rates may be 16 (percent) or 0.16 (fraction). */
+export function rateAsFraction(rate: number | null | undefined): number {
+  const n = Number(rate);
+  if (!Number.isFinite(n) || n === 0) {
+    return 0;
+  }
+  return Math.abs(n) > 1 ? n / 100 : n;
+}
+
+export function formatTaxPercent(rate: number | null | undefined): string {
+  const pct = rateAsFraction(rate) * 100;
+  const rounded = Math.round(pct * 100) / 100;
+  const text = Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(2);
+  return `${text}%`;
+}
+
 export function headerFromCustomer(customer: ICustomer | undefined): {
   billingPrice: string;
   creditTerm: number | null;

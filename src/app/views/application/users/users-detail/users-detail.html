@@ -1,5 +1,8 @@
 <div class="wrapper-detail" *ngIf="user$ | async as user">
   <form id="user-detail-form" class="user-detail-form" [formGroup]="userForm">
+    <div class="title-strip">
+      <span class="title-strip__label">USUARIO</span>
+    </div>
     <div class="row">
       <div class="col-md-6">
         <ejs-textbox

@@ -40,6 +40,7 @@ import {
 } from '../../../provider/purchases/purchase';
 import { SalesOrderService } from '../sales-order.service';
 import { ISalesOrder, ISalesOrderDiscount, ISalesOrderLine, ISalesOrderTax, ISalesman } from '../sales-order';
+import { formatTaxPercent } from '../../sales-document-header';
 
 @Component({
   selector: 'llion-sales-order-detail',
@@ -157,6 +158,9 @@ export class SalesOrderDetailComponent implements OnInit, AfterViewInit, OnDestr
     this.enabled$ = this.salesOrderService.enableFormAction$;
     this.order$ = this.salesOrderService.salesOrderSelected$;
     this.salesmen$ = this.customerService.salesmen$;
+    this.salesmen$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => this.cdr.markForCheck());
     this.customers$ = this.customerService.customers$.pipe(
       map((rows) =>
         [...(rows ?? [])]
@@ -364,6 +368,10 @@ export class SalesOrderDetailComponent implements OnInit, AfterViewInit, OnDestr
 
   formatRate(rate: number | null | undefined): string {
     return ((Number(rate) || 0) * 100).toFixed(2);
+  }
+
+  formatTaxRate(rate: number | null | undefined): string {
+    return formatTaxPercent(rate);
   }
 
   onLineActionBegin(args: SaveEventArgs): void {
