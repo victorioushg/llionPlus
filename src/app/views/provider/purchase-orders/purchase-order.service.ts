@@ -316,6 +316,14 @@ export class PurchaseOrderService {
     );
   }
 
+  printPurchaseOrderPdf(poId: number): Observable<Blob> {
+    return this.http
+      .get(`${this.purchaseOrderUrl}/pdf/${poId}`, {
+        responseType: 'blob',
+      })
+      .pipe(catchError((err) => this.errorHandlerService.handleError(err)));
+  }
+
   deletePurchaseOrder(item: IPurchaseOrder): Observable<number> {
     return this.http
       .delete<IApiResponse<number>>(`${this.purchaseOrderUrl}/${item.poId}`, {

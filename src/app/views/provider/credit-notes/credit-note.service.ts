@@ -19,6 +19,11 @@ import { toastType } from '@shared/enums/enums';
 import { IOrganizationTax } from '@views/application/organization/organization';
 import { IGroup } from '@shared/models/group';
 import { ICreditNote, ICreditNoteMerchandise, ICreditNoteUnit } from './credit-note';
+import {
+  IInvoicePrevalidationResult,
+  IVendorMedia,
+  IVendorMediaFile,
+} from '../purchases/purchase';
 
 @Injectable({
   providedIn: 'root',
@@ -351,6 +356,103 @@ export class CreditNoteService {
       map((data) => Number(data.result) || 0),
       catchError((err) => this.errorHandlerService.handleError(err))
     );
+  }
+
+  printCreditNotePdf(crnId: number): Observable<Blob> {
+    return this.http
+      .get(`${this.creditNoteUrl}/pdf/${crnId}`, {
+        responseType: 'blob',
+      })
+      .pipe(catchError((err) => this.errorHandlerService.handleError(err)));
+  }
+
+  prevalidateInvoice(payload: {
+    fileName: string;
+    contentType: string;
+    fileDataBase64: string;
+    organizationId: number;
+    vendorId?: number | null;
+    creditNoteId?: number | null;
+  }): Observable<IInvoicePrevalidationResult> {
+    return this.http
+      .post<IApiResponse<IInvoicePrevalidationResult>>(
+        `${this.creditNoteUrl}/invoice/prevalidate`,
+        { ...payload, expectedKind: 'CreditNote' },
+        { headers: this.headers }
+      )
+      .pipe(
+        map((data) => data.result),
+        catchError((err) => this.errorHandlerService.handleError(err))
+      );
+  }
+
+  saveInvoiceMedia(payload: {
+    fileName: string;
+    contentType: string;
+    fileDataBase64: string;
+    organizationId: number;
+    vendorId?: number | null;
+    creditNoteId?: number | null;
+    comment?: string | null;
+  }): Observable<{
+    mediaId: number;
+    saved: boolean;
+    prevalidation: IInvoicePrevalidationResult;
+  }> {
+    return this.http
+      .post<
+        IApiResponse<{
+          mediaId: number;
+          saved: boolean;
+          prevalidation: IInvoicePrevalidationResult;
+        }>
+      >(
+        `${this.creditNoteUrl}/invoice/media`,
+        { ...payload, expectedKind: 'CreditNote' },
+        { headers: this.headers }
+      )
+      .pipe(
+        tap((data) => {
+          if (data.result?.saved) {
+            this.toastService.showMyToast(
+              'Documento almacenado',
+              toastType.success
+            );
+          }
+        }),
+        map((data) => data.result),
+        catchError((err) => this.errorHandlerService.handleError(err))
+      );
+  }
+
+  getInvoiceMediaByCreditNote(crnId: number): Observable<IVendorMedia | null> {
+    if (!crnId || crnId <= 0) {
+      return of(null);
+    }
+    return this.http
+      .get<IApiResponse<IVendorMedia>>(
+        `${this.creditNoteUrl}/invoice/media/creditnote/${crnId}`
+      )
+      .pipe(
+        map((data) =>
+          data.result?.mediaId && data.result.mediaId > 0 ? data.result : null
+        ),
+        catchError(() => of(null))
+      );
+  }
+
+  getInvoiceMediaFile(mediaId: number): Observable<IVendorMediaFile | null> {
+    if (!mediaId || mediaId <= 0) {
+      return of(null);
+    }
+    return this.http
+      .get<IApiResponse<IVendorMediaFile>>(
+        `${this.creditNoteUrl}/invoice/media/file/${mediaId}`
+      )
+      .pipe(
+        map((data) => data.result ?? null),
+        catchError(() => of(null))
+      );
   }
 
   deleteCreditNote(item: ICreditNote): Observable<number> {

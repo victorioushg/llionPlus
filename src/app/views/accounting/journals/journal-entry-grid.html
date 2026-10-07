@@ -1,0 +1,68 @@
+<div id="container" class="container">
+  <div class="row">
+    <div class="col-lg-5">
+      <div id="journal-entry-grid">
+        <ejs-grid
+          #grid
+          [dataSource]="(journalEntries$ | async) || []"
+          [allowFiltering]="true"
+          [filterSettings]="filterSettings"
+          [allowSorting]="true"
+          [toolbar]="toolbar"
+          [height]="screenHeight"
+          [searchSettings]="searchSettings"
+          [sortSettings]="sortSettings"
+          [selectionSettings]="selectionSettings"
+          [allowTextWrap]="false"
+          clipMode="EllipsisWithTooltip"
+          (actionBegin)="actionBegin($event)"
+          (toolbarClick)="onToolbarClick($event)"
+          (rowSelected)="onRowSelected($event)"
+          (rowDeselected)="onRowDeselected($event)"
+          (recordDoubleClick)="onRecordDoubleClick($event)"
+          (commandClick)="commandClick($event)"
+        >
+          <e-columns>
+            <e-column width="50" [commands]="commands" clipMode="Clip"></e-column>
+            <e-column
+              field="journalEntryCode"
+              headerText="Nº asiento"
+              width="110"
+              [allowFiltering]="false"
+              clipMode="EllipsisWithTooltip"
+            ></e-column>
+            <e-column
+              field="journalEntryDate"
+              headerText="Fecha"
+              type="date"
+              format="dd/MM/yyyy"
+              width="90"
+              [allowFiltering]="false"
+            ></e-column>
+            <e-column
+              field="entryKind"
+              headerText="Tipo"
+              width="110"
+              [allowFiltering]="true"
+            ></e-column>
+            <e-column
+              field="description"
+              headerText="Descripción"
+              width="200"
+              [allowFiltering]="false"
+              clipMode="EllipsisWithTooltip"
+            ></e-column>
+            <e-column
+              field="journalEntryId"
+              [isPrimaryKey]="true"
+              [visible]="false"
+            ></e-column>
+          </e-columns>
+        </ejs-grid>
+      </div>
+    </div>
+    <div class="col-lg-7 journal-entry-detail-col" [style.height.px]="panelHeight">
+      <llion-journal-entry-detail></llion-journal-entry-detail>
+    </div>
+  </div>
+</div>

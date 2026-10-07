@@ -92,8 +92,22 @@
   margin: 0;
 }
 
+#sidebar-treeview .e-treeview .e-list-item.e-level-1 > .e-ul {
+  padding-left: 1.5rem;
+}
+
 #sidebar-treeview .e-treeview .e-list-item.e-level-2 > .e-ul {
   padding-left: 2rem;
+}
+
+#sidebar-treeview .e-treeview .e-list-item.e-level-3 > .e-ul {
+  padding-left: 2rem;
+}
+
+#sidebar-treeview .e-treeview .e-list-item.e-level-2 .treeview-text,
+#sidebar-treeview .e-treeview .e-list-item.e-level-3 .treeview-text,
+#sidebar-treeview .e-treeview .e-list-item.e-level-4 .treeview-text {
+  padding-left: 22px;
 }
 
 #sidebar-treeview {
@@ -258,17 +272,13 @@
   font-weight: 600;
 }
 
-#sidebar-treeview .e-treeview .e-list-item.e-level-3 .treeview-text {
-  padding-left: 22px;
-}
-
 
 /* end of content area styles */
 /* custom code start */
 /* body and html styles */
 body {
   margin: 0;
-  font-family: "MPlus1p", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-family: Roboto, Helvetica, Arial, sans-serif;
   -webkit-tap-highlight-color: transparent;
   overflow-x: hidden;
   overflow-y: hidden;

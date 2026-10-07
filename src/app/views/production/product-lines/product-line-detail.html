@@ -1,0 +1,69 @@
+<div class="wrapper-detail" *ngIf="productLine$ | async as line">
+  <form id="product-line-detail-form" [formGroup]="lineForm">
+    <div class="title-strip">
+      <span class="title-strip__label">LÍNEA</span>
+    </div>
+    <div class="row">
+      <div class="col-md-8">
+        <ejs-textbox
+          placeholder="descripción"
+          floatLabelType="Always"
+          formControlName="description"
+          [enabled]="enabled$ | async"
+        ></ejs-textbox>
+      </div>
+      <div class="col-md-4">
+        <ejs-textbox
+          placeholder="código"
+          floatLabelType="Always"
+          formControlName="lineCode"
+          [enabled]="enabled$ | async"
+        ></ejs-textbox>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-8">
+        <ejs-dropdownlist
+          placeholder="tipo"
+          floatLabelType="Always"
+          formControlName="lineKind"
+          [dataSource]="lineKindOptions"
+          [fields]="dropdownFields"
+          [enabled]="enabled$ | async"
+        ></ejs-dropdownlist>
+      </div>
+      <div class="col-md-4" style="margin-top: auto">
+        <table style="width: 100%">
+          <tr>
+            <td style="width: 50%">Activo</td>
+            <td style="width: 50%">
+              <ejs-switch
+                formControlName="deactivated"
+                [disabled]="!(enabled$ | async)"
+              ></ejs-switch>
+            </td>
+          </tr>
+        </table>
+      </div>
+    </div>
+    <br />
+    <div class="row">
+      <div class="col-md-12">
+        <div id="product-line-form-buttons">
+          <button ejs-button (click)="onCancelClick()" [disabled]="!(enabled$ | async)" style="float: right">
+            Cancelar
+          </button>
+          <button
+            ejs-button
+            (click)="onSaveClick()"
+            cssClass="e-primary"
+            [disabled]="!(enabled$ | async)"
+            style="float: right"
+          >
+            Aceptar
+          </button>
+        </div>
+      </div>
+    </div>
+  </form>
+</div>

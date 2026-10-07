@@ -7,6 +7,17 @@
   >
     <div class="title-strip">
       <span class="title-strip__label">RECEPCIÓN DE MERCANCÍAS</span>
+      <div class="title-strip__actions">
+        <button
+          type="button"
+          class="print-icon-btn"
+          [disabled]="currentGrId <= 0 || printBusy"
+          (click)="printReceipt()"
+          title="Imprimir"
+        >
+          <img src="assets/images/icons8-print-24.png" alt="Imprimir" />
+        </button>
+      </div>
     </div>
 
     <div class="row">

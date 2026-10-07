@@ -39,7 +39,12 @@
       </div>
     </div>
     <div class="col-lg-8">
-      <ejs-tab id="tabs" #tabs loadOn="Init">
+      <ejs-tab
+        id="tabs"
+        #tabs
+        loadOn="Init"
+        (selected)="onTabSelected($event)"
+      >
         <e-tabitems>
           <e-tabitem [header]="headerText[0]">
             <ng-template #content>

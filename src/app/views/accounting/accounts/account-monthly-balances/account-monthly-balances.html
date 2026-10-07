@@ -1,0 +1,72 @@
+<div
+  id="account-monthly-container"
+  [class.is-disabled]="!gridEnabled"
+>
+  <div id="account-monthly-grid">
+    <ejs-grid
+      #monthlygrid
+      [dataSource]="rows"
+      [allowFiltering]="false"
+      [allowSorting]="true"
+      [toolbar]="toolbar"
+      [height]="screenHeight"
+      [searchSettings]="searchSettings"
+      [sortSettings]="sortSettings"
+      [rowHeight]="36"
+      clipMode="EllipsisWithTooltip"
+      (toolbarClick)="onToolbarClick($event)"
+    >
+      <e-columns>
+        <e-column
+          field="monthName"
+          headerText="Mes"
+          width="180"
+        ></e-column>
+        <e-column
+          field="debits"
+          headerText="Débitos"
+          type="number"
+          format="N2"
+          width="140"
+          textAlign="Right"
+        ></e-column>
+        <e-column
+          field="credits"
+          headerText="Créditos"
+          type="number"
+          format="N2"
+          width="140"
+          textAlign="Right"
+        ></e-column>
+        <e-column
+          field="balance"
+          headerText="Saldo"
+          type="number"
+          format="N2"
+          width="140"
+          textAlign="Right"
+        ></e-column>
+        <e-column
+          field="rowKey"
+          [isPrimaryKey]="true"
+          [visible]="false"
+        ></e-column>
+      </e-columns>
+    </ejs-grid>
+  </div>
+
+  <div class="totals-strip">
+    <div class="total-field">
+      <span class="total-field__label">Débitos</span>
+      <span class="total-field__value">{{ debitTotal | number: '1.2-2' }}</span>
+    </div>
+    <div class="total-field">
+      <span class="total-field__label">Créditos</span>
+      <span class="total-field__value">{{ creditTotal | number: '1.2-2' }}</span>
+    </div>
+    <div class="total-field total-field--grand">
+      <span class="total-field__label">Saldo</span>
+      <span class="total-field__value">{{ balance | number: '1.2-2' }}</span>
+    </div>
+  </div>
+</div>

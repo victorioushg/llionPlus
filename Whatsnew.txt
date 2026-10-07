@@ -38,6 +38,11 @@ COMPRAS
   vencimiento iguales a la fecha de Vence; giros crea un GR/COM
   por cada giro, vencimiento = emisión + (giro × periodo).
   Tesorería SA/COM a contado.
+- Imprimir (icono en el detalle): PDF vertical de la compra.
+  Descripción a dos líneas, Desc. Art./Pro., subtotal, descuentos,
+  IVA, total en letras, pie con logo llion y copyright.
+- Importar factura (icono): lee PDF o imagen, prevalidación y
+  guarda el documento en prv_vendor_media.
 - Cuenta contable y Clase: se copian del proveedor al incluir; se
   pueden cambiar. La fecha de asiento contable no se muestra; al
   guardar queda igual a la emisión.
@@ -71,6 +76,10 @@ NOTAS CRÉDITO / DÉBITO (NCC / NDC)
   en pantalla (queda igual a la emisión).
 - Renglones con % aceptación. En notas débito también Motivo (ReasonNDB).
 - Sin descuentos de factura. IVA por RateType e IssueDateTax.
+- Imprimir (icono en el detalle): mismo PDF que compras, con
+  condición de pago, estatus, compra relacionada e IVA por tasa.
+- Importar factura (icono): lee PDF o imagen, prevalida y guarda
+  el documento asociado a la nota.
 
 ==============================================================================
 PROVEEDORES
@@ -111,6 +120,8 @@ RECEPCIONES DE MERCANCÍAS
 - Al guardar, el tránsito no lo pone el usuario: se recalcula como
   Cantidad − cantidad ya facturada de ese renglón.
 - Los numéricos del popup no tienen flechas; el usuario escribe el valor.
+- Imprimir (icono en el detalle): PDF vertical como compras, con
+  estatus, referencia, descuentos generales e IVA por tasa.
 
 ==============================================================================
 ÓRDENES DE COMPRA
@@ -143,6 +154,8 @@ RECEPCIONES DE MERCANCÍAS
   Cantidad − cantidad ya recibida/facturada de ese renglón.
 - Los numéricos del popup (cantidad, costos, %) no tienen flechas; el
   usuario escribe el valor.
+- Imprimir (icono en el detalle): PDF vertical como compras, con
+  emisión, entrega, estatus, descuentos generales e IVA por tasa.
 
 ==============================================================================
 API / BASE DE DATOS (llionAPI, no va en este repositorio)
@@ -320,3 +333,25 @@ Continuar abre una sesión en app_user_sessions (máquina + impresora de
 app_fiscal_printers). Quedan en currentLlionUser, en cabecera, y se
 cierran al Log out. Al cambiar de organización se reabre sesión con la
 impresora de esa empresa.
+
+==============================================================================
+ASIENTOS CONTABLES
+==============================================================================
+Pantalla Contabilidad / Asientos contables: listado a la izquierda
+(JournalEntryCode, fecha y descripción) y detalle a la derecha
+(encabezado + renglones). Pie con totales Debe, Haber y Balance.
+El asiento debe cuadrar para guardar. Número ASI desde app_counters
+(CounterDescription = Journal Entry). Ruta /accounting/journals,
+API api/journalentries. Importe en acc_journal_entry_lines.Amount;
+Debit_Credit bit 1 = Debe, 0 = Haber. Encabezado TemplateOriginId;
+líneas SourceRule.
+
+==============================================================================
+PRODUCCIÓN
+==============================================================================
+Submódulo Producción (Costman): líneas, recursos (mano de obra/máquinas),
+formulaciones (BOM + gastos + residuales), órdenes de producción con
+explosión de materiales y seguimiento (iniciar / entregar / notas).
+Rutas: /production/lines|resources|formulations|orders|tracking
+API: api/production/*
+

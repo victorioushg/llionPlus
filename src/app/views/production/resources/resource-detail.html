@@ -1,0 +1,109 @@
+<div class="wrapper-detail" *ngIf="resource$ | async as resource">
+  <form id="resource-detail-form" [formGroup]="resourceForm">
+    <div class="title-strip">
+      <span class="title-strip__label">RECURSO</span>
+    </div>
+    <div class="row">
+      <div class="col-md-8">
+        <ejs-textbox
+          placeholder="nombre"
+          floatLabelType="Always"
+          formControlName="name"
+          [enabled]="enabled$ | async"
+        ></ejs-textbox>
+      </div>
+      <div class="col-md-4">
+        <ejs-textbox
+          placeholder="código"
+          floatLabelType="Always"
+          formControlName="resourceCode"
+          [enabled]="enabled$ | async"
+        ></ejs-textbox>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-6">
+        <ejs-dropdownlist
+          placeholder="tipo"
+          floatLabelType="Always"
+          formControlName="resourceType"
+          [dataSource]="resourceTypeOptions"
+          [fields]="dropdownFields"
+          [enabled]="enabled$ | async"
+        ></ejs-dropdownlist>
+      </div>
+      <div class="col-md-6">
+        <ejs-dropdownlist
+          placeholder="línea"
+          floatLabelType="Always"
+          formControlName="productLineId"
+          [dataSource]="(productLines$ | async) || []"
+          [fields]="lineFields"
+          [allowFiltering]="true"
+          [showClearButton]="true"
+          [enabled]="enabled$ | async"
+        ></ejs-dropdownlist>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-4">
+        <ejs-textbox
+          placeholder="unidad"
+          floatLabelType="Always"
+          formControlName="uom"
+          [enabled]="enabled$ | async"
+        ></ejs-textbox>
+      </div>
+      <div class="col-md-4">
+        <ejs-numerictextbox
+          placeholder="costo hora"
+          floatLabelType="Always"
+          formControlName="unitCost"
+          format="N4"
+          [enabled]="enabled$ | async"
+        ></ejs-numerictextbox>
+      </div>
+      <div class="col-md-4">
+        <ejs-numerictextbox
+          placeholder="horas disponibles"
+          floatLabelType="Always"
+          formControlName="availableHours"
+          format="N2"
+          [enabled]="enabled$ | async"
+        ></ejs-numerictextbox>
+      </div>
+    </div>
+    <br />
+    <div class="row">
+      <div class="col-md-6" style="margin-top: auto">
+        <table style="width: 100%">
+          <tr>
+            <td style="width: 50%">Activo</td>
+            <td style="width: 50%">
+              <ejs-switch
+                formControlName="deactivated"
+                [disabled]="!(enabled$ | async)"
+              ></ejs-switch>
+            </td>
+          </tr>
+        </table>
+      </div>
+      <div class="col-md-6">
+        <div id="resource-form-buttons">
+          <button ejs-button (click)="onCancelClick()" [disabled]="!(enabled$ | async)" style="float: right">
+            Cancelar
+          </button>
+          <button
+            ejs-button
+            (click)="onSaveClick()"
+            cssClass="e-primary"
+            [disabled]="!(enabled$ | async)"
+            style="float: right"
+          >
+            Aceptar
+          </button>
+        </div>
+      </div>
+    </div>
+  </form>
+</div>

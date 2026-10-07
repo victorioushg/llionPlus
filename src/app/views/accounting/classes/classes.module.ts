@@ -1,33 +1,44 @@
 import { CommonModule } from '@angular/common';
-import { NgModule, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
+import { CUSTOM_ELEMENTS_SCHEMA, NgModule } from '@angular/core';
 import { RouterModule } from '@angular/router';
-import { FormsModule } from '@angular/forms';
-import { ROUTES } from './_routes';
-import { ClassesComponent } from '@views/accounting/classes/classes-grid';
-import { TreeGridAllModule } from '@syncfusion/ej2-angular-treegrid';
-import { ToolbarModule } from '@syncfusion/ej2-angular-navigations';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
+import { GridAllModule } from '@syncfusion/ej2-angular-grids';
+import { TabModule, ToolbarModule } from '@syncfusion/ej2-angular-navigations';
 import {
   NumericTextBoxModule,
   TextBoxModule,
 } from '@syncfusion/ej2-angular-inputs';
 import { DropDownListModule } from '@syncfusion/ej2-angular-dropdowns';
-import { ButtonModule } from '@syncfusion/ej2-angular-buttons';
+import { ButtonModule, SwitchModule } from '@syncfusion/ej2-angular-buttons';
 import { enableRipple } from '@syncfusion/ej2-base';
+import { ROUTES } from './_routes';
+import { ClassesComponent } from './classes-grid';
+import { ClassDetailComponent } from './class-detail/class-detail';
+import { ClassMovementsComponent } from './class-movements/class-movements';
 
 enableRipple(true);
 
 @NgModule({
-  declarations: [ClassesComponent],
+  declarations: [
+    ClassesComponent,
+    ClassDetailComponent,
+    ClassMovementsComponent,
+  ],
   imports: [
     CommonModule,
     RouterModule.forChild(ROUTES),
-    FormsModule,
+    FontAwesomeModule,
     ToolbarModule,
-    TreeGridAllModule,
+    TabModule,
+    GridAllModule,
     TextBoxModule,
     NumericTextBoxModule,
     DropDownListModule,
+    SwitchModule,
     ButtonModule,
+    FormsModule,
+    ReactiveFormsModule,
   ],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })

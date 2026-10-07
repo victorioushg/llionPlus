@@ -1,0 +1,190 @@
+@use 'variables' as *;
+
+:host {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+}
+
+.wrapper-detail {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+
+:host ::ng-deep #journal-entry-detail-form {
+  .e-float-input .e-float-text,
+  .e-float-input label.e-float-text,
+  .e-control-wrapper .e-float-text,
+  .e-date-wrapper .e-float-text {
+    color: $llion-color-font !important;
+    opacity: 1 !important;
+    -webkit-text-fill-color: $llion-color-font;
+  }
+
+  .journal-code-field {
+    .e-float-text {
+      font-size: 11px;
+      font-weight: 600;
+      font-family: inherit;
+    }
+
+    input.e-input {
+      font-size: inherit;
+      font-weight: 600;
+      font-family: inherit;
+      color: $llion-color-font;
+      -webkit-text-fill-color: $llion-color-font;
+    }
+  }
+}
+
+.journal-entry-form {
+  flex: 0 0 auto;
+
+  .row {
+    margin-bottom: 8px;
+  }
+}
+
+.actual-switch {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding-top: 18px;
+  font-size: 12px;
+}
+
+.promote-actual {
+  margin-left: 4px;
+}
+
+#journal-entry-lines-grid {
+  flex: 1 1 0;
+  min-height: 80px;
+  width: 100%;
+  overflow: hidden;
+}
+
+::ng-deep #journal-entry-lines-grid {
+  width: 100%;
+
+  .e-grid {
+    margin-bottom: 0;
+    max-height: 100% !important;
+  }
+
+  .e-toolbar {
+    background-color: $llion-color-primary-container;
+  }
+
+  .e-toolbar .e-toolbar-items,
+  .e-toolbar .e-toolbar-items.e-tbar-pos {
+    background-color: $llion-color-primary-container;
+  }
+
+  .e-toolbar .e-toolbar-items .e-tbar-btn {
+    background: $llion-color-white;
+    border: 1px solid #5a70cc;
+  }
+
+  .e-rowcell {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+::ng-deep .journal-edit-dialog {
+  padding: 8px 4px 4px;
+
+  .row {
+    margin-bottom: 12px;
+  }
+
+  .e-float-input,
+  .e-control-wrapper,
+  .e-numerictextbox {
+    width: 100%;
+  }
+}
+
+.totals-strip {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 16px;
+  flex: 0 0 auto;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 2;
+  margin-top: 5px;
+  min-height: 40px;
+  padding: 6px 10px;
+  background: $llion-color-primary-container;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+}
+
+.total-field {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.total-field__label {
+  font-size: 11px;
+  color: rgba(0, 0, 0, 0.55);
+  white-space: nowrap;
+}
+
+.total-field__value {
+  min-width: 96px;
+  padding: 4px 8px;
+  text-align: right;
+  font-weight: 600;
+  background: $llion-color-white;
+  border: 1px solid rgba(0, 0, 0, 0.16);
+}
+
+.total-field--grand .total-field__label {
+  font-weight: 600;
+  color: $llion-color-font;
+}
+
+.total-field--grand .total-field__value {
+  min-width: 120px;
+}
+
+.total-field--unbalanced .total-field__value {
+  color: #b42318;
+  border-color: #b42318;
+}
+
+.actions-strip {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  flex: 0 0 auto;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 2;
+  margin-top: 5px;
+  min-height: 40px;
+  padding: 6px 10px;
+  background: $llion-color-primary-container;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+}
+
+.journal-entry-placeholder {
+  min-height: 120px;
+  padding: 16px;
+  color: rgba(0, 0, 0, 0.55);
+}

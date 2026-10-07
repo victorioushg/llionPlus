@@ -1,0 +1,42 @@
+<div id="container" class="container">
+  <div class="row">
+    <div class="col-lg-5">
+      <div id="production-order-grid" class="production-grid">
+        <ejs-grid
+          #grid
+          [dataSource]="(orders$ | async) || []"
+          [allowSorting]="true"
+          [toolbar]="toolbar"
+          [height]="screenHeight"
+          [searchSettings]="searchSettings"
+          [selectionSettings]="selectionSettings"
+          clipMode="EllipsisWithTooltip"
+          (actionBegin)="actionBegin($event)"
+          (toolbarClick)="onToolbarClick($event)"
+          (rowSelected)="onRowSelected($event)"
+          (rowDeselected)="onRowDeselected($event)"
+          (recordDoubleClick)="onRecordDoubleClick($event)"
+          (commandClick)="commandClick($event)"
+        >
+          <e-columns>
+            <e-column width="50" [commands]="commands" clipMode="Clip"></e-column>
+            <e-column field="orderNumber" headerText="Folio" width="110"></e-column>
+            <e-column field="description" headerText="Descripción" width="180"></e-column>
+            <e-column
+              field="issueDate"
+              headerText="Fecha"
+              type="date"
+              format="dd/MM/yyyy"
+              width="90"
+            ></e-column>
+            <e-column field="statusName" headerText="Estatus" width="90"></e-column>
+            <e-column field="productionOrderId" [isPrimaryKey]="true" [visible]="false"></e-column>
+          </e-columns>
+        </ejs-grid>
+      </div>
+    </div>
+    <div class="col-lg-7 production-detail-col" [style.height.px]="panelHeight">
+      <llion-production-order-detail></llion-production-order-detail>
+    </div>
+  </div>
+</div>

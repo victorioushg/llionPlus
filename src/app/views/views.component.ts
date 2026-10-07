@@ -284,85 +284,114 @@ export class ViewsComponent implements OnInit {
     }
 
     switch (nodeId) {
-      case '02-01':
+      case '02-01-01':
         this.router.navigate(['/accounting/accounts']);
         break;
-      case '02-02':
+      case '02-01-02':
         this.router.navigate(['/accounting/classes']);
         break;
-      case '03-01':
+      case '02-01-03':
+        this.router.navigate(['/accounting/journals']);
+        break;
+      case '03-01-01':
         this.router.navigate(['/treasury/banks']);
         break;
-      case '03-02':
+      case '03-01-02':
         this.router.navigate(['/treasury/cashboxes']);
         break;
-      case '04-01':
+      case '04-01-01':
         this.router.navigate(['/employee']);
         break;
-      case '05-01':
+      case '05-01-01':
         this.router.navigate(['/provider']);
         break;
-      case '05-02-01':
+      case '05-01-02-01':
         this.router.navigate(['/provider/purchase-orders']);
         break;
-      case '05-02-02':
+      case '05-01-02-02':
         this.router.navigate(['/provider/goods-receipts']);
         break;
-      case '05-02-03':
+      case '05-01-02-03':
         this.router.navigate(['/provider/purchases']);
         break;
-      case '05-02-04':
+      case '05-01-02-04':
         this.router.navigate(['/provider/credit-notes']);
         break;
-      case '05-02-05':
+      case '05-01-02-05':
         this.router.navigate(['/provider/debit-notes']);
         break;
-      case '06-01':
+      case '06-01-01':
         this.router.navigate(['/customer']);
         break;
-      case '06-02-01':
+      case '06-01-02-01':
         this.router.navigate(['/customer/quotes']);
         break;
-      case '06-02-02':
+      case '06-01-02-02':
         this.router.navigate(['/customer/sales-orders']);
         break;
-      case '06-02-03':
+      case '06-01-02-03':
         this.router.navigate(['/customer/delivery-notes']);
         break;
-      case '06-02-04':
+      case '06-01-02-04':
         this.router.navigate(['/customer/invoices']);
         break;
-      case '06-02-05':
+      case '06-01-02-05':
         this.router.navigate(['/customer/credit-notes']);
         break;
-      case '06-02-06':
+      case '06-01-02-06':
         this.router.navigate(['/customer/debit-notes']);
         break;
-      case '08-01':
+      case '08-01-01':
         this.router.navigate(['/merchandising/merchandise']);
         break;
-      case '08-02':
+      case '08-01-02':
         this.router.navigate(['/merchandising/services']);
         break;
-      case '10-01':
-        this.router.navigate(['/control/parameters']);
+      case '09-01-01':
+        this.router.navigate(['/production/lines']);
         break;
-      case '11-01':
+      case '09-01-02':
+        this.router.navigate(['/production/resources']);
+        break;
+      case '09-01-03':
+        this.router.navigate(['/production/formulations']);
+        break;
+      case '09-01-04':
+        this.router.navigate(['/production/orders']);
+        break;
+      case '09-01-05':
+        this.router.navigate(['/production/tracking']);
+        break;
+      case '11-01-01':
         this.router.navigate(['/application/organization']);
         break;
-      case '11-02':
+      case '11-01-02':
         this.router.navigate(['/users']);
         break;
       default:
         break;
     }
 
-    this.title =
-      args.nodeData['id'].toString().length > 2
-        ? this.title.split(' | ')[0] + ' | '
-        : '';
+    this.title = this.menuPathLabels(nodeId).join(' | ');
+  }
 
-    this.title += args.nodeData['text'].toString().toLowerCase();
+  private menuPathLabels(nodeId: string): string[] {
+    const walk = (nodes: any[], trail: string[]): string[] | null => {
+      for (const node of nodes) {
+        const next = [...trail, String(node.nodeText ?? '').toLowerCase()];
+        if (node.nodeId === nodeId) {
+          return next;
+        }
+        if (Array.isArray(node.nodeChild) && node.nodeChild.length) {
+          const found = walk(node.nodeChild, next);
+          if (found) {
+            return found;
+          }
+        }
+      }
+      return null;
+    };
+    return walk(this.data, []) ?? [];
   }
 
   private menuNodeHasChildren(nodeId: string): boolean {

@@ -7,9 +7,25 @@
   >
     <div class="title-strip">
       <span class="title-strip__label">COMPRA</span>
-      <button ejs-button type="button" (click)="openInvoiceDocument()">
-        {{ invoiceButtonLabel }}
-      </button>
+      <div class="title-strip__actions">
+        <button
+          type="button"
+          class="print-icon-btn"
+          [disabled]="currentBillId <= 0 || printBusy"
+          (click)="printPurchase()"
+          title="Imprimir"
+        >
+          <img src="assets/images/icons8-print-24.png" alt="Imprimir" />
+        </button>
+        <button
+          type="button"
+          class="print-icon-btn"
+          (click)="openInvoiceDocument()"
+          [title]="invoiceButtonTitle"
+        >
+          <img src="assets/images/icons8-import-pdf-24.png" alt="Importar factura" />
+        </button>
+      </div>
     </div>
 
     <div class="row">
@@ -633,7 +649,7 @@
   <div class="invoice-reader-overlay" *ngIf="invoiceReaderOpen">
     <div class="invoice-reader-dialog">
       <div class="invoice-reader-header">
-        <h6>{{ hasLinkedInvoice && !invoiceResult ? 'Factura de la compra' : 'Leer factura' }}</h6>
+        <h6>{{ hasLinkedInvoice && !invoiceResult ? 'Factura de la compra' : 'Importar factura' }}</h6>
         <button ejs-button type="button" cssClass="e-flat" (click)="closeInvoiceDocument()">
           Cerrar
         </button>

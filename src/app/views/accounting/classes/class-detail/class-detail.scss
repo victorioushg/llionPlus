@@ -1,0 +1,24 @@
+@use "variables" as *;
+
+:host {
+  display: block;
+  width: 100%;
+}
+
+.wrapper-detail {
+  width: 100%;
+}
+
+.class-detail-form {
+  .row {
+    margin-bottom: 4px;
+  }
+}
+
+.flags-row {
+  align-items: center;
+}
+
+#class-form-buttons {
+  display: none;
+}

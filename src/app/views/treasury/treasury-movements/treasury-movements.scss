@@ -28,10 +28,344 @@
   opacity: 0.45;
 }
 
+.cash-totals {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 28px;
+  align-items: center;
+  margin-top: 0;
+  padding: 6px 12px;
+  background: #e8eef8;
+  border: 1px solid #c5d0e6;
+  border-top: none;
+  font-size: 13px;
+
+  label {
+    margin-right: 8px;
+    color: #3d4d6b;
+    font-weight: 600;
+  }
+
+  span {
+    white-space: nowrap;
+  }
+}
+
+.cash-totals__total label,
+.cash-totals__total {
+  font-weight: 700;
+}
+
 ::ng-deep .movement-edit-dialog {
   padding: 8px 4px 4px;
 
   .row {
     margin-bottom: 12px;
+  }
+}
+
+::ng-deep .e-dialog.treasury-movement-dialog {
+  background-color: $llion-color-mercury !important;
+  border: none !important;
+  box-shadow: rgba(0, 0, 0, 0.25) 0px 54px 55px,
+    rgba(0, 0, 0, 0.12) 0px -12px 30px, rgba(0, 0, 0, 0.12) 0px 4px 6px,
+    rgba(0, 0, 0, 0.17) 0px 12px 13px, rgba(0, 0, 0, 0.09) 0px -3px 5px !important;
+
+  .e-dlg-header-content {
+    background-color: $llion-color-primary !important;
+    border-bottom: none !important;
+  }
+
+  .e-dlg-header,
+  .e-dlg-header *,
+  .e-dlg-header-content .e-dlg-header,
+  .e-dlg-closeicon-btn,
+  .e-dlg-closeicon-btn *,
+  .e-icon-dlg-close {
+    color: $llion-color-white !important;
+    -webkit-text-fill-color: $llion-color-white !important;
+  }
+
+  .e-dlg-header-content .e-btn.e-dlg-closeicon-btn:hover,
+  .e-dlg-header-content .e-btn.e-dlg-closeicon-btn:focus {
+    background-color: rgba(255, 255, 255, 0.16) !important;
+  }
+
+  .e-dlg-content {
+    background: $llion-color-mercury !important;
+    padding: 12px 16px 10px;
+  }
+
+  .e-footer-content {
+    display: none;
+    background: $llion-color-mercury;
+  }
+
+  &.show-dialog-footer .e-footer-content {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+  }
+
+  &.cash-dialog .e-footer-content .e-btn-icon {
+    display: none !important;
+  }
+}
+
+::ng-deep .cash-movement-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 480px;
+
+  .cash-field {
+    display: grid;
+    grid-template-columns: 148px 168px;
+    align-items: center;
+    column-gap: 12px;
+  }
+
+  .cash-field label {
+    margin: 0;
+    font-size: 13px;
+    color: #1f1f1f;
+  }
+
+  .e-input-group,
+  .e-control-wrapper,
+  .e-date-wrapper,
+  .e-ddl.e-control-wrapper {
+    width: 168px;
+  }
+
+  .cash-field--date .e-input {
+    font-weight: 700;
+  }
+
+  .cash-field--amount .e-numerictextbox .e-input,
+  .cash-field--amount input.e-input {
+    text-align: right;
+  }
+}
+
+.cash-movement-footer {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: 0;
+  margin-top: 8px;
+}
+
+::ng-deep .e-dialog.cash-dialog .cash-movement-footer {
+  margin-top: 0;
+}
+
+.cash-hint {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-height: 30px;
+  padding: 4px 8px;
+  background: #fcffd9;
+  border: 1px solid #c8c89a;
+  font-size: 12px;
+  color: #1f1f1f;
+}
+
+.cash-hint__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #1a73c7;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  font-style: italic;
+  font-family: Georgia, "Times New Roman", serif;
+  flex: 0 0 16px;
+}
+
+.movement-actions {
+  display: flex;
+  gap: 8px;
+  flex: 0 0 auto;
+}
+
+.movement-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 14px;
+  border-radius: 4px;
+  font-size: 13px !important;
+  font-family: Roboto, Helvetica, Arial, sans-serif;
+  cursor: pointer;
+}
+
+.movement-btn__icon {
+  width: 14px;
+  height: 14px;
+  flex: 0 0 14px;
+}
+
+.movement-btn--ok {
+  background: $llion-color-primary;
+  border: 1px solid $llion-color-primary;
+  color: $llion-color-white;
+}
+
+.movement-btn--ok .movement-btn__icon {
+  color: $llion-color-white;
+}
+
+.movement-btn--cancel {
+  background: $llion-color-white;
+  border: 1px solid #8a8a8a;
+  color: $llion-color-font;
+}
+
+.movement-btn--cancel .movement-btn__icon {
+  color: currentColor;
+}
+
+.movement-btn--ok:hover {
+  filter: brightness(1.08);
+}
+
+.movement-btn--cancel:hover {
+  background: #f3f3f3;
+}
+
+::ng-deep .bank-movement-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 640px;
+
+  .bank-field {
+    display: grid;
+    grid-template-columns: 130px minmax(0, 1fr);
+    align-items: center;
+    column-gap: 12px;
+  }
+
+  .bank-field label {
+    margin: 0;
+    font-size: 13px;
+    color: #1f1f1f;
+  }
+
+  .bank-field__pair,
+  .bank-field__beneficiary {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .bank-field:not(.bank-field--wide) .e-input-group,
+  .bank-field:not(.bank-field--wide) .e-control-wrapper,
+  .bank-field:not(.bank-field--wide) .e-date-wrapper,
+  .bank-field:not(.bank-field--wide) .e-ddl.e-control-wrapper {
+    width: 168px;
+  }
+
+  .bank-field--wide .e-input-group,
+  .bank-field--wide .e-control-wrapper {
+    width: 100%;
+  }
+
+  .bank-field__beneficiary .e-input-group,
+  .bank-field__beneficiary .e-control-wrapper {
+    flex: 1;
+  }
+
+  .bank-field--date .e-input,
+  .bank-field--wide textarea.e-input {
+    font-weight: 600;
+  }
+
+  #amount,
+  .bank-field__pair .e-numerictextbox .e-input {
+    text-align: right;
+  }
+}
+
+.bank-separator {
+  height: 1px;
+  margin: 4px 0;
+  background: #bdbdbd;
+}
+
+.bank-policy__head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+  font-size: 13px;
+  color: #1f1f1f;
+}
+
+.bank-policy__tools {
+  display: inline-flex;
+  gap: 4px;
+}
+
+.policy-tool {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: 1px solid #8a8a8a;
+  background: #fff;
+  cursor: pointer;
+
+  .e-icons {
+    font-family: 'e-icons' !important;
+    font-size: 14px !important;
+    line-height: 1;
+  }
+}
+
+.policy-tool--add .e-icons {
+  color: #1b8f2d;
+}
+
+.policy-tool--edit .e-icons {
+  color: #3d4d6b;
+}
+
+.policy-tool--delete .e-icons {
+  color: #d12424;
+}
+
+.bank-policy__grid {
+  width: 100%;
+  border-collapse: collapse;
+  background: #fff;
+  font-size: 12px;
+
+  th,
+  td {
+    border: 1px solid #c5c5c5;
+    padding: 4px 6px;
+    text-align: left;
+    font-weight: 600;
+  }
+
+  th {
+    background: #f7f7f7;
+  }
+
+  tbody td {
+    height: 72px;
+    background: #bdbdbd;
   }
 }

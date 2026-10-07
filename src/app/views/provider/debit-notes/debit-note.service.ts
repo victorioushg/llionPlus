@@ -19,6 +19,11 @@ import { toastType } from '@shared/enums/enums';
 import { IOrganizationTax } from '@views/application/organization/organization';
 import { IGroup } from '@shared/models/group';
 import { IDebitNote, IDebitNoteMerchandise, IDebitNoteUnit } from './debit-note';
+import {
+  IInvoicePrevalidationResult,
+  IVendorMedia,
+  IVendorMediaFile,
+} from '../purchases/purchase';
 
 @Injectable({
   providedIn: 'root',
@@ -351,6 +356,103 @@ export class DebitNoteService {
       map((data) => Number(data.result) || 0),
       catchError((err) => this.errorHandlerService.handleError(err))
     );
+  }
+
+  printDebitNotePdf(dbnId: number): Observable<Blob> {
+    return this.http
+      .get(`${this.debitNoteUrl}/pdf/${dbnId}`, {
+        responseType: 'blob',
+      })
+      .pipe(catchError((err) => this.errorHandlerService.handleError(err)));
+  }
+
+  prevalidateInvoice(payload: {
+    fileName: string;
+    contentType: string;
+    fileDataBase64: string;
+    organizationId: number;
+    vendorId?: number | null;
+    debitNoteId?: number | null;
+  }): Observable<IInvoicePrevalidationResult> {
+    return this.http
+      .post<IApiResponse<IInvoicePrevalidationResult>>(
+        `${this.debitNoteUrl}/invoice/prevalidate`,
+        { ...payload, expectedKind: 'DebitNote' },
+        { headers: this.headers }
+      )
+      .pipe(
+        map((data) => data.result),
+        catchError((err) => this.errorHandlerService.handleError(err))
+      );
+  }
+
+  saveInvoiceMedia(payload: {
+    fileName: string;
+    contentType: string;
+    fileDataBase64: string;
+    organizationId: number;
+    vendorId?: number | null;
+    debitNoteId?: number | null;
+    comment?: string | null;
+  }): Observable<{
+    mediaId: number;
+    saved: boolean;
+    prevalidation: IInvoicePrevalidationResult;
+  }> {
+    return this.http
+      .post<
+        IApiResponse<{
+          mediaId: number;
+          saved: boolean;
+          prevalidation: IInvoicePrevalidationResult;
+        }>
+      >(
+        `${this.debitNoteUrl}/invoice/media`,
+        { ...payload, expectedKind: 'DebitNote' },
+        { headers: this.headers }
+      )
+      .pipe(
+        tap((data) => {
+          if (data.result?.saved) {
+            this.toastService.showMyToast(
+              'Documento almacenado',
+              toastType.success
+            );
+          }
+        }),
+        map((data) => data.result),
+        catchError((err) => this.errorHandlerService.handleError(err))
+      );
+  }
+
+  getInvoiceMediaByDebitNote(dbnId: number): Observable<IVendorMedia | null> {
+    if (!dbnId || dbnId <= 0) {
+      return of(null);
+    }
+    return this.http
+      .get<IApiResponse<IVendorMedia>>(
+        `${this.debitNoteUrl}/invoice/media/debitnote/${dbnId}`
+      )
+      .pipe(
+        map((data) =>
+          data.result?.mediaId && data.result.mediaId > 0 ? data.result : null
+        ),
+        catchError(() => of(null))
+      );
+  }
+
+  getInvoiceMediaFile(mediaId: number): Observable<IVendorMediaFile | null> {
+    if (!mediaId || mediaId <= 0) {
+      return of(null);
+    }
+    return this.http
+      .get<IApiResponse<IVendorMediaFile>>(
+        `${this.debitNoteUrl}/invoice/media/file/${mediaId}`
+      )
+      .pipe(
+        map((data) => data.result ?? null),
+        catchError(() => of(null))
+      );
   }
 
   deleteDebitNote(item: IDebitNote): Observable<number> {

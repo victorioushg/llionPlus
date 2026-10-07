@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse, HttpHeaders, HttpParams } from '@angular/common/http';
 import { environment } from '@environments/environment';
 import {
   BehaviorSubject,
@@ -26,7 +26,7 @@ import { toastType } from '@shared/enums/enums';
 import { Action } from '@shared/models/edit-action';
 import { IAccountClass } from '@views/accounting/classes/class';
 import { ClassesService } from '@views/accounting/classes/classes.service';
-import { IAccount } from './account';
+import { IAccount, IAccountMonthlyBalance, IAccountMovement } from './account';
 
 /** Raw API row — supports both C# names and legacy Angular aliases. */
 type AccountApiRow = IAccount & {
@@ -97,10 +97,14 @@ export class AccountsService {
   );
   enableAccountFormAction$ = this.enabledAccountFormSource.asObservable();
 
+  private readonly movementsRefreshSubject = new BehaviorSubject<number>(0);
+
   accounts$!: Observable<IAccount[]>;
   classes$!: Observable<IAccountClass[]>;
   accountSelected$!: Observable<IAccount>;
   accountWithCRUD$!: Observable<IAccount[]>;
+  accountMovements$!: Observable<IAccountMovement[]>;
+  accountMonthlyBalances$!: Observable<IAccountMonthlyBalance[]>;
 
   constructor(
     private http: HttpClient,
@@ -277,6 +281,193 @@ export class AccountsService {
         [] as IAccount[]
       )
     );
+
+    this.accountMovements$ = combineLatest([
+      this.accountContextIdAction$,
+      this.applicationService.workingOrganization$,
+      this.movementsRefreshSubject,
+    ]).pipe(
+      switchMap(([accountId, workingOrg]) => {
+        const organizationId = workingOrg?.organizationId ?? 0;
+        if (!accountId || accountId <= 0 || organizationId <= 0) {
+          return of([] as IAccountMovement[]);
+        }
+        return this.getAccountMovements(accountId, organizationId);
+      }),
+      shareReplay({ bufferSize: 1, refCount: true })
+    );
+
+    this.accountMonthlyBalances$ = combineLatest([
+      this.accountContextIdAction$,
+      this.applicationService.workingOrganization$,
+    ]).pipe(
+      switchMap(([accountId, workingOrg]) => {
+        const organizationId = workingOrg?.organizationId ?? 0;
+        if (!accountId || accountId <= 0 || organizationId <= 0) {
+          return of([] as IAccountMonthlyBalance[]);
+        }
+        return this.getAccountMonthlyBalances(accountId, organizationId);
+      }),
+      shareReplay({ bufferSize: 1, refCount: true })
+    );
+  }
+
+  refreshMovements(): void {
+    this.movementsRefreshSubject.next(this.movementsRefreshSubject.value + 1);
+  }
+
+  private getAccountMonthlyBalances(
+    accountId: number,
+    organizationId: number
+  ): Observable<IAccountMonthlyBalance[]> {
+    return this.http
+      .get<IApiResponse<Array<IAccountMonthlyBalance & Record<string, unknown>>>>(
+        `${this.accountUrl}/monthly-balances/${accountId}/${organizationId}`
+      )
+      .pipe(
+        map((data) =>
+          (
+            (data.result ?? []) as Array<
+              IAccountMonthlyBalance & Record<string, unknown>
+            >
+          ).map((row) => this.normalizeMonthlyBalance(row))
+        ),
+        catchError((err) => {
+          if (err instanceof HttpErrorResponse && err.status === 404) {
+            return of([] as IAccountMonthlyBalance[]);
+          }
+          return this.errorHandlerService.handleError(err);
+        })
+      );
+  }
+
+  private normalizeMonthlyBalance(
+    row: IAccountMonthlyBalance & Record<string, unknown>
+  ): IAccountMonthlyBalance {
+    return {
+      monthNumber: Number(row.monthNumber ?? row['MonthNumber']) || 0,
+      monthName: String(row.monthName ?? row['MonthName'] ?? '').trim(),
+      fiscalYear: Number(row.fiscalYear ?? row['FiscalYear']) || 0,
+      debits: Number(row.debits ?? row['Debits']) || 0,
+      credits: Number(row.credits ?? row['Credits']) || 0,
+      balance: Number(row.balance ?? row['Balance']) || 0,
+    };
+  }
+
+  private getAccountMovements(
+    accountId: number,
+    organizationId: number,
+    dateFrom?: string | null,
+    dateTo?: string | null,
+    fiscalPeriod?: number | null
+  ): Observable<IAccountMovement[]> {
+    let params = new HttpParams();
+    if (dateFrom) {
+      params = params.set('dateFrom', dateFrom);
+    }
+    if (dateTo) {
+      params = params.set('dateTo', dateTo);
+    }
+    if (fiscalPeriod) {
+      params = params.set('fiscalPeriod', String(fiscalPeriod));
+    }
+    return this.http
+      .get<IApiResponse<Array<IAccountMovement & Record<string, unknown>>>>(
+        `${this.accountUrl}/movements/${accountId}/${organizationId}`,
+        { params }
+      )
+      .pipe(
+        map((data) =>
+          ((data.result ?? []) as Array<IAccountMovement & Record<string, unknown>>).map(
+            (row) => this.normalizeMovement(row)
+          )
+        ),
+        catchError((err) => {
+          if (err instanceof HttpErrorResponse && err.status === 404) {
+            return of([] as IAccountMovement[]);
+          }
+          return this.errorHandlerService.handleError(err);
+        })
+      );
+  }
+
+  normalizeMovement(
+    row: IAccountMovement & Record<string, unknown>
+  ): IAccountMovement {
+    const movementType = this.asOptionalBoolean(
+      row.movementType ?? row['MovementType']
+    );
+    const journalEntryId =
+      Number(row.journalEntryId ?? row['JournalEntryId']) || 0;
+    const rowNumber = Number(row.rowNumber ?? row['RowNumber']) || 0;
+    const movementId = Number(row.movementId ?? row['MovementId']) || 0;
+    return {
+      movementId,
+      movementKey: journalEntryId
+        ? `${journalEntryId}-${rowNumber}`
+        : String(movementId),
+      journalEntryId: journalEntryId || null,
+      rowNumber: rowNumber || null,
+      accountId: Number(row.accountId ?? row['AccountId']) || null,
+      accountCode: String(
+        row.accountCode ?? row['AccountCode'] ?? row['Code'] ?? ''
+      ).trim(),
+      classId: Number(row.classId ?? row['ClassId']) || null,
+      movementDate: this.asDate(
+        row.movementDate ?? row['MovementDate'] ?? row['JournalEntryDate']
+      ),
+      journalDescription: String(
+        row.journalDescription ??
+          row['journal_Description'] ??
+          row['Journal_Description'] ??
+          row['JournalDescription'] ??
+          row['JournalEntryCode'] ??
+          ''
+      ).trim(),
+      reference: String(
+        row.reference ?? row['Reference'] ?? row['ReferenceNumber'] ?? ''
+      ).trim(),
+      movementDescription: String(
+        row.movementDescription ??
+          row['MovementDescription'] ??
+          row['Memo'] ??
+          ''
+      ).trim(),
+      movementType,
+      movementTypeLabel:
+        movementType === true ? 'Debe' : movementType === false ? 'Haber' : '',
+      amount: row.amount ?? (row['Amount'] as number | null) ?? null,
+      fiscalPeriod:
+        Number(row.fiscalPeriod ?? row['FiscalPeriod']) || null,
+      organizationId:
+        Number(row.organizationId ?? row['OrganizationId']) || null,
+    };
+  }
+
+  private asDate(value: unknown): Date | null {
+    if (value instanceof Date) {
+      return Number.isNaN(value.getTime()) ? null : value;
+    }
+    const text = String(value ?? '').trim();
+    if (!text) {
+      return null;
+    }
+    const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(text);
+    if (match) {
+      return new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]));
+    }
+    const parsed = new Date(text);
+    return Number.isNaN(parsed.getTime()) ? null : parsed;
+  }
+
+  private asOptionalBoolean(value: unknown): boolean | null {
+    if (value === true || value === 1 || value === '1') {
+      return true;
+    }
+    if (value === false || value === 0 || value === '0') {
+      return false;
+    }
+    return null;
   }
 
   private modifyAccounts(

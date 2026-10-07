@@ -345,6 +345,14 @@ export class GoodsReceiptService {
     );
   }
 
+  printGoodsReceiptPdf(grId: number): Observable<Blob> {
+    return this.http
+      .get(`${this.goodsReceiptUrl}/pdf/${grId}`, {
+        responseType: 'blob',
+      })
+      .pipe(catchError((err) => this.errorHandlerService.handleError(err)));
+  }
+
   deleteGoodsReceipt(item: IGoodsReceipt): Observable<number> {
     return this.http
       .delete<IApiResponse<number>>(`${this.goodsReceiptUrl}/${item.grId}`, {

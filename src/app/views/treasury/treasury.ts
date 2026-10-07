@@ -30,7 +30,9 @@ export interface ITreasuryMovement {
   originDocumentId?: number | null;
   originType?: string | null;
   beneficiary?: string | null;
+  paymentType?: string | null;
   paymentReceipt?: string | null;
+  paymentReference?: string | null;
   reconciled?: boolean | null;
   reconciledMonth?: Date | string | null;
   reconciledDate?: Date | string | null;
@@ -39,6 +41,8 @@ export interface ITreasuryMovement {
   journalEntryDate?: string | null;
   customer_Provider?: number | null;
   salesPersonId?: number | null;
+  partyName?: string | null;
+  salesPersonName?: string | null;
   accountId?: number | null;
   classId?: number | null;
   lock_Date?: Date | string | null;
@@ -46,16 +50,46 @@ export interface ITreasuryMovement {
   organizationId: number;
 }
 
+export interface ICashMovementTotals {
+  cashAmount: number;
+  checkAmount: number;
+  cardAmount: number;
+  voucherAmount: number;
+  totalAmount: number;
+}
+
+export interface IBankMovementTotals {
+  depositAmount: number;
+  creditNoteAmount: number;
+  debitNoteAmount: number;
+  checkAmount: number;
+  totalAmount: number;
+}
+
 export const TREASURY_BANK_MOVEMENT_TYPES = [
-  { code: 'DP', description: 'Depósito (DP)' },
-  { code: 'ND', description: 'Nota de débito (ND)' },
-  { code: 'CH', description: 'Cheque (CH)' },
-  { code: 'NC', description: 'Nota de crédito (NC)' },
+  { code: 'DP', description: 'DEPOSITO' },
+  { code: 'NC', description: 'NOTA CREDITO' },
+  { code: 'CH', description: 'CHEQUE' },
+  { code: 'ND', description: 'NOTA DEBITO' },
+];
+
+export const TREASURY_BANK_DEPOSIT_TYPES = [
+  { code: 'NM', description: 'NORMAL' },
+  { code: 'DF', description: 'DIFERIDO' },
 ];
 
 export const TREASURY_CASH_MOVEMENT_TYPES = [
-  { code: 'EN', description: 'Entrada (EN)' },
-  { code: 'SA', description: 'Salida (SA)' },
+  { code: 'EN', description: 'ENTRADA' },
+  { code: 'SA', description: 'SALIDA' },
+];
+
+export const TREASURY_CASH_PAYMENT_TYPES = [
+  { code: 'EF', description: 'Efectivo' },
+  { code: 'CH', description: 'Cheque' },
+  { code: 'TA', description: 'Tarjeta' },
+  { code: 'CT', description: 'Cupón de Alimentación' },
+  { code: 'DP', description: 'Depósito' },
+  { code: 'TR', description: 'Transferencia' },
 ];
 
 /** @deprecated use TREASURY_BANK_MOVEMENT_TYPES / TREASURY_CASH_MOVEMENT_TYPES */

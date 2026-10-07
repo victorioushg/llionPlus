@@ -45,7 +45,7 @@
       </div>
     </div>
     <div class="row">
-      <div class="col-md-12">
+      <div class="col-md-6">
         <ejs-dropdownlist
           formControlName="accountId"
           [dataSource]="accounts$ | async"
@@ -56,6 +56,19 @@
           [filterType]="filterType"
           floatLabelType="Always"
           placeholder="cuenta contable"
+        ></ejs-dropdownlist>
+      </div>
+      <div class="col-md-6">
+        <ejs-dropdownlist
+          formControlName="classId"
+          [dataSource]="(classes$ | async) || []"
+          [fields]="classFields"
+          [enabled]="enabled$ | async"
+          [allowFiltering]="true"
+          [showClearButton]="true"
+          [filterType]="filterType"
+          floatLabelType="Always"
+          placeholder="clase"
         ></ejs-dropdownlist>
       </div>
     </div>

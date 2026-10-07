@@ -1,0 +1,190 @@
+<div class="wrapper-detail" *ngIf="visible$ | async; else placeholder">
+  <form class="production-form" [formGroup]="headerForm" *ngIf="order$ | async as order">
+    <div class="title-strip">
+      <span class="title-strip__label">ORDEN DE PRODUCCIÓN</span>
+    </div>
+    <div class="row">
+      <div class="col-md-3">
+        <ejs-textbox
+          placeholder="Folio"
+          floatLabelType="Always"
+          formControlName="orderNumber"
+        ></ejs-textbox>
+      </div>
+      <div class="col-md-3">
+        <ejs-datepicker
+          format="dd/MM/yyyy"
+          placeholder="Fecha"
+          floatLabelType="Always"
+          formControlName="issueDate"
+          [enabled]="enabled$ | async"
+        ></ejs-datepicker>
+      </div>
+      <div class="col-md-3">
+        <ejs-datepicker
+          format="dd/MM/yyyy"
+          placeholder="Fecha estimada"
+          floatLabelType="Always"
+          formControlName="estimatedEndDate"
+          [enabled]="enabled$ | async"
+        ></ejs-datepicker>
+      </div>
+      <div class="col-md-3">
+        <ejs-textbox placeholder="Estatus" floatLabelType="Always" formControlName="statusName"></ejs-textbox>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-12">
+        <ejs-textbox
+          placeholder="Descripción"
+          floatLabelType="Always"
+          formControlName="description"
+          [enabled]="enabled$ | async"
+        ></ejs-textbox>
+      </div>
+    </div>
+  </form>
+
+  <ejs-tab>
+    <e-tabitems>
+      <e-tabitem [header]="headerText[0]">
+        <ng-template #content>
+          <ejs-grid
+            #linesgrid
+            [dataSource]="lines"
+            [toolbar]="linesToolbar"
+            [editSettings]="linesEditSettings"
+            [height]="linesHeight"
+            [rowHeight]="32"
+            clipMode="EllipsisWithTooltip"
+            (actionBegin)="onLineActionBegin($event)"
+            (actionComplete)="onLineActionComplete($event)"
+          >
+            <e-columns>
+              <e-column field="formulationName" headerText="Descripción" width="220"></e-column>
+              <e-column field="quantity" headerText="Cantidad" width="80" type="number" format="N2" textAlign="Right"></e-column>
+              <e-column field="uom" headerText="Und" width="50"></e-column>
+              <e-column field="unitCost" headerText="Costo U." width="90" type="number" format="N2" textAlign="Right"></e-column>
+              <e-column field="amount" headerText="Importe" width="100" type="number" format="N2" textAlign="Right"></e-column>
+              <e-column field="formulationCode" headerText="Código" width="80"></e-column>
+              <e-column field="rowNumber" [isPrimaryKey]="true" [visible]="false"></e-column>
+            </e-columns>
+            <ng-template #editSettingsTemplate>
+              <div ngForm #lineForm="ngForm">
+                <div class="row">
+                  <div class="col-md-12">
+                    <ejs-dropdownlist
+                      name="formulationId"
+                      [(ngModel)]="lineData.formulationId"
+                      placeholder="Formulación"
+                      floatLabelType="Always"
+                      [dataSource]="(formulations$ | async) || []"
+                      [fields]="formulationFields"
+                      [allowFiltering]="true"
+                      [filterType]="filterType"
+                      [required]="true"
+                      (change)="onFormulationChange($event)"
+                    ></ejs-dropdownlist>
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="col-md-4">
+                    <ejs-numerictextbox
+                      name="quantity"
+                      [(ngModel)]="lineData.quantity"
+                      placeholder="Cantidad"
+                      floatLabelType="Always"
+                      format="n3"
+                      [showSpinButton]="false"
+                      (change)="onLineAmountChange()"
+                    ></ejs-numerictextbox>
+                  </div>
+                  <div class="col-md-4">
+                    <ejs-textbox name="uom" [(ngModel)]="lineData.uom" placeholder="Unidad" floatLabelType="Always"></ejs-textbox>
+                  </div>
+                  <div class="col-md-4">
+                    <ejs-numerictextbox
+                      name="unitCost"
+                      [(ngModel)]="lineData.unitCost"
+                      placeholder="Costo U."
+                      floatLabelType="Always"
+                      format="n2"
+                      [showSpinButton]="false"
+                      (change)="onLineAmountChange()"
+                    ></ejs-numerictextbox>
+                  </div>
+                </div>
+              </div>
+            </ng-template>
+          </ejs-grid>
+        </ng-template>
+      </e-tabitem>
+      <e-tabitem [header]="headerText[1]">
+        <ng-template #content>
+          <ejs-grid
+            [dataSource]="requirements"
+            [allowSorting]="true"
+            [height]="explosionHeight"
+            [rowHeight]="32"
+            clipMode="EllipsisWithTooltip"
+          >
+            <e-columns>
+              <e-column field="description" headerText="Componente" width="180"></e-column>
+              <e-column field="requiredQuantity" headerText="Cantidad" width="80" type="number" format="N2" textAlign="Right"></e-column>
+              <e-column field="uom" headerText="Und" width="50"></e-column>
+              <e-column field="onHandQuantity" headerText="Ex. actual" width="80" type="number" format="N2" textAlign="Right"></e-column>
+              <e-column field="pendingQuantity" headerText="Pendiente" width="80" type="number" format="N2" textAlign="Right"></e-column>
+              <e-column field="reservedQuantity" headerText="Apartado" width="80" type="number" format="N2" textAlign="Right"></e-column>
+              <e-column field="consumedQuantity" headerText="Consumido" width="80" type="number" format="N2" textAlign="Right"></e-column>
+              <e-column field="componentCode" headerText="Código" width="70"></e-column>
+            </e-columns>
+          </ejs-grid>
+        </ng-template>
+      </e-tabitem>
+      <e-tabitem [header]="headerText[2]">
+        <ng-template #content>
+          <div class="notes-add">
+            <div style="flex: 1">
+              <ejs-textbox
+                [(ngModel)]="noteComment"
+                [ngModelOptions]="{ standalone: true }"
+                placeholder="Comentario"
+                floatLabelType="Always"
+                [multiline]="true"
+                [htmlAttributes]="{ rows: '2' }"
+                [enabled]="currentOrderId > 0"
+              ></ejs-textbox>
+            </div>
+            <button ejs-button cssClass="e-primary" [disabled]="currentOrderId <= 0" (click)="addNote()">
+              Agregar
+            </button>
+          </div>
+          <ejs-grid [dataSource]="notes" [height]="notesHeight" [rowHeight]="32">
+            <e-columns>
+              <e-column field="noteOn" headerText="Fecha y hora" type="date" format="dd/MM/yyyy HH:mm" width="140"></e-column>
+              <e-column field="userName" headerText="Usuario" width="100"></e-column>
+              <e-column field="comment" headerText="Comentarios" width="240"></e-column>
+            </e-columns>
+          </ejs-grid>
+        </ng-template>
+      </e-tabitem>
+    </e-tabitems>
+  </ejs-tab>
+
+  <div class="totals-bar">
+    <div class="total-item">
+      <span class="total-item__label">Costo total</span>
+      <span class="total-item__value">{{ totalCost | number: '1.2-2' }}</span>
+    </div>
+  </div>
+  <div class="form-actions">
+    <button ejs-button (click)="onCancelClick()" [disabled]="!(enabled$ | async)">Cancelar</button>
+    <button ejs-button cssClass="e-primary" (click)="onSaveClick()" [disabled]="!(enabled$ | async)">
+      Aceptar
+    </button>
+  </div>
+</div>
+
+<ng-template #placeholder>
+  <div class="placeholder">Seleccione o incluya una orden de producción.</div>
+</ng-template>

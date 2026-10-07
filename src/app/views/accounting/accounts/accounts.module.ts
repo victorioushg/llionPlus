@@ -19,11 +19,19 @@ import { enableRipple } from '@syncfusion/ej2-base';
 import { routes } from './_routes';
 import { AccountsComponent } from './accounts-grid';
 import { AccountDetailComponent } from './account-detail/account-detail';
+import { AccountMovementsComponent } from './account-movements/account-movements';
+import { AccountMonthlyBalancesComponent } from './account-monthly-balances/account-monthly-balances';
 
 enableRipple(true);
 
+
 @NgModule({
-  declarations: [AccountsComponent, AccountDetailComponent],
+  declarations: [
+    AccountsComponent,
+    AccountDetailComponent,
+    AccountMovementsComponent,
+    AccountMonthlyBalancesComponent,
+  ],
   imports: [
     CommonModule,
     RouterModule.forChild(routes),

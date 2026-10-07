@@ -15,7 +15,7 @@ export class ToastService {
         show: { effect: 'FadeZoomIn' },
         hide: { effect: 'FadeZoomOut' },
       };
-      model.position = { X: 'Right', Y: 'Bottom' };
+      model.position = { X: 'Right', Y: 'Top' };
       model.cssClass = 'e-toast-info fa fa-info-circle ';
    
       this.toastObj = new Toast(model, element);
@@ -46,9 +46,10 @@ export class ToastService {
       //   : 'Precaución',
       content: toast.content,
       timeOut: toast.timeOut == null ? 5000 : toast.timeOut,
-      position: { X: 'Right', Y: 'Bottom' },
+      position: { X: 'Right', Y: 'Top' },
       showCloseButton: false,
-      height: 70,
+      width: 380,
+      height: 'auto',
       icon:
         type == toastType.error
           ? 'e-icons e-large e-circle-error'

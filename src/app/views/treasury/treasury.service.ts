@@ -26,6 +26,8 @@ import { ErrorHandlerService } from '@shared/services/errorHandlerService';
 import { toastType } from '@shared/enums/enums';
 import { Action } from '@shared/models/edit-action';
 import {
+  IBankMovementTotals,
+  ICashMovementTotals,
   ITreasury,
   ITreasuryMovement,
   TREASURY_TYPE_BANK,
@@ -77,12 +79,14 @@ export class TreasuryService {
   );
   enableTreasuryFormAction$ = this.enabledTreasuryFormSource.asObservable();
 
-  private readonly movementsRefreshSubject = new BehaviorSubject<number>(0);
+  private readonly movementsRefreshSubject = new Subject<void>();
+  movementsChanged$ = this.movementsRefreshSubject.asObservable();
+  private readonly movementsVisibleSubject = new Subject<void>();
+  movementsVisible$ = this.movementsVisibleSubject.asObservable();
 
   treasuries$!: Observable<ITreasury[]>;
   treasurySelected$!: Observable<ITreasury>;
   treasuryWithCRUD$!: Observable<ITreasury[]>;
-  treasuryMovements$!: Observable<ITreasuryMovement[]>;
 
   get currentOrganizationId(): number {
     return this.applicationService.workingOrganization?.organizationId ?? 0;
@@ -237,31 +241,21 @@ export class TreasuryService {
       ),
       shareReplay({ bufferSize: 1, refCount: true })
     );
-
-    this.treasuryMovements$ = combineLatest([
-      this.treasuryContextIdAction$,
-      this.applicationService.workingOrganization$,
-      this.movementsRefreshSubject,
-    ]).pipe(
-      switchMap(([treasuryId, workingOrg]) => {
-        const organizationId = workingOrg?.organizationId ?? 0;
-        if (!treasuryId || treasuryId <= 0 || !organizationId) {
-          return of([] as ITreasuryMovement[]);
-        }
-        return this.getTreasuryMovements(treasuryId, organizationId);
-      }),
-      shareReplay({ bufferSize: 1, refCount: true })
-    );
   }
 
   refreshMovements(): void {
-    this.movementsRefreshSubject.next(this.movementsRefreshSubject.value + 1);
+    this.movementsRefreshSubject.next();
+  }
+
+  notifyMovementsVisible(): void {
+    this.movementsVisibleSubject.next();
   }
 
   addMovement(item: ITreasuryMovement): Observable<number> {
     return this.http
       .post<IApiResponse<number>>(`${this.treasuryUrl}/movement`, item, {
         headers: this.headers,
+        params: this.treasuryTypeParams(),
       })
       .pipe(
         tap(() => {
@@ -298,7 +292,7 @@ export class TreasuryService {
     return this.http
       .delete<IApiResponse<number>>(
         `${this.treasuryUrl}/movement/${movementId}/${treasuryId}`,
-        { headers: this.headers }
+        { headers: this.headers, params: this.treasuryTypeParams() }
       )
       .pipe(
         tap(() => {
@@ -313,17 +307,104 @@ export class TreasuryService {
       );
   }
 
-  private getTreasuryMovements(
+  getTreasuryMovementPage(
     treasuryId: number,
-    organizationId: number
+    organizationId: number,
+    take: number,
+    beforeDate: string | null,
+    beforeId: number | null,
+    search: string
   ): Observable<ITreasuryMovement[]> {
+    let params = new HttpParams().set('take', String(take));
+    if (beforeDate) {
+      params = params.set('beforeDate', beforeDate);
+    }
+    if (beforeId) {
+      params = params.set('beforeId', String(beforeId));
+    }
+    const needle = (search || '').trim();
+    if (needle) {
+      params = params.set('search', needle);
+    }
+    const treasuryType = this.currentTreasuryType;
+    if (treasuryType) {
+      params = params.set('treasuryType', treasuryType);
+    }
+
     return this.http
       .get<IApiResponse<ITreasuryMovement[]>>(
-        `${this.treasuryUrl}/movements/${treasuryId}/${organizationId}`
+        `${this.treasuryUrl}/movements/${treasuryId}/${organizationId}`,
+        { params }
       )
       .pipe(
         map((data) => data.result ?? []),
         catchError((err) => this.errorHandlerService.handleError(err))
+      );
+  }
+
+  getCashMovementTotals(
+    treasuryId: number,
+    organizationId: number
+  ): Observable<ICashMovementTotals> {
+    const empty: ICashMovementTotals = {
+      cashAmount: 0,
+      checkAmount: 0,
+      cardAmount: 0,
+      voucherAmount: 0,
+      totalAmount: 0,
+    };
+    if (treasuryId <= 0 || organizationId <= 0) {
+      return of(empty);
+    }
+    return this.http
+      .get<IApiResponse<ICashMovementTotals>>(
+        `${this.treasuryUrl}/movements/totals/${treasuryId}/${organizationId}`
+      )
+      .pipe(
+        map((data) => ({
+          cashAmount: Number(data.result?.cashAmount) || 0,
+          checkAmount: Number(data.result?.checkAmount) || 0,
+          cardAmount: Number(data.result?.cardAmount) || 0,
+          voucherAmount: Number(data.result?.voucherAmount) || 0,
+          totalAmount: Number(data.result?.totalAmount) || 0,
+        })),
+        catchError((err) => {
+          this.errorHandlerService.handleError(err);
+          return of(empty);
+        })
+      );
+  }
+
+  getBankMovementTotals(
+    treasuryId: number,
+    organizationId: number
+  ): Observable<IBankMovementTotals> {
+    const empty: IBankMovementTotals = {
+      depositAmount: 0,
+      creditNoteAmount: 0,
+      debitNoteAmount: 0,
+      checkAmount: 0,
+      totalAmount: 0,
+    };
+    if (treasuryId <= 0 || organizationId <= 0) {
+      return of(empty);
+    }
+    return this.http
+      .get<IApiResponse<IBankMovementTotals>>(
+        `${this.treasuryUrl}/movements/bank-totals/${treasuryId}/${organizationId}`
+      )
+      .pipe(
+        map((data) => ({
+          depositAmount: Number(data.result?.depositAmount) || 0,
+          creditNoteAmount: Number(data.result?.creditNoteAmount) || 0,
+          debitNoteAmount: Number(data.result?.debitNoteAmount) || 0,
+          checkAmount: Number(data.result?.checkAmount) || 0,
+          totalAmount: Number(data.result?.totalAmount) || 0,
+        })),
+        catchError((err) => {
+          this.errorHandlerService.handleError(err);
+          return of(empty);
+        })
       );
   }
 
@@ -371,6 +452,13 @@ export class TreasuryService {
     return fallbackType || null;
   }
 
+  private treasuryTypeParams(): HttpParams {
+    const treasuryType = this.currentTreasuryType;
+    return treasuryType
+      ? new HttpParams().set('treasuryType', treasuryType)
+      : new HttpParams();
+  }
+
   private modifyTreasuries(
     treasuries: ITreasury[],
     operation: Action<ITreasury>
@@ -399,13 +487,14 @@ export class TreasuryService {
     const treasury: ITreasury = {
       ...operation.item,
       treasuryId: Number(operation.item.treasuryId) || 0,
+      treasuryType: operation.item.treasuryType || this.currentTreasuryType,
     };
 
     if (operation.action === 'delete') {
       return this.http
         .delete<IApiResponse<number>>(
           `${this.treasuryUrl}/${treasury.treasuryId}`,
-          { headers: this.headers }
+          { headers: this.headers, params: this.treasuryTypeParams() }
         )
         .pipe(
           tap(() =>

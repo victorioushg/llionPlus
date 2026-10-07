@@ -1,0 +1,74 @@
+<div
+  id="class-movements-container"
+  [class.is-disabled]="!gridEnabled"
+>
+  <div id="class-movements-grid">
+    <ejs-grid
+      #movementsgrid
+      [dataSource]="(movements$ | async) || []"
+      [allowFiltering]="false"
+      [allowSorting]="true"
+      [toolbar]="toolbar"
+      [height]="screenHeight"
+      [searchSettings]="searchSettings"
+      [sortSettings]="sortSettings"
+      [rowHeight]="36"
+      clipMode="EllipsisWithTooltip"
+      (toolbarClick)="onToolbarClick($event)"
+    >
+      <e-columns>
+        <e-column
+          field="movementDate"
+          headerText="Fecha"
+          type="date"
+          format="dd/MM/yyyy"
+          width="100"
+          textAlign="Center"
+        ></e-column>
+        <e-column
+          field="journalDescription"
+          headerText="Asiento"
+          width="140"
+        ></e-column>
+        <e-column
+          field="reference"
+          headerText="Referencia"
+          width="120"
+        ></e-column>
+        <e-column
+          field="movementDescription"
+          headerText="Descripción"
+          width="220"
+        ></e-column>
+        <e-column
+          field="movementTypeLabel"
+          headerText="Tipo"
+          width="80"
+          textAlign="Center"
+        ></e-column>
+        <e-column
+          field="amount"
+          headerText="Importe"
+          type="number"
+          format="N2"
+          width="120"
+          textAlign="Right"
+        ></e-column>
+        <e-column
+          field="fiscalPeriod"
+          headerText="Ejercicio"
+          width="90"
+          textAlign="Center"
+        ></e-column>
+        <e-column
+          field="movementId"
+          [isPrimaryKey]="true"
+          [visible]="false"
+        ></e-column>
+        <e-column field="accountId" [visible]="false"></e-column>
+        <e-column field="classId" [visible]="false"></e-column>
+        <e-column field="organizationId" [visible]="false"></e-column>
+      </e-columns>
+    </ejs-grid>
+  </div>
+</div>

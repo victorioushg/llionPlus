@@ -29,6 +29,7 @@ import {
 } from 'rxjs';
 import { debounceTime } from 'rxjs/operators';
 import { withToolbarTitle } from '@shared/utils/grid-toolbar';
+import { openPdfBlob } from '@shared/utils/open-pdf-blob';
 import { ToastService } from '@shared/services/toastService';
 import { toastType } from '@shared/enums/enums';
 import { IProvider } from '../../provider';
@@ -119,6 +120,7 @@ export class PurchaseOrderDetailComponent
   discountRatePct = 0;
 
   currentPoId = 0;
+  printBusy = false;
   private currentOrder: IPurchaseOrder | null = null;
   private providers: IProvider[] = [];
   private merchandises: IPurchaseOrderMerchandise[] = [];
@@ -260,6 +262,49 @@ export class PurchaseOrderDetailComponent
 
   onCancelClick(): void {
     this.purchaseOrderService.cancelEdit();
+  }
+
+  printOrder(): void {
+    if (this.currentPoId <= 0) {
+      this.toastService.showMyToast(
+        'Guarde la orden de compra antes de imprimir',
+        toastType.warning
+      );
+      return;
+    }
+    if (this.printBusy) {
+      return;
+    }
+    this.printBusy = true;
+    this.cdr.markForCheck();
+    this.purchaseOrderService
+      .printPurchaseOrderPdf(this.currentPoId)
+      .pipe(take(1), takeUntil(this.destroy$))
+      .subscribe({
+        next: (blob) => {
+          this.printBusy = false;
+          this.cdr.markForCheck();
+          const result = openPdfBlob(
+            blob,
+            `orden-compra-${this.currentPoId}.pdf`
+          );
+          if (result === 'empty') {
+            this.toastService.showMyToast(
+              'No se generó el PDF de la orden de compra',
+              toastType.warning
+            );
+          } else if (result === 'json') {
+            this.toastService.showMyToast(
+              'No se pudo imprimir la orden de compra',
+              toastType.error
+            );
+          }
+        },
+        error: () => {
+          this.printBusy = false;
+          this.cdr.markForCheck();
+        },
+      });
   }
 
   onAcceptClick(): void {

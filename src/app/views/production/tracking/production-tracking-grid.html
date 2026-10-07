@@ -1,0 +1,106 @@
+<div id="container" class="container">
+  <div class="row">
+    <div class="col-lg-8">
+      <div class="production-grid">
+        <ejs-grid
+          #grid
+          [dataSource]="(rows$ | async) || []"
+          [allowSorting]="true"
+          [toolbar]="toolbar"
+          [height]="screenHeight"
+          [searchSettings]="searchSettings"
+          [selectionSettings]="selectionSettings"
+          clipMode="EllipsisWithTooltip"
+          (actionBegin)="actionBegin($event)"
+          (toolbarClick)="onToolbarClick($event)"
+          (rowSelected)="onRowSelected($event)"
+        >
+          <e-columns>
+            <e-column field="orderNumber" headerText="Orden" width="110"></e-column>
+            <e-column field="productName" headerText="Producto" width="180"></e-column>
+            <e-column field="quantity" headerText="Cantidad" width="80" type="number" format="N2" textAlign="Right"></e-column>
+            <e-column field="issuedQuantity" headerText="Surtida" width="80" type="number" format="N2" textAlign="Right"></e-column>
+            <e-column field="pendingQuantity" headerText="Pendiente" width="80" type="number" format="N2" textAlign="Right"></e-column>
+            <e-column field="startedOn" headerText="Inicia" type="date" format="dd/MM/yyyy HH:mm" width="120"></e-column>
+            <e-column field="finishedOn" headerText="Termina" type="date" format="dd/MM/yyyy HH:mm" width="120"></e-column>
+            <e-column field="statusName" headerText="Estatus" width="90"></e-column>
+            <e-column field="productionOrderLineId" [isPrimaryKey]="true" [visible]="false"></e-column>
+          </e-columns>
+        </ejs-grid>
+        <div style="padding: 6px 8px">
+          <label>
+            <input
+              type="checkbox"
+              [(ngModel)]="pendingOnly"
+              (ngModelChange)="togglePendingOnly()"
+            />
+            Sólo pendientes
+          </label>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-4 production-detail-col" [style.height.px]="panelHeight">
+      <div class="wrapper-detail" *ngIf="selected; else placeholder">
+        <div class="title-strip">
+          <span class="title-strip__label">{{ selected.productName }}</span>
+        </div>
+        <p>
+          Orden {{ selected.orderNumber }} · {{ selected.uom }} ·
+          {{ selected.statusName }}
+        </p>
+        <div class="row">
+          <div class="col-md-6">
+            <ejs-numerictextbox
+              [value]="selected.quantity"
+              placeholder="Cantidad"
+              floatLabelType="Always"
+              format="n2"
+              [enabled]="false"
+            ></ejs-numerictextbox>
+          </div>
+          <div class="col-md-6">
+            <ejs-numerictextbox
+              [(ngModel)]="deliverQty"
+              placeholder="Entregar"
+              floatLabelType="Always"
+              format="n2"
+              [enabled]="canDeliver()"
+            ></ejs-numerictextbox>
+          </div>
+        </div>
+        <div class="tracking-actions">
+          <button ejs-button [disabled]="!canStart()" (click)="startSelected()">Iniciar</button>
+          <button
+            ejs-button
+            cssClass="e-primary"
+            [disabled]="!canDeliver()"
+            (click)="deliverSelected()"
+          >
+            Entregar
+          </button>
+        </div>
+        <div class="notes-add" style="margin-top: 16px">
+          <div style="flex: 1">
+            <ejs-textbox
+              [(ngModel)]="noteComment"
+              placeholder="Nota"
+              floatLabelType="Always"
+              [multiline]="true"
+              [htmlAttributes]="{ rows: '2' }"
+            ></ejs-textbox>
+          </div>
+          <button ejs-button (click)="addNote()">Agregar</button>
+        </div>
+        <ejs-grid [dataSource]="notes" [height]="180" [rowHeight]="28">
+          <e-columns>
+            <e-column field="noteOn" headerText="Fecha" type="date" format="dd/MM HH:mm" width="90"></e-column>
+            <e-column field="comment" headerText="Comentario" width="160"></e-column>
+          </e-columns>
+        </ejs-grid>
+      </div>
+      <ng-template #placeholder>
+        <div class="placeholder">Seleccione un producto en seguimiento.</div>
+      </ng-template>
+    </div>
+  </div>
+</div>

@@ -26,6 +26,13 @@ export const ROUTES: Routes = [
           ),
       },
       {
+        path: 'accounting/journals',
+        loadChildren: () =>
+          import('@views/accounting/journals/journal-entries.module').then(
+            (m) => m.JournalEntriesModule
+          ),
+      },
+      {
         path: 'treasury',
         loadChildren: () =>
           import('@views/treasury/treasury.module').then(
@@ -72,6 +79,13 @@ export const ROUTES: Routes = [
         loadChildren: () =>
           import('@views/employee/employee.module').then(
             (m) => m.EmployeeModule
+          ),
+      },
+      {
+        path: 'production',
+        loadChildren: () =>
+          import('@views/production/production.module').then(
+            (m) => m.ProductionModule
           ),
       },
       {

@@ -78,6 +78,12 @@
   color: $llion-color-font;
 }
 
+.title-strip__actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .comment-stats-row {
   align-items: flex-end;
 }

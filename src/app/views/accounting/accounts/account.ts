@@ -49,6 +49,38 @@ export type CashFlowClassification =
   | 'Financing';
 
 /**
+ * Mirrors llionAPI.Models.Accounts.AccountMovement / acc_account_movements.
+ */
+export interface IAccountMovement {
+  movementId: number;
+  movementKey?: string | null;
+  journalEntryId?: number | null;
+  rowNumber?: number | null;
+  accountId?: number | null;
+  accountCode?: string | null;
+  classId?: number | null;
+  movementDate?: Date | string | null;
+  journalDescription?: string | null;
+  reference?: string | null;
+  movementDescription?: string | null;
+  /** true = Debe, false = Haber */
+  movementType?: boolean | null;
+  movementTypeLabel?: string | null;
+  amount?: number | null;
+  fiscalPeriod?: number | null;
+  organizationId?: number | null;
+}
+
+export interface IAccountMonthlyBalance {
+  monthNumber: number;
+  monthName: string;
+  fiscalYear: number;
+  debits: number;
+  credits: number;
+  balance: number;
+}
+
+/**
  * Mirrors llionAPI.Models.Accounts.Account / acc_account
  * (QuickBooks Account-shaped chart of accounts).
  */

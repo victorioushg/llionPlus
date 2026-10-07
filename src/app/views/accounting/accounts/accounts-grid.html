@@ -15,6 +15,7 @@
           (rowSelected)="onRowSelected($event)"
           (rowDeselected)="onRowDeselected($event)"
           (recordDoubleClick)="onRecordDoubleClick($event)"
+          (commandClick)="commandClick($event)"
         >
           <e-columns>
             <e-column width="50" [commands]="commands"></e-column>
@@ -35,16 +36,26 @@
       </div>
     </div>
     <div class="col-lg-8">
-      <ejs-tab id="tabs" #tabs>
+      <ejs-tab id="tabs" #tabs loadOn="Init">
         <e-tabitems>
           <e-tabitem [header]="headerText[0]">
-            <div class="row">
-              <div class="col-lg-12">
-                <ng-template #content>
+            <ng-template #content>
+              <div class="row">
+                <div class="col-lg-12">
                   <llion-account-detail></llion-account-detail>
-                </ng-template>
+                </div>
               </div>
-            </div>
+            </ng-template>
+          </e-tabitem>
+          <e-tabitem [header]="headerText[1]">
+            <ng-template #content>
+              <llion-account-movements></llion-account-movements>
+            </ng-template>
+          </e-tabitem>
+          <e-tabitem [header]="headerText[2]">
+            <ng-template #content>
+              <llion-account-monthly-balances></llion-account-monthly-balances>
+            </ng-template>
           </e-tabitem>
         </e-tabitems>
       </ejs-tab>

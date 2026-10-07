@@ -1,0 +1,71 @@
+@use "variables" as *;
+
+#account-movements-grid .e-toolbar {
+  background-color: $llion-color-primary-container;
+}
+
+.e-toolbar .e-toolbar-items .e-tbar-btn {
+  background: $llion-color-white;
+  border: 1px solid #5a70cc;
+}
+
+::ng-deep #account-movements-grid .e-toolbar-item.e-search-wrapper {
+  padding-top: 7px;
+}
+
+::ng-deep
+  #account-movements-grid
+  .e-grid
+  .e-toolbar-items
+  .e-toolbar-item.e-search-wrapper
+  .e-search {
+  background-color: $llion-color-primary-container;
+}
+
+#account-movements-container.is-disabled,
+#account-movements-container.is-disabled ::ng-deep .e-grid {
+  pointer-events: none;
+  opacity: 0.45;
+}
+
+.totals-strip {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 16px;
+  margin-top: 5px;
+  min-height: 40px;
+  padding: 6px 10px;
+  background: $llion-color-primary-container;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+}
+
+.total-field {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.total-field__label {
+  font-size: 11px;
+  color: rgba(0, 0, 0, 0.55);
+  white-space: nowrap;
+}
+
+.total-field__value {
+  min-width: 120px;
+  padding: 4px 8px;
+  text-align: right;
+  font-weight: 600;
+  background: $llion-color-white;
+  border: 1px solid rgba(0, 0, 0, 0.16);
+}
+
+.total-field--grand .total-field__label {
+  font-weight: 600;
+  color: $llion-color-font;
+}
+
+.total-field--grand .total-field__value {
+  min-width: 140px;
+}

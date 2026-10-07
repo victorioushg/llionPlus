@@ -23,23 +23,40 @@
     "nodeChild": [
       {
         "nodeId": "02-01",
-        "nodeText": "cuentas",
-        "image": "../../assets/images/transparent-icon.png"
+        "nodeText": "archivos",
+        "image": "../../assets/images/icons8/24/icons8-document-24.png",
+        "nodeChild": [
+          {
+            "nodeId": "02-01-01",
+            "nodeText": "cuentas",
+            "image": "../../assets/images/icons8/24/icons8-accounting-24.png"
+          },
+          {
+            "nodeId": "02-01-02",
+            "nodeText": "centros de costos",
+            "image": "../../assets/images/icons8/24/icons8-stacked-organizational-chart-highlighted-first-node-24.png"
+          },
+          {
+            "nodeId": "02-01-03",
+            "nodeText": "asientos contables",
+            "image": "../../assets/images/icons8/24/icons8-reserve-24.png"
+          },
+          {
+            "nodeId": "02-01-04",
+            "nodeText": "activos fijos",
+            "image": "../../assets/images/icons8/24/icons8-estimate-24.png"
+          }
+        ]
       },
       {
         "nodeId": "02-02",
-        "nodeText": "centro de costos",
-        "image": "../../assets/images/transparent-icon.png"
+        "nodeText": "procesos",
+        "image": "../../assets/images/icons8/24/icons8-process-24.png"
       },
       {
         "nodeId": "02-03",
-        "nodeText": "asientos contables",
-        "image": "../../assets/images/transparent-icon.png"
-      },
-      {
-        "nodeId": "02-04",
-        "nodeText": "activos fijos",
-        "image": "../../assets/images/transparent-icon.png"
+        "nodeText": "reportes",
+        "image": "../../assets/images/icons8/24/icons8-report-24.png"
       }
     ]
   },
@@ -50,18 +67,37 @@
     "nodeChild": [
       {
         "nodeId": "03-01",
-        "nodeText": "bancos",
-        "image": "../../assets/images/transparent-icon.png"
+        "nodeText": "archivos",
+        "image": "../../assets/images/icons8/24/icons8-document-24.png",
+        "nodeChild": [
+          {
+            "nodeId": "03-01-01",
+            "nodeText": "bancos",
+            "image": "../../assets/images/transparent-icon.png"
+          },
+          {
+            "nodeId": "03-01-02",
+            "nodeText": "cajas",
+            "image": "../../assets/images/transparent-icon.png"
+          }
+        ]
       },
       {
         "nodeId": "03-02",
-        "nodeText": "cajas",
-        "image": "../../assets/images/transparent-icon.png"
+        "nodeText": "procesos",
+        "image": "../../assets/images/icons8/24/icons8-process-24.png"
       },
       {
         "nodeId": "03-03",
-        "nodeText": "reportes tesorería",
-        "image": "../../assets/images/transparent-icon.png"
+        "nodeText": "reportes",
+        "image": "../../assets/images/icons8/24/icons8-report-24.png",
+        "nodeChild": [
+          {
+            "nodeId": "03-03-01",
+            "nodeText": "reportes tesorería",
+            "image": "../../assets/images/transparent-icon.png"
+          }
+        ]
       }
     ]
   },
@@ -72,18 +108,35 @@
     "nodeChild": [
       {
         "nodeId": "04-01",
-        "nodeText": "trabajadores",
-        "image": "../../assets/images/transparent-icon.png"
+        "nodeText": "archivos",
+        "image": "../../assets/images/icons8/24/icons8-document-24.png",
+        "nodeChild": [
+          {
+            "nodeId": "04-01-01",
+            "nodeText": "trabajadores",
+            "image": "../../assets/images/transparent-icon.png"
+          },
+          {
+            "nodeId": "04-01-02",
+            "nodeText": "contratos",
+            "image": "../../assets/images/transparent-icon.png"
+          },
+          {
+            "nodeId": "04-01-03",
+            "nodeText": "nómina",
+            "image": "../../assets/images/transparent-icon.png"
+          }
+        ]
       },
       {
         "nodeId": "04-02",
-        "nodeText": "contratos",
-        "image": "../../assets/images/transparent-icon.png"
+        "nodeText": "procesos",
+        "image": "../../assets/images/icons8/24/icons8-process-24.png"
       },
       {
         "nodeId": "04-03",
-        "nodeText": "nómina",
-        "image": "../../assets/images/transparent-icon.png"
+        "nodeText": "reportes",
+        "image": "../../assets/images/icons8/24/icons8-report-24.png"
       }
     ]
   },
@@ -94,40 +147,57 @@
     "nodeChild": [
       {
         "nodeId": "05-01",
-        "nodeText": "proveedores",
-        "image": "../../assets/images/transparent-icon.png"
+        "nodeText": "archivos",
+        "image": "../../assets/images/icons8/24/icons8-document-24.png",
+        "nodeChild": [
+          {
+            "nodeId": "05-01-01",
+            "nodeText": "proveedores",
+            "image": "../../assets/images/transparent-icon.png"
+          },
+          {
+            "nodeId": "05-01-02",
+            "nodeText": "documentos",
+            "image": "../../assets/images/transparent-icon.png",
+            "nodeChild": [
+              {
+                "nodeId": "05-01-02-01",
+                "nodeText": "órdenes de compra",
+                "image": "../../assets/images/transparent-icon.png"
+              },
+              {
+                "nodeId": "05-01-02-02",
+                "nodeText": "recepciones de mercancías",
+                "image": "../../assets/images/transparent-icon.png"
+              },
+              {
+                "nodeId": "05-01-02-03",
+                "nodeText": "compras",
+                "image": "../../assets/images/transparent-icon.png"
+              },
+              {
+                "nodeId": "05-01-02-04",
+                "nodeText": "notas crédito",
+                "image": "../../assets/images/transparent-icon.png"
+              },
+              {
+                "nodeId": "05-01-02-05",
+                "nodeText": "notas débito",
+                "image": "../../assets/images/transparent-icon.png"
+              }
+            ]
+          }
+        ]
       },
       {
         "nodeId": "05-02",
-        "nodeText": "documentos",
-        "image": "../../assets/images/transparent-icon.png",
-        "nodeChild": [
-          {
-            "nodeId": "05-02-01",
-            "nodeText": "órdenes de compra",
-            "image": "../../assets/images/transparent-icon.png"
-          },
-          {
-            "nodeId": "05-02-02",
-            "nodeText": "recepciones de mercancías",
-            "image": "../../assets/images/transparent-icon.png"
-          },
-          {
-            "nodeId": "05-02-03",
-            "nodeText": "compras",
-            "image": "../../assets/images/transparent-icon.png"
-          },
-          {
-            "nodeId": "05-02-04",
-            "nodeText": "notas crédito",
-            "image": "../../assets/images/transparent-icon.png"
-          },
-          {
-            "nodeId": "05-02-05",
-            "nodeText": "notas débito",
-            "image": "../../assets/images/transparent-icon.png"
-          }
-        ]
+        "nodeText": "procesos",
+        "image": "../../assets/images/icons8/24/icons8-process-24.png"
+      },
+      {
+        "nodeId": "05-03",
+        "nodeText": "reportes",
+        "image": "../../assets/images/icons8/24/icons8-report-24.png"
       }
     ]
   },
@@ -138,45 +208,62 @@
     "nodeChild": [
       {
         "nodeId": "06-01",
-        "nodeText": "clientes",
-        "image": "../../assets/images/transparent-icon.png"
+        "nodeText": "archivos",
+        "image": "../../assets/images/icons8/24/icons8-document-24.png",
+        "nodeChild": [
+          {
+            "nodeId": "06-01-01",
+            "nodeText": "clientes",
+            "image": "../../assets/images/transparent-icon.png"
+          },
+          {
+            "nodeId": "06-01-02",
+            "nodeText": "documentos",
+            "image": "../../assets/images/transparent-icon.png",
+            "nodeChild": [
+              {
+                "nodeId": "06-01-02-01",
+                "nodeText": "presupuesto",
+                "image": "../../assets/images/transparent-icon.png"
+              },
+              {
+                "nodeId": "06-01-02-02",
+                "nodeText": "pedidos",
+                "image": "../../assets/images/transparent-icon.png"
+              },
+              {
+                "nodeId": "06-01-02-03",
+                "nodeText": "notas de entrega",
+                "image": "../../assets/images/transparent-icon.png"
+              },
+              {
+                "nodeId": "06-01-02-04",
+                "nodeText": "facturas",
+                "image": "../../assets/images/transparent-icon.png"
+              },
+              {
+                "nodeId": "06-01-02-05",
+                "nodeText": "notas crédito",
+                "image": "../../assets/images/transparent-icon.png"
+              },
+              {
+                "nodeId": "06-01-02-06",
+                "nodeText": "notas débito",
+                "image": "../../assets/images/transparent-icon.png"
+              }
+            ]
+          }
+        ]
       },
       {
         "nodeId": "06-02",
-        "nodeText": "documentos",
-        "image": "../../assets/images/transparent-icon.png",
-        "nodeChild": [
-          {
-            "nodeId": "06-02-01",
-            "nodeText": "presupuesto",
-            "image": "../../assets/images/transparent-icon.png"
-          },
-          {
-            "nodeId": "06-02-02",
-            "nodeText": "pedidos",
-            "image": "../../assets/images/transparent-icon.png"
-          },
-          {
-            "nodeId": "06-02-03",
-            "nodeText": "notas de entrega",
-            "image": "../../assets/images/transparent-icon.png"
-          },
-          {
-            "nodeId": "06-02-04",
-            "nodeText": "facturas",
-            "image": "../../assets/images/transparent-icon.png"
-          },
-          {
-            "nodeId": "06-02-05",
-            "nodeText": "notas crédito",
-            "image": "../../assets/images/transparent-icon.png"
-          },
-          {
-            "nodeId": "06-02-06",
-            "nodeText": "notas débito",
-            "image": "../../assets/images/transparent-icon.png"
-          }
-        ]
+        "nodeText": "procesos",
+        "image": "../../assets/images/icons8/24/icons8-process-24.png"
+      },
+      {
+        "nodeId": "06-03",
+        "nodeText": "reportes",
+        "image": "../../assets/images/icons8/24/icons8-report-24.png"
       }
     ]
   },
@@ -186,14 +273,33 @@
     "image": "../../assets/images/icons8/24/icons8-receipt-24.png",
     "nodeChild": [
       {
-        "nodeId": "06-01",
-        "nodeText": "clientes",
-        "image": "../../assets/images/transparent-icon.png"
+        "nodeId": "07-01",
+        "nodeText": "archivos",
+        "image": "../../assets/images/icons8/24/icons8-document-24.png",
+        "nodeChild": [
+          {
+            "nodeId": "07-01-01",
+            "nodeText": "clientes",
+            "image": "../../assets/images/transparent-icon.png"
+          }
+        ]
       },
       {
-        "nodeId": "06-02",
-        "nodeText": "reportes clientes",
-        "image": "../../assets/images/transparent-icon.png"
+        "nodeId": "07-02",
+        "nodeText": "procesos",
+        "image": "../../assets/images/icons8/24/icons8-process-24.png"
+      },
+      {
+        "nodeId": "07-03",
+        "nodeText": "reportes",
+        "image": "../../assets/images/icons8/24/icons8-report-24.png",
+        "nodeChild": [
+          {
+            "nodeId": "07-03-01",
+            "nodeText": "reportes clientes",
+            "image": "../../assets/images/transparent-icon.png"
+          }
+        ]
       }
     ]
   },
@@ -204,13 +310,30 @@
     "nodeChild": [
       {
         "nodeId": "08-01",
-        "nodeText": "mercancías",
-        "image": "../../assets/images/transparent-icon.png"
+        "nodeText": "archivos",
+        "image": "../../assets/images/icons8/24/icons8-document-24.png",
+        "nodeChild": [
+          {
+            "nodeId": "08-01-01",
+            "nodeText": "mercancías",
+            "image": "../../assets/images/transparent-icon.png"
+          },
+          {
+            "nodeId": "08-01-02",
+            "nodeText": "servicios",
+            "image": "../../assets/images/transparent-icon.png"
+          }
+        ]
       },
       {
         "nodeId": "08-02",
-        "nodeText": "servicios",
-        "image": "../../assets/images/transparent-icon.png"
+        "nodeText": "procesos",
+        "image": "../../assets/images/icons8/24/icons8-process-24.png"
+      },
+      {
+        "nodeId": "08-03",
+        "nodeText": "reportes",
+        "image": "../../assets/images/icons8/24/icons8-report-24.png"
       }
     ]
   },
@@ -221,25 +344,45 @@
     "nodeChild": [
       {
         "nodeId": "09-01",
-        "nodeText": "producción",
-        "image": "../../assets/images/transparent-icon.png"
-      }
-    ]
-  },
-  {
-    "nodeId": "10",
-    "nodeText": "control",
-    "image": "../../assets/images/icons8/24/icons8-slider-24.png",
-    "nodeChild": [
-      {
-        "nodeId": "10-01",
-        "nodeText": "parámetros",
-        "image": "../../assets/images/transparent-icon.png"
+        "nodeText": "archivos",
+        "image": "../../assets/images/icons8/24/icons8-document-24.png",
+        "nodeChild": [
+          {
+            "nodeId": "09-01-01",
+            "nodeText": "líneas",
+            "image": "../../assets/images/transparent-icon.png"
+          },
+          {
+            "nodeId": "09-01-02",
+            "nodeText": "recursos",
+            "image": "../../assets/images/transparent-icon.png"
+          },
+          {
+            "nodeId": "09-01-03",
+            "nodeText": "formulaciones",
+            "image": "../../assets/images/transparent-icon.png"
+          },
+          {
+            "nodeId": "09-01-04",
+            "nodeText": "órdenes de producción",
+            "image": "../../assets/images/transparent-icon.png"
+          },
+          {
+            "nodeId": "09-01-05",
+            "nodeText": "seguimiento",
+            "image": "../../assets/images/transparent-icon.png"
+          }
+        ]
       },
       {
-        "nodeId": "10-02",
-        "nodeText": "monedas y cambios",
-        "image": "../../assets/images/transparent-icon.png"
+        "nodeId": "09-02",
+        "nodeText": "procesos",
+        "image": "../../assets/images/icons8/24/icons8-process-24.png"
+      },
+      {
+        "nodeId": "09-03",
+        "nodeText": "reportes",
+        "image": "../../assets/images/icons8/24/icons8-report-24.png"
       }
     ]
   },
@@ -250,13 +393,30 @@
     "nodeChild": [
       {
         "nodeId": "11-01",
-        "nodeText": "organizaciones",
-        "image": "../../assets/images/transparent-icon.png"
+        "nodeText": "archivos",
+        "image": "../../assets/images/icons8/24/icons8-document-24.png",
+        "nodeChild": [
+          {
+            "nodeId": "11-01-01",
+            "nodeText": "organizaciones",
+            "image": "../../assets/images/transparent-icon.png"
+          },
+          {
+            "nodeId": "11-01-02",
+            "nodeText": "usuarios",
+            "image": "../../assets/images/transparent-icon.png"
+          }
+        ]
       },
       {
         "nodeId": "11-02",
-        "nodeText": "usuarios",
-        "image": "../../assets/images/transparent-icon.png"
+        "nodeText": "procesos",
+        "image": "../../assets/images/icons8/24/icons8-process-24.png"
+      },
+      {
+        "nodeId": "11-03",
+        "nodeText": "reportes",
+        "image": "../../assets/images/icons8/24/icons8-report-24.png"
       }
     ]
   }

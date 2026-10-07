@@ -1,0 +1,36 @@
+<div id="container" class="container">
+  <div class="row">
+    <div class="col-lg-5">
+      <div id="formulation-grid" class="production-grid">
+        <ejs-grid
+          #grid
+          [dataSource]="(formulations$ | async) || []"
+          [allowSorting]="true"
+          [toolbar]="toolbar"
+          [height]="screenHeight"
+          [searchSettings]="searchSettings"
+          [selectionSettings]="selectionSettings"
+          clipMode="EllipsisWithTooltip"
+          (actionBegin)="actionBegin($event)"
+          (toolbarClick)="onToolbarClick($event)"
+          (rowSelected)="onRowSelected($event)"
+          (rowDeselected)="onRowDeselected($event)"
+          (recordDoubleClick)="onRecordDoubleClick($event)"
+          (commandClick)="commandClick($event)"
+        >
+          <e-columns>
+            <e-column width="50" [commands]="commands" clipMode="Clip"></e-column>
+            <e-column field="name" headerText="Descripción" width="200"></e-column>
+            <e-column field="uom" headerText="Und" width="60"></e-column>
+            <e-column field="productLineName" headerText="Línea" width="120"></e-column>
+            <e-column field="formulationCode" headerText="Código" width="80"></e-column>
+            <e-column field="formulationId" [isPrimaryKey]="true" [visible]="false"></e-column>
+          </e-columns>
+        </ejs-grid>
+      </div>
+    </div>
+    <div class="col-lg-7 production-detail-col" [style.height.px]="panelHeight">
+      <llion-formulation-detail></llion-formulation-detail>
+    </div>
+  </div>
+</div>

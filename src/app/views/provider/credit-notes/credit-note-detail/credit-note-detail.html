@@ -7,6 +7,25 @@
   >
     <div class="title-strip">
       <span class="title-strip__label">NOTA CRÉDITO</span>
+      <div class="title-strip__actions">
+        <button
+          type="button"
+          class="print-icon-btn"
+          [disabled]="currentCrnId <= 0 || printBusy"
+          (click)="printCreditNote()"
+          title="Imprimir"
+        >
+          <img src="assets/images/icons8-print-24.png" alt="Imprimir" />
+        </button>
+        <button
+          type="button"
+          class="print-icon-btn"
+          (click)="openInvoiceDocument()"
+          [title]="invoiceButtonTitle"
+        >
+          <img src="assets/images/icons8-import-pdf-24.png" alt="Importar factura" />
+        </button>
+      </div>
     </div>
 
     <div class="row">
@@ -648,6 +667,72 @@
     >
       Aceptar
     </button>
+  </div>
+
+  <div class="invoice-reader-overlay" *ngIf="invoiceReaderOpen">
+    <div class="invoice-reader-dialog">
+      <div class="invoice-reader-header">
+        <h6>{{ hasLinkedInvoice && !invoiceResult ? 'Documento de la nota crédito' : 'Importar factura' }}</h6>
+        <button ejs-button type="button" cssClass="e-flat" (click)="closeInvoiceDocument()">
+          Cerrar
+        </button>
+      </div>
+      <div class="invoice-reader-body">
+        <div class="invoice-reader-preview">
+          <div class="invoice-reader-empty" *ngIf="!invoicePreviewUrl && !invoiceBusy">
+            Seleccione un PDF o una imagen de la nota o factura
+          </div>
+          <div class="invoice-reader-empty" *ngIf="invoiceBusy">Leyendo documento…</div>
+          <iframe
+            *ngIf="invoicePreviewUrl && invoicePreviewKind === 'pdf'"
+            [src]="invoicePreviewUrl"
+            title="Documento PDF"
+          ></iframe>
+          <img
+            *ngIf="invoicePreviewUrl && invoicePreviewKind === 'image'"
+            [src]="invoicePreviewUrl"
+            alt="Documento"
+          />
+        </div>
+        <div class="invoice-reader-side">
+          <input
+            #invoiceFileInput
+            type="file"
+            accept=".pdf,.png,.jpg,.jpeg,.gif,.bmp,.tif,.tiff,.webp,application/pdf,image/*"
+            (change)="onInvoiceFilePicked($event)"
+          />
+          <p class="invoice-file-name" *ngIf="invoiceFileName">{{ invoiceFileName }}</p>
+          <div
+            class="invoice-badge"
+            *ngIf="invoiceResult"
+            [class.is-valid]="invoiceResult.isValidInvoice"
+            [class.is-invalid]="!invoiceResult.isValidInvoice"
+          >
+            {{ invoiceResult.isValidInvoice ? 'Documento válido' : 'No es un documento válido' }}
+            <span *ngIf="invoiceResult.confidence != null">
+              ({{ invoiceResult.confidence }}%)
+            </span>
+          </div>
+          <ul class="invoice-checks" *ngIf="invoiceResult?.checks as checks">
+            <li *ngFor="let check of checks">{{ check }}</li>
+          </ul>
+          <ul class="invoice-issues" *ngIf="invoiceResult?.issues as issues">
+            <li *ngFor="let issue of issues">{{ issue }}</li>
+          </ul>
+          <div class="invoice-reader-actions">
+            <button
+              ejs-button
+              cssClass="e-primary"
+              type="button"
+              [disabled]="invoiceBusy || !invoiceResult?.isValidInvoice"
+              (click)="saveValidatedInvoice()"
+            >
+              Guardar documento
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 

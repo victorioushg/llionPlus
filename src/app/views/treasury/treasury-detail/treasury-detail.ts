@@ -10,6 +10,7 @@ import {
 import { ApplicationService } from '@shared/services/applicattionService';
 import { AccountsService } from '@views/accounting/accounts/accounts.service';
 import { IAccount } from '@views/accounting/accounts/account';
+import { IAccountClass } from '@views/accounting/classes/class';
 
 @Component({
   selector: 'llion-treasury-detail',
@@ -26,10 +27,12 @@ export class TreasuryDetailComponent implements OnInit {
   treasury$!: Observable<ITreasury>;
   enabled$!: Observable<boolean>;
   accounts$!: Observable<IAccount[]>;
+  classes$!: Observable<IAccountClass[]>;
   /** Agency address/phone/email — only for BAN (bancos). */
   showAgencyContacts$!: Observable<boolean>;
 
   accountFields: Object = { text: 'name', value: 'accountId' };
+  classFields: Object = { text: 'fullName', value: 'classId' };
   filterType: 'Contains' = 'Contains';
 
   constructor(
@@ -46,10 +49,18 @@ export class TreasuryDetailComponent implements OnInit {
       treasuryAccountNumber: [''],
       actualBalance: [null],
       accountId: [null],
+      classId: [null],
       deactivated: [true],
     });
 
     this.accounts$ = this.accountsService.accounts$;
+    this.classes$ = this.accountsService.classes$.pipe(
+      map((rows) =>
+        (rows ?? []).filter(
+          (row) => row.classId > 0 && row.isActive !== false
+        )
+      )
+    );
 
     this.treasury$ = this.treasuryService.treasurySelected$.pipe(
       tap((data: ITreasury) => {
@@ -60,6 +71,7 @@ export class TreasuryDetailComponent implements OnInit {
           treasuryAccountNumber: data.treasuryAccountNumber,
           actualBalance: data.actualBalance,
           accountId: data.accountId,
+          classId: data.classId,
           deactivated: !data.deactivated,
         });
       }),
@@ -128,7 +140,7 @@ export class TreasuryDetailComponent implements OnInit {
       accountId: this.treasuryForm.value.accountId,
       deactivated: !this.treasuryForm.value.deactivated,
       treasuryType: this.treasury?.treasuryType ?? null,
-      classId: this.treasury?.classId ?? null,
+      classId: this.treasuryForm.value.classId,
       currencyId: this.treasury?.currencyId ?? null,
       organizationId,
     };

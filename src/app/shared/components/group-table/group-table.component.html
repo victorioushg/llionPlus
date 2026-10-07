@@ -14,7 +14,7 @@
       [dataSource]="localRowData"
       [toolbar]="gridToolbar"
       [editSettings]="gridEditSettings"
-      [searchSettings]="{ fields: [textField] }"
+      [searchSettings]="{ fields: [textField], operator: 'contains' }"
       (created)="onGridCreated()"
       height="300"
       cssClass="icon-only-grid"

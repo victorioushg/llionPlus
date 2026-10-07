@@ -1,0 +1,232 @@
+<div class="wrapper-detail" *ngIf="visible$ | async; else placeholder">
+  <form
+    id="journal-entry-detail-form"
+    class="journal-entry-form"
+    [formGroup]="headerForm"
+    *ngIf="entry$ | async as entry"
+  >
+    <div class="title-strip">
+      <span class="title-strip__label">ASIENTO CONTABLE</span>
+    </div>
+
+    <div class="row">
+      <div class="col-md-3">
+        <ejs-textbox
+          cssClass="journal-code-field"
+          placeholder="Asiento No."
+          floatLabelType="Always"
+          formControlName="journalEntryCode"
+          [enabled]="false"
+        ></ejs-textbox>
+      </div>
+      <div class="col-md-3">
+        <ejs-datepicker
+          format="dd/MM/yyyy"
+          placeholder="Fecha"
+          floatLabelType="Always"
+          formControlName="journalEntryDate"
+          [enabled]="enabled$ | async"
+        ></ejs-datepicker>
+      </div>
+      <div class="col-md-2">
+        <ejs-textbox
+          placeholder="Período"
+          floatLabelType="Always"
+          formControlName="periodLabel"
+          [enabled]="false"
+        ></ejs-textbox>
+      </div>
+      <div class="col-md-4 actual-switch">
+        <ejs-switch formControlName="actual" [disabled]="true"></ejs-switch>
+        <span>{{ actualLabel }}</span>
+        <button
+          type="button"
+          class="e-btn e-small promote-actual"
+          (click)="promoteToActual()"
+          [disabled]="!canPromote"
+        >
+          Pasar a actual
+        </button>
+      </div>
+      <div class="col-md-2" *ngIf="currentLockDate">
+        <ejs-datepicker
+          format="dd/MM/yyyy"
+          placeholder="Bloqueo"
+          floatLabelType="Always"
+          formControlName="lockDate"
+          [enabled]="false"
+        ></ejs-datepicker>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col-md-12">
+        <ejs-textbox
+          placeholder="Descripción"
+          floatLabelType="Always"
+          formControlName="description"
+          [enabled]="enabled$ | async"
+        ></ejs-textbox>
+      </div>
+    </div>
+  </form>
+
+  <div id="journal-entry-lines-grid">
+    <ejs-grid
+      #linesgrid
+      [dataSource]="lines"
+      [toolbar]="linesToolbar"
+      [editSettings]="linesEditSettings"
+      [allowFiltering]="false"
+      [allowSorting]="false"
+      [allowSelection]="true"
+      [height]="linesHeight"
+      [rowHeight]="32"
+      clipMode="EllipsisWithTooltip"
+      (actionBegin)="onLineActionBegin($event)"
+      (actionComplete)="onLineActionComplete($event)"
+    >
+      <e-columns>
+        <e-column
+          field="accountDisplay"
+          headerText="Cuenta"
+          width="220"
+          clipMode="EllipsisWithTooltip"
+        ></e-column>
+        <e-column
+          field="referenceNumber"
+          headerText="Referencia"
+          width="110"
+          clipMode="EllipsisWithTooltip"
+        ></e-column>
+        <e-column
+          field="memo"
+          headerText="Memo"
+          width="180"
+          clipMode="EllipsisWithTooltip"
+        ></e-column>
+        <e-column
+          field="debit"
+          headerText="Debe"
+          width="110"
+          type="number"
+          format="N2"
+          textAlign="Right"
+        ></e-column>
+        <e-column
+          field="credit"
+          headerText="Haber"
+          width="110"
+          type="number"
+          format="N2"
+          textAlign="Right"
+        ></e-column>
+        <e-column field="rowNumber" [isPrimaryKey]="true" [visible]="false"></e-column>
+      </e-columns>
+      <ng-template #editSettingsTemplate>
+        <div ngForm #lineForm="ngForm" class="journal-edit-dialog">
+          <div class="row">
+            <div class="col-md-12">
+              <ejs-dropdownlist
+                name="accountId"
+                [(ngModel)]="lineData.accountId"
+                placeholder="Cuenta"
+                floatLabelType="Always"
+                [dataSource]="(accounts$ | async) || []"
+                [fields]="accountFields"
+                [allowFiltering]="true"
+                [filterType]="filterType"
+                [required]="true"
+                (change)="onAccountChange($event)"
+              ></ejs-dropdownlist>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-md-6">
+              <ejs-textbox
+                name="referenceNumber"
+                [(ngModel)]="lineData.referenceNumber"
+                placeholder="Referencia"
+                floatLabelType="Always"
+              ></ejs-textbox>
+            </div>
+            <div class="col-md-6">
+              <ejs-textbox
+                name="memo"
+                [(ngModel)]="lineData.memo"
+                placeholder="Memo"
+                floatLabelType="Always"
+              ></ejs-textbox>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-md-6">
+              <ejs-numerictextbox
+                name="debit"
+                [(ngModel)]="lineData.debit"
+                placeholder="Debe"
+                floatLabelType="Always"
+                format="n2"
+                [min]="0"
+                [showSpinButton]="false"
+                (change)="onDebitChange()"
+              ></ejs-numerictextbox>
+            </div>
+            <div class="col-md-6">
+              <ejs-numerictextbox
+                name="credit"
+                [(ngModel)]="lineData.credit"
+                placeholder="Haber"
+                floatLabelType="Always"
+                format="n2"
+                [min]="0"
+                [showSpinButton]="false"
+                (change)="onCreditChange()"
+              ></ejs-numerictextbox>
+            </div>
+          </div>
+        </div>
+      </ng-template>
+    </ejs-grid>
+  </div>
+
+  <div class="totals-strip">
+    <div class="total-field">
+      <span class="total-field__label">Debe</span>
+      <span class="total-field__value">{{ debitTotal | number: '1.2-2' }}</span>
+    </div>
+    <div class="total-field">
+      <span class="total-field__label">Haber</span>
+      <span class="total-field__value">{{ creditTotal | number: '1.2-2' }}</span>
+    </div>
+    <div
+      class="total-field total-field--grand"
+      [class.total-field--unbalanced]="unbalanced"
+    >
+      <span class="total-field__label">Balance</span>
+      <span class="total-field__value">{{ balance | number: '1.2-2' }}</span>
+    </div>
+  </div>
+
+  <div class="actions-strip">
+    <button
+      ejs-button
+      (click)="onCancelClick()"
+      [disabled]="!(enabled$ | async)"
+    >
+      Cancelar
+    </button>
+    <button
+      ejs-button
+      cssClass="e-primary"
+      (click)="onAcceptClick()"
+      [disabled]="!(enabled$ | async)"
+    >
+      Aceptar
+    </button>
+  </div>
+</div>
+
+<ng-template #placeholder>
+  <div class="journal-entry-placeholder">Seleccione un asiento contable</div>
+</ng-template>

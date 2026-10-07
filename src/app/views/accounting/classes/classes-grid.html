@@ -1,106 +1,58 @@
 <div id="container" class="container">
   <div class="row">
     <div class="col-lg-4">
-      <div id="classes-grid">
-        <ejs-treegrid
-          #classesgrid
-          [dataSource]="classRows"
-          childMapping="subtasks"
-          [loadChildOnDemand]="false"
-          [treeColumnIndex]="0"
-          [toolbar]="classesToolbar"
-          [editSettings]="classesEditSettings"
-          [height]="classesGridHeight"
-          [rowHeight]="classesGridRowHeight"
-          [allowSelection]="true"
-          (actionBegin)="actionBegin($event)"
-          (actionComplete)="actionComplete($event)"
-          (rowDataBound)="rowDataBound($event)"
-          (dataBound)="onDataBound()"
+      <div id="classes-grid" [class.wrapper]="disabledGrid$ | async">
+        <ejs-grid
+          #grid
+          [dataSource]="classes$ | async"
+          [allowFiltering]="enabled$ | async"
+          [cssClass]="(disabledGrid$ | async) ? 'disablegrid' : ''"
+          [toolbar]="toolbar"
+          [height]="screenHeight"
+          [searchSettings]="searchSettings"
+          (actionBegin)="actionBegin($any($event))"
+          (toolbarClick)="onToolbarClick($any($event))"
+          (rowSelected)="onRowSelected($any($event))"
+          (rowDeselected)="onRowDeselected($any($event))"
+          (recordDoubleClick)="onRecordDoubleClick($any($event))"
+          (commandClick)="commandClick($any($event))"
         >
           <e-columns>
-            <e-column field="name" headerText="nombre" width="220"></e-column>
+            <e-column width="50" [commands]="commands"></e-column>
+            <e-column field="name" headerText="nombre" width="160"></e-column>
             <e-column
-              field="isActive"
-              headerText="activa"
-              width="70"
-              type="boolean"
-              [displayAsCheckBox]="true"
-              textAlign="Center"
+              field="fullName"
+              headerText="nombre completo"
+              width="220"
             ></e-column>
             <e-column
               field="classId"
               [isPrimaryKey]="true"
               [visible]="false"
             ></e-column>
-            <e-column field="fullName" [visible]="false"></e-column>
-            <e-column field="parentId" [visible]="false"></e-column>
-            <e-column field="parentFullName" [visible]="false"></e-column>
-            <e-column field="subLevel" [visible]="false"></e-column>
           </e-columns>
-
-          <ng-template #editSettingsTemplate let-data>
-            <div ngForm #classForm="ngForm" class="class-edit-dialog">
-              <input
-                type="hidden"
-                name="classId"
-                [(ngModel)]="classData.classId"
-              />
-              <input
-                type="hidden"
-                name="parentId"
-                [(ngModel)]="classData.parentId"
-              />
-
-              <div class="row">
-                <div class="col-md-12">
-                  <ejs-textbox
-                    [value]="parentLabel"
-                    placeholder="Clase padre"
-                    floatLabelType="Always"
-                    [enabled]="false"
-                  ></ejs-textbox>
-                </div>
-              </div>
-
-              <div class="row">
-                <div class="col-md-12">
-                  <ejs-textbox
-                    name="name"
-                    [(ngModel)]="classData.name"
-                    placeholder="Nombre"
-                    floatLabelType="Always"
-                    [required]="true"
-                  ></ejs-textbox>
-                </div>
-              </div>
-
-              <div class="row">
-                <div class="col-md-6">
-                  <ejs-dropdownlist
-                    name="isActive"
-                    [(ngModel)]="classData.isActive"
-                    [dataSource]="activeOptions"
-                    [fields]="activeFields"
-                    placeholder="Activa"
-                    floatLabelType="Always"
-                  ></ejs-dropdownlist>
-                </div>
-                <div class="col-md-6">
-                  <ejs-numerictextbox
-                    [value]="classData.subLevel ?? 0"
-                    placeholder="Nivel"
-                    floatLabelType="Always"
-                    format="n0"
-                    [decimals]="0"
-                    [enabled]="false"
-                  ></ejs-numerictextbox>
-                </div>
-              </div>
-            </div>
-          </ng-template>
-        </ejs-treegrid>
+        </ejs-grid>
       </div>
+    </div>
+    <div class="col-lg-8">
+      <ejs-tab id="tabs" #tabs loadOn="Init">
+        <e-tabitems>
+          <e-tabitem [header]="headerText[0]">
+            <ng-template #content>
+              <div class="row">
+                <div class="col-lg-12">
+                  <llion-class-detail></llion-class-detail>
+                </div>
+              </div>
+            </ng-template>
+          </e-tabitem>
+          <e-tabitem [header]="headerText[1]">
+            <ng-template #content>
+              <llion-class-movements></llion-class-movements>
+            </ng-template>
+          </e-tabitem>
+        </e-tabitems>
+      </ejs-tab>
     </div>
   </div>
 </div>

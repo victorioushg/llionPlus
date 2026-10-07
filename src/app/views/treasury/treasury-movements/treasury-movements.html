@@ -5,7 +5,7 @@
   <div id="treasury-movements-grid">
     <ejs-grid
       #movementsgrid
-      [dataSource]="(movements$ | async) || []"
+      [dataSource]="movements"
       [allowFiltering]="false"
       [allowSorting]="true"
       [toolbar]="toolbar"
@@ -27,61 +27,137 @@
           format="dd/MM/yyyy"
           width="100"
           textAlign="Center"
+          [visible]="!isCashBox"
         ></e-column>
         <e-column
           field="movementDocument"
-          headerText="Documento"
+          headerText="Número"
           width="120"
+          [visible]="!isCashBox"
         ></e-column>
         <e-column
           field="movementType"
           headerText="Tipo"
           width="70"
           textAlign="Center"
+          [visible]="!isCashBox"
         ></e-column>
         <e-column
           field="concept"
           headerText="Concepto"
-          width="220"
+          width="280"
+          [visible]="!isCashBox"
         ></e-column>
         <e-column
           field="amount"
           headerText="Importe"
           type="number"
           format="N2"
-          width="110"
+          width="120"
           textAlign="Right"
+          [visible]="!isCashBox"
+        ></e-column>
+        <e-column
+          field="originDocument"
+          headerText="Ref."
+          width="120"
+          [visible]="!isCashBox"
+        ></e-column>
+        <e-column
+          field="partyName"
+          headerText="Proveedor / Cliente"
+          width="220"
+          [visible]="!isCashBox"
+        ></e-column>
+        <e-column
+          field="salesPersonName"
+          headerText="Vendedor"
+          width="160"
+          [visible]="!isCashBox"
+        ></e-column>
+        <e-column
+          field="paymentReceipt"
+          headerText="Comprobante"
+          width="120"
+          [visible]="!isCashBox"
+        ></e-column>
+
+        <e-column
+          field="movementDate"
+          headerText="Fecha"
+          type="date"
+          format="dd/MM/yyyy"
+          width="100"
+          textAlign="Center"
+          [visible]="isCashBox"
+        ></e-column>
+        <e-column
+          field="movementType"
+          headerText="Tipo"
+          width="70"
+          textAlign="Center"
+          [visible]="isCashBox"
+        ></e-column>
+        <e-column
+          field="movementDocument"
+          headerText="Documento"
+          width="130"
+          [visible]="isCashBox"
+        ></e-column>
+        <e-column
+          field="paymentType"
+          headerText="F. Pago"
+          width="80"
+          textAlign="Center"
+          [visible]="isCashBox"
+        ></e-column>
+        <e-column
+          field="paymentReceipt"
+          headerText="N. Pago"
+          width="120"
+          [visible]="isCashBox"
+        ></e-column>
+        <e-column
+          field="paymentReference"
+          headerText="Ref. Pago"
+          width="140"
+          [visible]="isCashBox"
         ></e-column>
         <e-column
           field="origin"
           headerText="Origen"
-          width="70"
+          width="80"
           textAlign="Center"
+          [visible]="isCashBox"
         ></e-column>
         <e-column
-          field="originDocument"
-          headerText="Doc. origen"
+          field="amount"
+          headerText="Importe"
+          type="number"
+          format="N2"
           width="120"
+          textAlign="Right"
+          [visible]="isCashBox"
         ></e-column>
         <e-column
-          field="beneficiary"
-          headerText="Beneficiario"
+          field="partyName"
+          headerText="Ref. Prov./Cli"
+          width="220"
+          [visible]="isCashBox"
+        ></e-column>
+        <e-column
+          field="salesPersonName"
+          headerText="Asesor"
           width="160"
+          [visible]="isCashBox"
         ></e-column>
         <e-column
-          field="reconciled"
-          headerText="Conciliado"
-          type="boolean"
-          [displayAsCheckBox]="true"
-          width="90"
-          textAlign="Center"
+          field="concept"
+          headerText="Concepto"
+          width="280"
+          [visible]="isCashBox"
         ></e-column>
-        <e-column
-          field="fiscalPeriod"
-          headerText="Ejercicio"
-          width="90"
-          textAlign="Center"
-        ></e-column>
+
         <e-column
           field="movementId"
           [isPrimaryKey]="true"
@@ -93,7 +169,12 @@
       </e-columns>
 
       <ng-template #editSettingsTemplate>
-        <div ngForm #movementForm="ngForm" class="movement-edit-dialog">
+        <div
+          ngForm
+          #movementForm="ngForm"
+          [class.cash-movement-form]="isCashBox"
+          [class.bank-movement-form]="!isCashBox"
+        >
           <input
             type="hidden"
             name="movementId"
@@ -110,144 +191,270 @@
             [(ngModel)]="movementData.organizationId"
           />
 
-          <div class="row">
-            <div class="col-md-4">
+          <ng-container *ngIf="isCashBox">
+            <div class="cash-field cash-field--date">
+              <label for="movementDate">Fecha</label>
               <ejs-datepicker
                 id="movementDate"
                 name="movementDate"
                 [(ngModel)]="movementData.movementDate"
-                placeholder="Fecha"
-                floatLabelType="Always"
-                format="dd/MM/yyyy"
+                floatLabelType="Never"
+                format="dd-MM-yyyy"
                 [required]="true"
+                (focus)="setCashHint('Indique la fecha de este movimiento ...')"
               ></ejs-datepicker>
             </div>
-            <div class="col-md-4">
-              <ejs-textbox
-                id="movementDocument"
-                name="movementDocument"
-                [(ngModel)]="movementData.movementDocument"
-                placeholder="Documento"
-                floatLabelType="Always"
-                [required]="true"
-              ></ejs-textbox>
-            </div>
-            <div class="col-md-4">
+            <div class="cash-field">
+              <label for="movementType">Tipo movimiento</label>
               <ejs-dropdownlist
                 id="movementType"
                 name="movementType"
                 [(ngModel)]="movementData.movementType"
                 [dataSource]="movementTypes"
                 [fields]="movementTypeFields"
-                [allowFiltering]="true"
-                placeholder="Tipo"
-                floatLabelType="Always"
-                popupHeight="220px"
+                floatLabelType="Never"
+                popupHeight="160px"
                 [required]="true"
+                (focus)="setCashHint('Seleccione el tipo de movimiento ...')"
               ></ejs-dropdownlist>
             </div>
-          </div>
-
-          <div class="row">
-            <div class="col-md-8">
+            <div class="cash-field">
+              <label for="movementDocument">Nº Documento</label>
               <ejs-textbox
-                id="concept"
-                name="concept"
-                [(ngModel)]="movementData.concept"
-                placeholder="Concepto"
-                floatLabelType="Always"
-                multiline="true"
-              ></ejs-textbox>
-            </div>
-            <div class="col-md-4">
-              <ejs-numerictextbox
-                id="amount"
-                name="amount"
-                [(ngModel)]="movementData.amount"
-                placeholder="Importe"
-                floatLabelType="Always"
-                format="n2"
-                [decimals]="2"
-                [showSpinButton]="false"
+                id="movementDocument"
+                name="movementDocument"
+                [(ngModel)]="movementData.movementDocument"
+                floatLabelType="Never"
+                [htmlAttributes]="documentAttrs"
                 [required]="true"
-              ></ejs-numerictextbox>
-            </div>
-          </div>
-
-          <div class="row">
-            <div class="col-md-4">
-              <ejs-textbox
-                id="origin"
-                name="origin"
-                [(ngModel)]="movementData.origin"
-                placeholder="Origen"
-                floatLabelType="Always"
+                (focus)="setCashHint('Indique el número de documento para este movimiento ...')"
               ></ejs-textbox>
             </div>
-            <div class="col-md-4">
-              <ejs-textbox
-                id="originDocument"
-                name="originDocument"
-                [(ngModel)]="movementData.originDocument"
-                placeholder="Doc. origen"
-                floatLabelType="Always"
-              ></ejs-textbox>
+            <div class="cash-field">
+              <label for="paymentType">Forma de Pago</label>
+              <ejs-dropdownlist
+                id="paymentType"
+                name="paymentType"
+                [(ngModel)]="movementData.paymentType"
+                [dataSource]="paymentTypes"
+                [fields]="movementTypeFields"
+                floatLabelType="Never"
+                popupHeight="200px"
+                [required]="true"
+                (focus)="setCashHint('Seleccione la forma de pago para este movimiento ...')"
+              ></ejs-dropdownlist>
             </div>
-            <div class="col-md-4">
-              <ejs-textbox
-                id="originType"
-                name="originType"
-                [(ngModel)]="movementData.originType"
-                placeholder="Tipo origen"
-                floatLabelType="Always"
-              ></ejs-textbox>
-            </div>
-          </div>
-
-          <div class="row">
-            <div class="col-md-6">
-              <ejs-textbox
-                id="beneficiary"
-                name="beneficiary"
-                [(ngModel)]="movementData.beneficiary"
-                placeholder="Beneficiario"
-                floatLabelType="Always"
-              ></ejs-textbox>
-            </div>
-            <div class="col-md-3">
+            <div class="cash-field">
+              <label for="paymentReceipt">Nº Documento Pago</label>
               <ejs-textbox
                 id="paymentReceipt"
                 name="paymentReceipt"
                 [(ngModel)]="movementData.paymentReceipt"
-                placeholder="Comprobante"
-                floatLabelType="Always"
+                floatLabelType="Never"
+                [htmlAttributes]="paymentDocAttrs"
+                (focus)="setCashHint('Indique el número de documento de pago para este movimiento ...')"
               ></ejs-textbox>
             </div>
-            <div class="col-md-3">
+            <div class="cash-field">
+              <label for="paymentReference">Referencia Pago</label>
+              <ejs-textbox
+                id="paymentReference"
+                name="paymentReference"
+                [(ngModel)]="movementData.paymentReference"
+                floatLabelType="Never"
+                [htmlAttributes]="paymentDocAttrs"
+                (focus)="setCashHint('Indique la referencia de pago ...')"
+              ></ejs-textbox>
+            </div>
+            <div class="cash-field cash-field--amount">
+              <label for="amount">Importe</label>
               <ejs-numerictextbox
-                id="fiscalPeriod"
-                name="fiscalPeriod"
-                [(ngModel)]="movementData.fiscalPeriod"
-                placeholder="Ejercicio"
-                floatLabelType="Always"
-                format="n0"
-                [decimals]="0"
+                id="amount"
+                name="amount"
+                [(ngModel)]="movementData.amount"
+                floatLabelType="Never"
+                format="n2"
+                [decimals]="2"
                 [showSpinButton]="false"
+                [required]="true"
+                (focus)="setCashHint('Indique el monto ó importe para este movimiento ...')"
               ></ejs-numerictextbox>
             </div>
-          </div>
-
-          <div class="row">
-            <div class="col-md-4">
-              <ejs-checkbox
-                name="reconciled"
-                [(ngModel)]="movementData.reconciled"
-                label="Conciliado"
-              ></ejs-checkbox>
+            <div class="cash-movement-footer">
+              <div class="cash-hint">
+                <span class="cash-hint__icon" aria-hidden="true">i</span>
+                <span>{{ cashHint }}</span>
+              </div>
             </div>
-          </div>
+          </ng-container>
+
+          <ng-container *ngIf="!isCashBox">
+            <div class="bank-field bank-field--date">
+              <label for="movementDate">Fecha</label>
+              <ejs-datepicker
+                id="movementDate"
+                name="movementDate"
+                [(ngModel)]="movementData.movementDate"
+                floatLabelType="Never"
+                format="dd-MM-yyyy"
+                [required]="true"
+                (focus)="setCashHint('Indique la fecha de este movimiento ...')"
+              ></ejs-datepicker>
+            </div>
+            <div class="bank-field">
+              <label for="movementType">Tipo Movimiento</label>
+              <div class="bank-field__pair">
+                <ejs-dropdownlist
+                  id="movementType"
+                  name="movementType"
+                  [(ngModel)]="movementData.movementType"
+                  [dataSource]="movementTypes"
+                  [fields]="movementTypeFields"
+                  floatLabelType="Never"
+                  popupHeight="180px"
+                  [required]="true"
+                  (focus)="setCashHint('Seleccione el tipo de movimiento a realizar')"
+                ></ejs-dropdownlist>
+                <ejs-dropdownlist
+                  id="originType"
+                  name="originType"
+                  [(ngModel)]="movementData.originType"
+                  [dataSource]="depositTypes"
+                  [fields]="movementTypeFields"
+                  floatLabelType="Never"
+                  popupHeight="120px"
+                  (focus)="setCashHint('Seleccione el tipo de depósito')"
+                ></ejs-dropdownlist>
+              </div>
+            </div>
+            <div class="bank-field">
+              <label for="movementDocument">Nº Documento</label>
+              <ejs-textbox
+                id="movementDocument"
+                name="movementDocument"
+                [(ngModel)]="movementData.movementDocument"
+                floatLabelType="Never"
+                [htmlAttributes]="documentAttrs"
+                [required]="true"
+                (focus)="setCashHint('Indique el número de documento para este movimiento ...')"
+              ></ejs-textbox>
+            </div>
+            <div class="bank-field bank-field--wide">
+              <label for="concept">Concepto</label>
+              <ejs-textbox
+                id="concept"
+                name="concept"
+                [(ngModel)]="movementData.concept"
+                floatLabelType="Never"
+                [multiline]="true"
+                (focus)="setCashHint('Indique el concepto por el cual se realiza este movimiento ...')"
+              ></ejs-textbox>
+            </div>
+            <div class="bank-field">
+              <label for="amount">Importe</label>
+              <div class="bank-field__pair">
+                <ejs-numerictextbox
+                  id="amount"
+                  name="amount"
+                  [(ngModel)]="movementData.amount"
+                  floatLabelType="Never"
+                  format="n2"
+                  [decimals]="2"
+                  [showSpinButton]="false"
+                  [required]="true"
+                  (focus)="setCashHint('Indique el monto ó importe para este movimiento ...')"
+                ></ejs-numerictextbox>
+                <ejs-dropdownlist
+                  id="bankCurrency"
+                  name="bankCurrency"
+                  [(ngModel)]="bankCurrency"
+                  [dataSource]="currencies"
+                  [fields]="movementTypeFields"
+                  floatLabelType="Never"
+                  popupHeight="180px"
+                  (focus)="setCashHint('Seleccione la moneda del movimiento ...')"
+                ></ejs-dropdownlist>
+              </div>
+            </div>
+            <div class="bank-separator"></div>
+            <div class="bank-field bank-field--wide">
+              <label for="beneficiary">Beneficiario</label>
+              <ejs-dropdownlist
+                id="beneficiary"
+                name="customer_Provider"
+                [(ngModel)]="movementData.customer_Provider"
+                [dataSource]="providers"
+                [fields]="providerFields"
+                [allowFiltering]="true"
+                floatLabelType="Never"
+                popupHeight="240px"
+                (change)="onBeneficiaryChange($event.value)"
+                (focus)="setCashHint('Seleccione el proveedor beneficiario de este movimiento ...')"
+              ></ejs-dropdownlist>
+            </div>
+            <div class="bank-policy">
+              <div class="bank-policy__head">
+                <span class="bank-policy__tools">
+                  <button type="button" class="policy-tool policy-tool--add" title="Agregar" aria-label="Agregar">
+                    <span class="e-icons e-plus"></span>
+                  </button>
+                  <button type="button" class="policy-tool policy-tool--edit" title="Editar" aria-label="Editar">
+                    <span class="e-icons e-edit"></span>
+                  </button>
+                  <button type="button" class="policy-tool policy-tool--delete" title="Eliminar" aria-label="Eliminar">
+                    <span class="e-icons e-trash"></span>
+                  </button>
+                </span>
+                <span>Póliza contable</span>
+              </div>
+              <table class="bank-policy__grid">
+                <thead>
+                  <tr>
+                    <th>Nº</th>
+                    <th>Código cuenta</th>
+                    <th>Nº Referencia</th>
+                    <th>Concepto</th>
+                    <th>Importe</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td colspan="5"></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="cash-movement-footer">
+              <div class="cash-hint">
+                <span class="cash-hint__icon" aria-hidden="true">i</span>
+                <span>{{ cashHint }}</span>
+              </div>
+              <div class="movement-actions">
+                <button type="button" class="movement-btn movement-btn--ok" (click)="acceptCashMovement()">
+                  Aceptar
+                </button>
+                <button type="button" class="movement-btn movement-btn--cancel" (click)="cancelCashMovement()">
+                  Cancelar
+                </button>
+              </div>
+            </div>
+          </ng-container>
         </div>
       </ng-template>
     </ejs-grid>
+    <div class="cash-totals" *ngIf="isCashBox">
+      <span><label>Efectivo</label>{{ cashTotals.cashAmount | number:'1.2-2' }}</span>
+      <span><label>Cheques</label>{{ cashTotals.checkAmount | number:'1.2-2' }}</span>
+      <span><label>Tarjetas</label>{{ cashTotals.cardAmount | number:'1.2-2' }}</span>
+      <span><label>Bonos/Vales</label>{{ cashTotals.voucherAmount | number:'1.2-2' }}</span>
+      <span class="cash-totals__total"><label>Total</label>{{ cashTotals.totalAmount | number:'1.2-2' }}</span>
+    </div>
+    <div class="cash-totals" *ngIf="!isCashBox">
+      <span><label>Depósitos</label>{{ bankTotals.depositAmount | number:'1.2-2' }}</span>
+      <span><label>Notas crédito</label>{{ bankTotals.creditNoteAmount | number:'1.2-2' }}</span>
+      <span><label>Notas débito</label>{{ bankTotals.debitNoteAmount | number:'1.2-2' }}</span>
+      <span><label>Cheques</label>{{ bankTotals.checkAmount | number:'1.2-2' }}</span>
+      <span class="cash-totals__total"><label>Disponibilidad</label>{{ bankTotals.totalAmount | number:'1.2-2' }}</span>
+    </div>
   </div>
 </div>

@@ -33,6 +33,7 @@ import {
 } from 'rxjs';
 import { debounceTime } from 'rxjs/operators';
 import { withToolbarTitle } from '@shared/utils/grid-toolbar';
+import { openPdfBlob } from '@shared/utils/open-pdf-blob';
 import { ToastService } from '@shared/services/toastService';
 import { toastType } from '@shared/enums/enums';
 import { IGroup } from '@shared/models/group';
@@ -180,6 +181,7 @@ export class PurchaseDetailComponent
   hasLinkedInvoice = false;
   invoiceReaderOpen = false;
   invoiceBusy = false;
+  printBusy = false;
   invoicePreviewUrl: SafeResourceUrl | null = null;
   invoicePreviewKind: 'pdf' | 'image' | null = null;
   invoiceFileName = '';
@@ -429,10 +431,48 @@ export class PurchaseDetailComponent
     this.purchaseService.cancelEdit();
   }
 
-  get invoiceButtonLabel(): string {
-    return this.hasLinkedInvoice
-      ? 'Ver factura'
-      : 'Leer factura (imagen o PDF)';
+  get invoiceButtonTitle(): string {
+    return this.hasLinkedInvoice ? 'Ver factura' : 'Importar factura';
+  }
+
+  printPurchase(): void {
+    if (this.currentBillId <= 0) {
+      this.toastService.showMyToast(
+        'Guarde la compra antes de imprimir',
+        toastType.warning
+      );
+      return;
+    }
+    if (this.printBusy) {
+      return;
+    }
+    this.printBusy = true;
+    this.cdr.markForCheck();
+    this.purchaseService
+      .printPurchasePdf(this.currentBillId)
+      .pipe(take(1), takeUntil(this.destroy$))
+      .subscribe({
+        next: (blob) => {
+          this.printBusy = false;
+          this.cdr.markForCheck();
+          const result = openPdfBlob(blob, `compra-${this.currentBillId}.pdf`);
+          if (result === 'empty') {
+            this.toastService.showMyToast(
+              'No se generó el PDF de la compra',
+              toastType.warning
+            );
+          } else if (result === 'json') {
+            this.toastService.showMyToast(
+              'No se pudo imprimir la compra',
+              toastType.error
+            );
+          }
+        },
+        error: () => {
+          this.printBusy = false;
+          this.cdr.markForCheck();
+        },
+      });
   }
 
   openInvoiceDocument(): void {
@@ -788,7 +828,9 @@ export class PurchaseDetailComponent
       payload.paymentTreasuryId = treasuryId;
       payload.paymentType = paymentType;
       payload.paymentDocument = String(payment.paymentDocument ?? '').trim();
-      payload.beneficiary = String(payment.beneficiary ?? '').trim();
+      payload.beneficiary =
+        String(payment.paymentName ?? '').trim() ||
+        String(payment.beneficiary ?? '').trim();
       this.clearPurchaseDrafts(payload);
     } else {
       const creditType = Number(payment.creditType) || 0;
@@ -879,7 +921,7 @@ export class PurchaseDetailComponent
         dueDate: this.asDate(payload.dueDate) ?? issueDate,
         paymentTreasuryId: defaultTreasury,
         paymentType: Number(current?.paymentType) || 0,
-        paymentName: '',
+        paymentName: current?.beneficiary ?? '',
         paymentDocument: current?.paymentDocument ?? '',
         beneficiary: current?.beneficiary ?? '',
         amount: this.grandTotal,

@@ -7,20 +7,48 @@ import {
   OnInit,
   ViewChild,
 } from '@angular/core';
-import { NgForm } from '@angular/forms';
 import {
-  EditSettingsModel,
-  ToolbarItems,
-  TreeGridComponent,
-} from '@syncfusion/ej2-angular-treegrid';
-import { fromEvent, Subject, take, takeUntil } from 'rxjs';
+  CommandClickEventArgs,
+  CommandModel,
+  GridComponent,
+  RecordDoubleClickEventArgs,
+  RowDeselectEventArgs,
+  RowSelectEventArgs,
+  SearchEventArgs,
+  SearchSettingsModel,
+} from '@syncfusion/ej2-angular-grids';
+import {
+  ClickEventArgs,
+  TabComponent,
+} from '@syncfusion/ej2-angular-navigations';
+import {
+  BehaviorSubject,
+  EMPTY,
+  Observable,
+  Subject,
+  catchError,
+  combineLatest,
+  fromEvent,
+  map,
+  shareReplay,
+  startWith,
+  take,
+  takeUntil,
+} from 'rxjs';
 import { debounceTime } from 'rxjs/operators';
+import MiniToolbar from '@assets/json/minitoolbar.json';
+import {
+  withToolbarTitle,
+  bindGridSearchAsYouType,
+} from '@shared/utils/grid-toolbar';
+import {
+  applyGridHeightAboveFooter,
+  contentGridHeight,
+} from '@shared/utils/layout';
 import { ToastService } from '@shared/services/toastService';
 import { toastType } from '@shared/enums/enums';
-import { withToolbarTitle } from '@shared/utils/grid-toolbar';
-import { applyGridHeightAboveFooter } from '@shared/utils/layout';
 import { ClassesService } from './classes.service';
-import { IAccountClass, IClassTreeRow } from './class';
+import { IAccountClass } from './class';
 
 @Component({
   selector: 'llion-content',
@@ -30,37 +58,27 @@ import { IAccountClass, IClassTreeRow } from './class';
   standalone: false,
 })
 export class ClassesComponent implements OnInit, AfterViewInit, OnDestroy {
-  @ViewChild('classesgrid') classesGrid?: TreeGridComponent;
-  @ViewChild('classForm') classForm?: NgForm;
+  commands!: CommandModel[];
+  toolbar = withToolbarTitle(MiniToolbar as object[], 'Centro de costos');
+  searchSettings?: SearchSettingsModel;
+  screenHeight = contentGridHeight();
 
-  classRows: IClassTreeRow[] = [];
-  classData: IAccountClass = this.createEmptyClass();
-  classesGridHeight = 320;
-  readonly classesGridRowHeight = 36;
+  classes$!: Observable<IAccountClass[]>;
+  enabled$!: Observable<boolean>;
+  disabledGrid$!: Observable<boolean>;
 
-  activeOptions = [
-    { text: 'Sí', value: true },
-    { text: 'No', value: false },
+  headerText: { text: string }[] = [
+    { text: 'Centro de Costo' },
+    { text: 'movimientos' },
   ];
-  activeFields = { text: 'text', value: 'value' };
 
-  classesToolbar = withToolbarTitle(
-    ['Add', 'Edit', 'Delete', 'Search'],
-    'Centro de costos'
-  ) as ToolbarItems[];
+  @ViewChild('grid') grid!: GridComponent;
+  @ViewChild('tabs') tabObj?: TabComponent;
 
-  classesEditSettings: EditSettingsModel = {
-    allowAdding: true,
-    allowEditing: true,
-    allowDeleting: true,
-    mode: 'Dialog',
-    allowEditOnDblClick: true,
-    showDeleteConfirmDialog: true,
-    newRowPosition: 'Below',
-  };
-
-  private flatRows: IAccountClass[] = [];
-  private collapseOnBind = false;
+  private readonly searchStringSubject = new BehaviorSubject<string>('');
+  private readonly selectedClassSubject =
+    new BehaviorSubject<IAccountClass | null>(null);
+  private allClasses: IAccountClass[] = [];
   private readonly destroy$ = new Subject<void>();
 
   constructor(
@@ -69,242 +87,209 @@ export class ClassesComponent implements OnInit, AfterViewInit, OnDestroy {
     private cdr: ChangeDetectorRef
   ) {}
 
-  ngOnInit(): void {
-    this.classesService.classes$
-      .pipe(takeUntil(this.destroy$))
-      .subscribe((rows) => {
-        this.flatRows = rows ?? [];
-        this.collapseOnBind = true;
-        this.classRows = this.buildTreeRows(this.flatRows);
-        this.applyTreeData();
-        this.cdr.markForCheck();
-      });
+  ngAfterViewInit(): void {
+    if (this.tabObj) {
+      (this.tabObj as TabComponent).element.classList.add('e-fill');
+    }
+    this.updateGridHeight();
+    setTimeout(() => this.updateGridHeight(), 0);
+    bindGridSearchAsYouType(
+      () => this.grid,
+      (value) => this.searchStringSubject.next(value),
+      this.destroy$
+    );
   }
 
-  ngAfterViewInit(): void {
-    this.applyTreeData();
+  ngOnInit(): void {
     this.updateGridHeight();
     fromEvent(window, 'resize')
       .pipe(debounceTime(100), takeUntil(this.destroy$))
       .subscribe(() => this.updateGridHeight());
-    setTimeout(() => this.updateGridHeight(), 0);
+
+    this.clearClassSelection();
+
+    this.commands = [
+      {
+        type: 'Delete',
+        buttonOption: { cssClass: 'e-btn', iconCss: 'e-trash e-icons' },
+      },
+    ];
+    this.searchSettings = { operator: 'contains' };
+
+    this.classes$ = combineLatest([
+      this.classesService.classes$,
+      this.searchStringSubject.asObservable().pipe(startWith('')),
+    ]).pipe(
+      map(([classes, searchStr]) => {
+        this.allClasses = classes ?? [];
+        const needle = searchStr.toLocaleLowerCase();
+        return this.allClasses
+          .filter((item) => {
+            return (
+              (item.name ?? '').toLocaleLowerCase().includes(needle) ||
+              (item.fullName ?? '').toLocaleLowerCase().includes(needle)
+            );
+          })
+          .sort((a, b) =>
+            String(a.fullName ?? a.name ?? '').localeCompare(
+              String(b.fullName ?? b.name ?? ''),
+              'es',
+              { sensitivity: 'base' }
+            )
+          );
+      }),
+      catchError((err) => {
+        this.toastService.showMyToast(err, toastType.error);
+        return EMPTY;
+      })
+    );
+
+    this.enabled$ = this.classesService.enableClassGridAction$.pipe(
+      shareReplay(1)
+    );
+    this.disabledGrid$ = this.enabled$.pipe(shareReplay(1));
+
+    this.classesService.enableClassFormAction$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((editing) => {
+        this.classesService.enableClassGrid(!!editing);
+      });
   }
 
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
+    this.clearClassSelection();
   }
 
-  get parentLabel(): string {
-    const parent = String(this.classData.parentFullName ?? '').trim();
-    return parent || '(raíz)';
-  }
-
-  rowDataBound(args: { data?: IAccountClass; row?: Element }): void {
-    if (!args.row || !args.data) {
-      return;
-    }
-    const row = args.row as HTMLElement;
-    const level = Number(args.data.subLevel ?? 0);
-    row.classList.toggle('class-folder-row', this.hasChildNodes(args.data));
-    row.classList.toggle('class-root-row', level === 0);
-  }
-
-  onDataBound(): void {
-    const grid = this.classesGrid;
-    if (this.collapseOnBind && grid && (grid.getCurrentViewRecords()?.length ?? 0) > 0) {
-      this.collapseOnBind = false;
-      grid.expandAll();
-    }
-    this.updateGridHeight();
-  }
-
-  actionBegin(args: {
-    requestType?: string;
-    cancel?: boolean;
-    data?: unknown;
-    rowData?: unknown;
-  }): void {
-    const row = this.getSourceClass(args.rowData ?? args.data);
-
-    if (args.requestType === 'add') {
-      const selected = this.getSelectedClass();
-      this.classData = this.createEmptyClass();
-      if (selected?.classId) {
-        this.classData.parentId = selected.classId;
-        this.classData.parentFullName = selected.fullName ?? selected.name ?? '';
-        this.classData.subLevel = (Number(selected.subLevel) || 0) + 1;
-      }
-      this.cdr.markForCheck();
-      return;
-    }
-
-    if (args.requestType === 'beginEdit') {
-      if (!row?.classId) {
-        args.cancel = true;
-        return;
-      }
-      this.classData = { ...this.createEmptyClass(), ...row };
-      this.cdr.markForCheck();
-      return;
-    }
-
-    if (args.requestType === 'save') {
-      const name = String(this.classData.name ?? '').trim();
-      if (!name) {
-        args.cancel = true;
-        this.toastService.showMyToast(
-          'Indique el nombre de la clase',
-          toastType.warning
-        );
-        return;
-      }
-      this.classData.name = name;
+  onToolbarClick(args: ClickEventArgs): void {
+    if (
+      args.item?.id === 'gridToolbarTitle' ||
+      args.item?.cssClass === 'e-grid-toolbar-title'
+    ) {
       args.cancel = true;
-      this.classesGrid?.closeEdit();
-      this.classesService
-        .saveClass(this.classData)
-        .pipe(take(1))
-        .subscribe();
       return;
     }
 
-    if (args.requestType === 'delete') {
-      const target = row ?? this.getSelectedClass();
-      if (!target?.classId) {
-        args.cancel = true;
-        return;
-      }
-      if (this.hasChildNodes(target)) {
-        args.cancel = true;
-        this.toastService.showMyToast(
-          'No se puede eliminar: la clase tiene subclases',
-          toastType.warning
-        );
-        return;
-      }
+    const target = args.originalEvent.target as HTMLElement;
+    const targetId =
+      target.id === ''
+        ? target.closest('button')?.id
+        : target.id.split('_').pop();
+
+    if (targetId === 'add') {
+      this.clearClassSelection();
+      this.setClassFormEditing(true);
       args.cancel = true;
-      this.classesService
-        .deleteClass(target)
-        .pipe(take(1))
-        .subscribe();
+    } else if (targetId === 'searchbutton') {
+      this.search();
+      args.cancel = true;
+    } else if (targetId === 'clearbutton') {
+      this.search(true);
+      args.cancel = true;
     }
   }
 
-  actionComplete(args: {
-    requestType?: string;
-    dialog?: { header?: string };
-  }): void {
-    if (args.requestType === 'add' && args.dialog) {
-      args.dialog.header = this.classData.parentId
-        ? `Nueva subclase de ${this.classData.parentFullName}`
-        : 'Nueva clase';
-    }
-    if (args.requestType === 'beginEdit' && args.dialog) {
-      args.dialog.header = 'Editar clase';
+  onRecordDoubleClick(args: RecordDoubleClickEventArgs): void {
+    const item = (args.rowData ??
+      this.selectedClassSubject.value) as IAccountClass | null;
+    if (item?.classId) {
+      this.selectClass(item);
+      this.setClassFormEditing(true);
+    } else {
+      this.toastService.showMyToast(
+        'Debe seleccionar un centro de costo...',
+        toastType.error
+      );
     }
   }
 
-  private applyTreeData(): void {
-    const grid = this.classesGrid;
-    if (!grid) {
+  actionBegin(args: SearchEventArgs): void {
+    if (args.requestType === 'searching') {
+      this.search();
+      args.cancel = true;
+    }
+  }
+
+  commandClick(args: CommandClickEventArgs): void {
+    if (args.target?.title === 'Delete') {
+      this.deleteSelectedClass();
+    }
+  }
+
+  onRowSelected(args: RowSelectEventArgs): void {
+    const item = (args.data ? args.data : null) as IAccountClass | null;
+    if (!item?.classId) {
       return;
     }
-    grid.dataSource = this.classRows;
+    const previousId = this.selectedClassSubject.value?.classId ?? 0;
+    this.selectClass(item);
+    if (previousId !== item.classId) {
+      this.setClassFormEditing(false);
+    }
+  }
+
+  onRowDeselected(_args: RowDeselectEventArgs): void {}
+
+  private deleteSelectedClass(): void {
+    const selected = this.selectedClassSubject.value;
+    if (!selected?.classId) {
+      this.toastService.showMyToast(
+        'Debe seleccionar un centro de costo...',
+        toastType.error
+      );
+      return;
+    }
+    if (this.hasChildNodes(selected.classId)) {
+      this.toastService.showMyToast(
+        'No se puede eliminar: el centro de costo tiene subclases',
+        toastType.warning
+      );
+      return;
+    }
+    this.classesService.deleteClass(selected).pipe(take(1)).subscribe();
+    this.clearClassSelection();
+  }
+
+  private hasChildNodes(classId: number): boolean {
+    return this.allClasses.some((row) => Number(row.parentId) === classId);
+  }
+
+  private selectClass(item: IAccountClass): void {
+    this.selectedClassSubject.next(item);
+    this.classesService.setClassContext(item.classId);
+  }
+
+  private clearClassSelection(): void {
+    this.setClassFormEditing(false);
+    this.selectedClassSubject.next(null);
+    this.classesService.setClassContext(0);
+  }
+
+  private setClassFormEditing(editing: boolean): void {
+    this.classesService.enableClassForm(editing);
+  }
+
+  private search(clear: boolean = false): void {
+    if (!this.grid?.element?.id) {
+      this.searchStringSubject.next('');
+      return;
+    }
+    const searchString = document.getElementById(
+      this.grid.element.id + '_searchbar'
+    ) as HTMLInputElement | null;
+    if (!searchString) {
+      this.searchStringSubject.next('');
+      return;
+    }
+    if (clear) {
+      searchString.value = '';
+    }
+    this.searchStringSubject.next(searchString.value || '');
   }
 
   private updateGridHeight(): void {
-    this.classesGridHeight = applyGridHeightAboveFooter(this.classesGrid, 280);
+    this.screenHeight = applyGridHeightAboveFooter(this.grid);
     this.cdr.markForCheck();
-  }
-
-  private buildTreeRows(rows: IAccountClass[]): IClassTreeRow[] {
-    const items: IClassTreeRow[] = rows.map((row) => ({
-      ...row,
-      subtasks: [],
-    }));
-    const byId = new Map<number, IClassTreeRow>();
-    items.forEach((item) => byId.set(item.classId, item));
-
-    const roots: IClassTreeRow[] = [];
-    for (const item of items) {
-      const parentId = Number(item.parentId) || 0;
-      const parent = parentId > 0 ? byId.get(parentId) : undefined;
-      if (parent) {
-        parent.subtasks = parent.subtasks ?? [];
-        parent.subtasks.push(item);
-      } else {
-        roots.push(item);
-      }
-    }
-
-    const sortTree = (nodes: IClassTreeRow[]): void => {
-      nodes.sort((a, b) =>
-        String(a.name ?? '').localeCompare(String(b.name ?? ''), 'es', {
-          sensitivity: 'base',
-        })
-      );
-      nodes.forEach((node) => {
-        if (node.subtasks && node.subtasks.length > 0) {
-          sortTree(node.subtasks);
-        }
-      });
-    };
-    sortTree(roots);
-    return roots;
-  }
-
-  private getSelectedClass(): IAccountClass | undefined {
-    const records = this.classesGrid?.getSelectedRecords() as
-      | IAccountClass[]
-      | undefined;
-    return this.getSourceClass(records?.[0]);
-  }
-
-  private hasChildNodes(data?: IAccountClass | null): boolean {
-    const record = data as
-      | (IAccountClass & {
-          hasChildRecords?: boolean;
-          childRecords?: unknown[];
-        })
-      | null
-      | undefined;
-    if (!record) {
-      return false;
-    }
-    if (record.hasChildRecords === true) {
-      return true;
-    }
-    if (Array.isArray(record.childRecords) && record.childRecords.length > 0) {
-      return true;
-    }
-    const source = this.getSourceClass(record) as IClassTreeRow | undefined;
-    if (Array.isArray(source?.subtasks) && source.subtasks.length > 0) {
-      return true;
-    }
-    const classId = Number(source?.classId ?? record.classId) || 0;
-    return this.flatRows.some((row) => Number(row.parentId) === classId);
-  }
-
-  private getSourceClass(data: unknown): IAccountClass | undefined {
-    if (!data) {
-      return undefined;
-    }
-    const row = (Array.isArray(data) ? data[0] : data) as IAccountClass & {
-      taskData?: IAccountClass;
-    };
-    return (row.taskData ?? row) as IAccountClass | undefined;
-  }
-
-  private createEmptyClass(): IAccountClass {
-    return {
-      classId: 0,
-      name: '',
-      fullName: '',
-      isActive: true,
-      parentId: null,
-      parentFullName: '',
-      subLevel: 0,
-    };
   }
 }

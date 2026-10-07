@@ -1,0 +1,330 @@
+<div class="wrapper-detail" *ngIf="visible$ | async; else placeholder">
+  <form
+    class="production-form"
+    [formGroup]="headerForm"
+    *ngIf="formulation$ | async"
+  >
+    <div class="title-strip">
+      <span class="title-strip__label">FORMULACIÓN</span>
+    </div>
+    <div class="row">
+      <div class="col-md-3">
+        <ejs-textbox
+          placeholder="Código"
+          floatLabelType="Always"
+          formControlName="formulationCode"
+          [enabled]="enabled$ | async"
+        ></ejs-textbox>
+      </div>
+      <div class="col-md-6">
+        <ejs-textbox
+          placeholder="Descripción"
+          floatLabelType="Always"
+          formControlName="name"
+          [enabled]="enabled$ | async"
+        ></ejs-textbox>
+      </div>
+      <div class="col-md-3">
+        <ejs-textbox
+          placeholder="Unidad"
+          floatLabelType="Always"
+          formControlName="uom"
+          [enabled]="enabled$ | async"
+        ></ejs-textbox>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-6">
+        <ejs-textbox
+          placeholder="Detalle"
+          floatLabelType="Always"
+          formControlName="description"
+          [enabled]="enabled$ | async"
+        ></ejs-textbox>
+      </div>
+      <div class="col-md-6">
+        <ejs-dropdownlist
+          placeholder="Almacén destino"
+          floatLabelType="Always"
+          formControlName="destinationWarehouseId"
+          [dataSource]="(warehouses$ | async) || []"
+          [fields]="warehouseFields"
+          [allowFiltering]="true"
+          [showClearButton]="true"
+          [enabled]="enabled$ | async"
+        ></ejs-dropdownlist>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-4">
+        <ejs-dropdownlist
+          placeholder="Línea"
+          floatLabelType="Always"
+          formControlName="productLineId"
+          [dataSource]="(productLines$ | async) || []"
+          [fields]="lineFields"
+          [allowFiltering]="true"
+          [showClearButton]="true"
+          [enabled]="enabled$ | async"
+        ></ejs-dropdownlist>
+      </div>
+      <div class="col-md-5">
+        <ejs-dropdownlist
+          placeholder="Mercancía de salida"
+          floatLabelType="Always"
+          formControlName="merchandiseId"
+          [dataSource]="(merchandises$ | async) || []"
+          [fields]="merchandiseFields"
+          [allowFiltering]="true"
+          [showClearButton]="true"
+          [enabled]="enabled$ | async"
+        ></ejs-dropdownlist>
+      </div>
+      <div class="col-md-3" style="margin-top: auto">
+        <table style="width: 100%">
+          <tr>
+            <td>Activo</td>
+            <td>
+              <ejs-switch
+                formControlName="deactivated"
+                [disabled]="!(enabled$ | async)"
+              ></ejs-switch>
+            </td>
+          </tr>
+        </table>
+      </div>
+    </div>
+  </form>
+
+  <ejs-tab>
+    <e-tabitems>
+      <e-tabitem [header]="{ text: 'fórmula' }">
+        <ng-template #content>
+          <ejs-grid
+            #linesgrid
+            [dataSource]="lines"
+            [toolbar]="linesToolbar"
+            [editSettings]="linesEditSettings"
+            [allowPaging]="false"
+            [height]="linesHeight"
+            [rowHeight]="32"
+            clipMode="EllipsisWithTooltip"
+            (actionBegin)="onLineActionBegin($event)"
+            (actionComplete)="onLineActionComplete($event)"
+          >
+            <e-columns>
+              <e-column field="componentKindName" headerText="Tipo" width="110"></e-column>
+              <e-column field="description" headerText="Descripción" width="220"></e-column>
+              <e-column field="quantity" headerText="Cant." width="70" type="number" format="N3" textAlign="Right"></e-column>
+              <e-column field="uom" headerText="Und" width="50"></e-column>
+              <e-column field="unitCost" headerText="Costo U." width="90" type="number" format="N2" textAlign="Right"></e-column>
+              <e-column field="amount" headerText="Importe" width="90" type="number" format="N2" textAlign="Right"></e-column>
+              <e-column field="componentCode" headerText="Código" width="80"></e-column>
+              <e-column field="rowNumber" [isPrimaryKey]="true" [visible]="false"></e-column>
+            </e-columns>
+            <ng-template #editSettingsTemplate>
+              <div ngForm #lineForm="ngForm">
+                <div class="row">
+                  <div class="col-md-4">
+                    <ejs-dropdownlist
+                      name="componentKind"
+                      [(ngModel)]="lineData.componentKind"
+                      placeholder="Tipo"
+                      floatLabelType="Always"
+                      [dataSource]="kindOptions"
+                      [fields]="kindFields"
+                      (change)="onKindChange()"
+                    ></ejs-dropdownlist>
+                  </div>
+                  <div class="col-md-8">
+                    <ejs-dropdownlist
+                      name="componentId"
+                      [(ngModel)]="selectedComponentId"
+                      placeholder="Componente"
+                      floatLabelType="Always"
+                      [dataSource]="componentOptions"
+                      [fields]="componentFields"
+                      [allowFiltering]="true"
+                      [filterType]="filterType"
+                      (change)="onComponentChange($event)"
+                    ></ejs-dropdownlist>
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="col-md-3">
+                    <ejs-numerictextbox
+                      name="quantity"
+                      [(ngModel)]="lineData.quantity"
+                      placeholder="Cantidad"
+                      floatLabelType="Always"
+                      format="n4"
+                      [showSpinButton]="false"
+                      (change)="onLineAmountChange()"
+                    ></ejs-numerictextbox>
+                  </div>
+                  <div class="col-md-3">
+                    <ejs-textbox
+                      name="uom"
+                      [(ngModel)]="lineData.uom"
+                      placeholder="Unidad"
+                      floatLabelType="Always"
+                    ></ejs-textbox>
+                  </div>
+                  <div class="col-md-3">
+                    <ejs-numerictextbox
+                      name="unitCost"
+                      [(ngModel)]="lineData.unitCost"
+                      placeholder="Costo U."
+                      floatLabelType="Always"
+                      format="n4"
+                      [showSpinButton]="false"
+                      (change)="onLineAmountChange()"
+                    ></ejs-numerictextbox>
+                  </div>
+                  <div class="col-md-3">
+                    <ejs-numerictextbox
+                      name="amount"
+                      [(ngModel)]="lineData.amount"
+                      placeholder="Importe"
+                      floatLabelType="Always"
+                      format="n2"
+                      [enabled]="false"
+                    ></ejs-numerictextbox>
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="col-md-12">
+                    <ejs-dropdownlist
+                      name="warehouseId"
+                      [(ngModel)]="lineData.warehouseId"
+                      placeholder="Almacén"
+                      floatLabelType="Always"
+                      [dataSource]="(warehouses$ | async) || []"
+                      [fields]="warehouseFields"
+                      [allowFiltering]="true"
+                      [showClearButton]="true"
+                    ></ejs-dropdownlist>
+                  </div>
+                </div>
+              </div>
+            </ng-template>
+          </ejs-grid>
+
+          <div class="row overhead-row" *ngFor="let overhead of overheads">
+            <div class="col-md-6">{{ overhead.description }}</div>
+            <div class="col-md-3">
+              <ejs-numerictextbox
+                [(ngModel)]="overhead.rate"
+                [ngModelOptions]="{ standalone: true }"
+                placeholder="Tasa"
+                floatLabelType="Always"
+                format="n4"
+                [enabled]="gridEnabled"
+                [showSpinButton]="false"
+                (change)="onOverheadRateChange()"
+              ></ejs-numerictextbox>
+            </div>
+            <div class="col-md-3" style="text-align: right; padding-top: 18px">
+              {{ overhead.amount | number: '1.2-2' }}
+            </div>
+          </div>
+        </ng-template>
+      </e-tabitem>
+      <e-tabitem [header]="{ text: 'productos residuales' }">
+        <ng-template #content>
+          <ejs-grid
+            #residualsgrid
+            [dataSource]="residuals"
+            [toolbar]="residualsToolbar"
+            [editSettings]="residualsEditSettings"
+            [height]="residualsHeight"
+            [rowHeight]="32"
+            (actionBegin)="onResidualActionBegin($event)"
+            (actionComplete)="onResidualActionComplete($event)"
+          >
+            <e-columns>
+              <e-column field="description" headerText="Descripción" width="220"></e-column>
+              <e-column field="uom" headerText="Und" width="60"></e-column>
+              <e-column field="quantity" headerText="Cantidad" width="90" type="number" format="N3" textAlign="Right"></e-column>
+              <e-column field="costPercent" headerText="% del costo" width="90" type="number" format="P2" textAlign="Right"></e-column>
+            </e-columns>
+            <ng-template #editSettingsTemplate>
+              <div ngForm #residualForm="ngForm">
+                <div class="row">
+                  <div class="col-md-8">
+                    <ejs-textbox
+                      name="description"
+                      [(ngModel)]="residualData.description"
+                      placeholder="Descripción"
+                      floatLabelType="Always"
+                      required
+                    ></ejs-textbox>
+                  </div>
+                  <div class="col-md-4">
+                    <ejs-textbox
+                      name="uom"
+                      [(ngModel)]="residualData.uom"
+                      placeholder="Unidad"
+                      floatLabelType="Always"
+                    ></ejs-textbox>
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="col-md-6">
+                    <ejs-numerictextbox
+                      name="quantity"
+                      [(ngModel)]="residualData.quantity"
+                      placeholder="Cantidad"
+                      floatLabelType="Always"
+                      format="n4"
+                      [showSpinButton]="false"
+                    ></ejs-numerictextbox>
+                  </div>
+                  <div class="col-md-6">
+                    <ejs-numerictextbox
+                      name="costPercent"
+                      [(ngModel)]="residualData.costPercent"
+                      placeholder="% del costo"
+                      floatLabelType="Always"
+                      format="n4"
+                      [showSpinButton]="false"
+                    ></ejs-numerictextbox>
+                  </div>
+                </div>
+              </div>
+            </ng-template>
+          </ejs-grid>
+        </ng-template>
+      </e-tabitem>
+    </e-tabitems>
+  </ejs-tab>
+
+  <div class="totals-bar">
+    <div class="total-item">
+      <span class="total-item__label">Sub-total</span>
+      <span class="total-item__value">{{ subtotalCost | number: '1.2-2' }}</span>
+    </div>
+    <div class="total-item">
+      <span class="total-item__label">Costo total</span>
+      <span class="total-item__value">{{ totalCost | number: '1.2-2' }}</span>
+    </div>
+  </div>
+
+  <div class="form-actions">
+    <button ejs-button (click)="onCancelClick()" [disabled]="!(enabled$ | async)">
+      Cancelar
+    </button>
+    <button
+      ejs-button
+      cssClass="e-primary"
+      (click)="onSaveClick()"
+      [disabled]="!(enabled$ | async)"
+    >
+      Aceptar
+    </button>
+  </div>
+</div>
+
+<ng-template #placeholder>
+  <div class="placeholder">Seleccione o incluya una formulación.</div>
+</ng-template>

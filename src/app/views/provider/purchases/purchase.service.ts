@@ -521,6 +521,14 @@ export class PurchaseService {
       );
   }
 
+  printPurchasePdf(billId: number): Observable<Blob> {
+    return this.http
+      .get(`${this.purchaseUrl}/pdf/${billId}`, {
+        responseType: 'blob',
+      })
+      .pipe(catchError((err) => this.errorHandlerService.handleError(err)));
+  }
+
   private getPurchaseDocument(billId: number): Observable<IPurchase> {
     return this.http
       .get<IApiResponse<IPurchase>>(

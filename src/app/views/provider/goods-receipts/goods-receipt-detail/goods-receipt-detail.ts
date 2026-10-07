@@ -29,6 +29,7 @@ import {
 } from 'rxjs';
 import { debounceTime } from 'rxjs/operators';
 import { withToolbarTitle } from '@shared/utils/grid-toolbar';
+import { openPdfBlob } from '@shared/utils/open-pdf-blob';
 import { ToastService } from '@shared/services/toastService';
 import { toastType } from '@shared/enums/enums';
 import { IGroup } from '@shared/models/group';
@@ -122,6 +123,7 @@ export class GoodsReceiptDetailComponent
   discountRatePct = 0;
 
   currentGrId = 0;
+  printBusy = false;
   private currentOrder: IGoodsReceipt | null = null;
   private providers: IProvider[] = [];
   private merchandises: IGoodsReceiptMerchandise[] = [];
@@ -274,6 +276,49 @@ export class GoodsReceiptDetailComponent
 
   onCancelClick(): void {
     this.goodsReceiptService.cancelEdit();
+  }
+
+  printReceipt(): void {
+    if (this.currentGrId <= 0) {
+      this.toastService.showMyToast(
+        'Guarde la recepción antes de imprimir',
+        toastType.warning
+      );
+      return;
+    }
+    if (this.printBusy) {
+      return;
+    }
+    this.printBusy = true;
+    this.cdr.markForCheck();
+    this.goodsReceiptService
+      .printGoodsReceiptPdf(this.currentGrId)
+      .pipe(take(1), takeUntil(this.destroy$))
+      .subscribe({
+        next: (blob) => {
+          this.printBusy = false;
+          this.cdr.markForCheck();
+          const result = openPdfBlob(
+            blob,
+            `recepcion-${this.currentGrId}.pdf`
+          );
+          if (result === 'empty') {
+            this.toastService.showMyToast(
+              'No se generó el PDF de la recepción',
+              toastType.warning
+            );
+          } else if (result === 'json') {
+            this.toastService.showMyToast(
+              'No se pudo imprimir la recepción',
+              toastType.error
+            );
+          }
+        },
+        error: () => {
+          this.printBusy = false;
+          this.cdr.markForCheck();
+        },
+      });
   }
 
   onAcceptClick(): void {

@@ -1,0 +1,39 @@
+<div id="container" class="container">
+  <div class="row">
+    <div class="col-lg-4">
+      <div
+        id="resource-grid"
+        class="production-grid"
+        [class.wrapper]="disabledGrid$ | async"
+      >
+        <ejs-grid
+          #grid
+          [dataSource]="resources$ | async"
+          [allowFiltering]="enabled$ | async"
+          [cssClass]="(disabledGrid$ | async) ? 'disablegrid' : ''"
+          [toolbar]="toolbar"
+          [height]="screenHeight"
+          [searchSettings]="searchSettings"
+          (actionBegin)="actionBegin($event)"
+          (toolbarClick)="onToolbarClick($event)"
+          (rowSelected)="onRowSelected($event)"
+          (rowDeselected)="onRowDeselected($event)"
+          (recordDoubleClick)="onRecordDoubleClick($event)"
+          (commandClick)="commandClick($event)"
+        >
+          <e-columns>
+            <e-column width="50" [commands]="commands"></e-column>
+            <e-column field="name" headerText="nombre" width="180"></e-column>
+            <e-column field="resourceTypeName" headerText="tipo" width="110"></e-column>
+            <e-column field="uom" headerText="und" width="60"></e-column>
+            <e-column field="resourceCode" headerText="código" width="80"></e-column>
+            <e-column field="resourceId" [isPrimaryKey]="true" [visible]="false"></e-column>
+          </e-columns>
+        </ejs-grid>
+      </div>
+    </div>
+    <div class="col-lg-8 production-detail-col">
+      <llion-resource-detail></llion-resource-detail>
+    </div>
+  </div>
+</div>

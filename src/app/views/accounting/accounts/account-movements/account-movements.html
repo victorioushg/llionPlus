@@ -1,0 +1,86 @@
+<div
+  id="account-movements-container"
+  [class.is-disabled]="!gridEnabled"
+>
+  <div id="account-movements-grid">
+    <ejs-grid
+      #movementsgrid
+      [dataSource]="(movements$ | async) || []"
+      [allowFiltering]="true"
+      [filterSettings]="filterSettings"
+      [allowSorting]="true"
+      [toolbar]="toolbar"
+      [height]="screenHeight"
+      [searchSettings]="searchSettings"
+      [sortSettings]="sortSettings"
+      [rowHeight]="36"
+      clipMode="EllipsisWithTooltip"
+      (dataBound)="onDataBound()"
+      (actionBegin)="onActionBegin($event)"
+      (actionComplete)="onActionComplete($event)"
+      (toolbarClick)="onToolbarClick($event)"
+    >
+      <e-columns>
+        <e-column
+          field="movementDate"
+          headerText="Fecha"
+          type="date"
+          format="dd/MM/yyyy"
+          width="100"
+          textAlign="Center"
+          [filter]="dateFilter"
+        ></e-column>
+        <e-column
+          field="journalDescription"
+          headerText="Asiento"
+          width="108"
+          [filter]="textFilter"
+        ></e-column>
+        <e-column
+          field="reference"
+          headerText="Referencia"
+          width="84"
+          [filter]="textFilter"
+        ></e-column>
+        <e-column
+          field="movementDescription"
+          headerText="Descripción"
+          width="340"
+          [filter]="textFilter"
+        ></e-column>
+        <e-column
+          field="amount"
+          headerText="Importe"
+          type="number"
+          format="N2"
+          width="120"
+          textAlign="Right"
+        ></e-column>
+        <e-column
+          field="movementKey"
+          [isPrimaryKey]="true"
+          [visible]="false"
+          [allowFiltering]="false"
+        ></e-column>
+        <e-column field="accountId" [visible]="false" [allowFiltering]="false"></e-column>
+        <e-column field="classId" [visible]="false" [allowFiltering]="false"></e-column>
+        <e-column field="organizationId" [visible]="false" [allowFiltering]="false"></e-column>
+      </e-columns>
+    </ejs-grid>
+  </div>
+
+  <div class="totals-strip">
+    <div class="total-field">
+      <span class="total-field__label">Débitos</span>
+      <span class="total-field__value">{{ debitTotal | number: '1.2-2' }}</span>
+    </div>
+    <div class="total-field">
+      <span class="total-field__label">Créditos</span>
+      <span class="total-field__value">{{ creditTotal | number: '1.2-2' }}</span>
+    </div>
+    <div class="total-field total-field--grand">
+      <span class="total-field__label">Saldo</span>
+      <span class="total-field__value">{{ balance | number: '1.2-2' }}</span>
+    </div>
+  </div>
+</div>

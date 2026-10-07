@@ -1,0 +1,94 @@
+<div class="wrapper-detail" *ngIf="classItem$ | async as classItem">
+  <form
+    id="class-detail-form"
+    class="class-detail-form"
+    [formGroup]="classForm"
+  >
+    <div class="title-strip">
+      <span class="title-strip__label">CENTRO DE COSTO</span>
+    </div>
+    <div class="row">
+      <div class="col-md-6">
+        <ejs-textbox
+          placeholder="nombre"
+          floatLabelType="Always"
+          formControlName="name"
+          [enabled]="enabled$ | async"
+        ></ejs-textbox>
+      </div>
+      <div class="col-md-6">
+        <ejs-textbox
+          placeholder="nombre completo"
+          floatLabelType="Always"
+          formControlName="fullName"
+          [enabled]="enabled$ | async"
+        ></ejs-textbox>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col-md-8">
+        <ejs-dropdownlist
+          formControlName="parentId"
+          [dataSource]="parentClasses$ | async"
+          [fields]="parentFields"
+          [enabled]="enabled$ | async"
+          [allowFiltering]="true"
+          [showClearButton]="true"
+          floatLabelType="Always"
+          placeholder="centro de costo padre"
+          (change)="onParentChange($event)"
+        ></ejs-dropdownlist>
+      </div>
+      <div class="col-md-4">
+        <ejs-numerictextbox
+          placeholder="nivel"
+          floatLabelType="Always"
+          formControlName="subLevel"
+          [enabled]="false"
+          format="N0"
+          [decimals]="0"
+          [showSpinButton]="false"
+        ></ejs-numerictextbox>
+      </div>
+    </div>
+
+    <br />
+    <div class="row flags-row">
+      <div class="col-md-6" style="margin-top: auto">
+        <table style="width: 100%">
+          <tr>
+            <td style="width: 55%">Activo</td>
+            <td style="width: 45%">
+              <ejs-switch
+                formControlName="isActive"
+                [disabled]="!(enabled$ | async)"
+              ></ejs-switch>
+            </td>
+          </tr>
+        </table>
+      </div>
+      <div class="col-md-6">
+        <div id="class-form-buttons">
+          <button
+            ejs-button
+            (click)="onCancelClick()"
+            [disabled]="!(enabled$ | async)"
+            style="float: right"
+          >
+            Cancelar
+          </button>
+          <button
+            ejs-button
+            (click)="onSaveClick()"
+            cssClass="e-primary"
+            [disabled]="!(enabled$ | async)"
+            style="float: right"
+          >
+            Aceptar
+          </button>
+        </div>
+      </div>
+    </div>
+  </form>
+</div>

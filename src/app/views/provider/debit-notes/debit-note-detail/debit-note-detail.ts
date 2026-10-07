@@ -3,10 +3,12 @@ import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
   Component,
+  ElementRef,
   OnDestroy,
   OnInit,
   ViewChild,
 } from '@angular/core';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { FormBuilder, FormGroup, NgForm } from '@angular/forms';
 import { ChangeEventArgs } from '@syncfusion/ej2-angular-dropdowns';
 import {
@@ -22,6 +24,7 @@ import {
   combineLatest,
   fromEvent,
   map,
+  of,
   shareReplay,
   switchMap,
   take,
@@ -29,13 +32,14 @@ import {
 } from 'rxjs';
 import { debounceTime } from 'rxjs/operators';
 import { withToolbarTitle } from '@shared/utils/grid-toolbar';
+import { openPdfBlob } from '@shared/utils/open-pdf-blob';
 import { ToastService } from '@shared/services/toastService';
 import { toastType } from '@shared/enums/enums';
 import { IGroup } from '@shared/models/group';
 import { IProvider, IPaymentTerm, CREDIT_CASH_OPTIONS, toCreditCash } from '../../provider';
 import { ProviderService } from '../../provider.service';
 import { PurchaseService } from '../../purchases/purchase.service';
-import { IPurchase } from '../../purchases/purchase';
+import { IInvoicePrevalidationResult, IPurchase } from '../../purchases/purchase';
 import { AccountsService } from '@views/accounting/accounts/accounts.service';
 import { IAccount } from '@views/accounting/accounts/account';
 import { IAccountClass } from '@views/accounting/classes/class';
@@ -63,6 +67,7 @@ export class DebitNoteDetailComponent
   @ViewChild('discountsgrid') discountsGrid?: GridComponent;
   @ViewChild('lineForm') lineForm?: NgForm;
   @ViewChild('discountForm') discountForm?: NgForm;
+  @ViewChild('invoiceFileInput') invoiceFileInput?: ElementRef<HTMLInputElement>;
 
   readonly discountsGridHeight = 88;
   readonly footerGridRowHeight = 28;
@@ -136,6 +141,17 @@ export class DebitNoteDetailComponent
   discountRatePct = 0;
 
   currentDbnId = 0;
+  printBusy = false;
+  hasLinkedInvoice = false;
+  invoiceReaderOpen = false;
+  invoiceBusy = false;
+  invoicePreviewUrl: SafeResourceUrl | null = null;
+  invoicePreviewKind: 'pdf' | 'image' | null = null;
+  invoiceFileName = '';
+  invoicePendingBase64 = '';
+  invoicePendingContentType = '';
+  invoiceResult: IInvoicePrevalidationResult | null = null;
+  private invoiceObjectUrl: string | null = null;
   private currentOrder: IDebitNote | null = null;
   private providers: IProvider[] = [];
   private terms: IPaymentTerm[] = [];
@@ -158,6 +174,7 @@ export class DebitNoteDetailComponent
     private providerService: ProviderService,
     private accountsService: AccountsService,
     private toastService: ToastService,
+    private sanitizer: DomSanitizer,
     private cdr: ChangeDetectorRef
   ) {}
 
@@ -313,6 +330,7 @@ export class DebitNoteDetailComponent
   }
 
   ngOnDestroy(): void {
+    this.clearInvoicePreview();
     this.destroy$.next();
     this.destroy$.complete();
   }
@@ -323,6 +341,258 @@ export class DebitNoteDetailComponent
 
   onCancelClick(): void {
     this.purchaseService.cancelEdit();
+  }
+
+  printDebitNote(): void {
+    if (this.currentDbnId <= 0) {
+      this.toastService.showMyToast(
+        'Guarde la nota débito antes de imprimir',
+        toastType.warning
+      );
+      return;
+    }
+    if (this.printBusy) {
+      return;
+    }
+    this.printBusy = true;
+    this.cdr.markForCheck();
+    this.purchaseService
+      .printDebitNotePdf(this.currentDbnId)
+      .pipe(take(1), takeUntil(this.destroy$))
+      .subscribe({
+        next: (blob) => {
+          this.printBusy = false;
+          this.cdr.markForCheck();
+          const result = openPdfBlob(
+            blob,
+            `nota-debito-${this.currentDbnId}.pdf`
+          );
+          if (result === 'empty') {
+            this.toastService.showMyToast(
+              'No se generó el PDF de la nota débito',
+              toastType.warning
+            );
+          } else if (result === 'json') {
+            this.toastService.showMyToast(
+              'No se pudo imprimir la nota débito',
+              toastType.error
+            );
+          }
+        },
+        error: () => {
+          this.printBusy = false;
+          this.cdr.markForCheck();
+        },
+      });
+  }
+
+  get invoiceButtonTitle(): string {
+    return this.hasLinkedInvoice ? 'Ver documento' : 'Importar factura';
+  }
+
+  openInvoiceDocument(): void {
+    this.invoiceReaderOpen = true;
+    this.invoiceResult = null;
+    this.invoicePendingBase64 = '';
+    this.invoicePendingContentType = '';
+    this.invoiceFileName = '';
+    this.clearInvoicePreview();
+    if (this.currentDbnId > 0 && this.hasLinkedInvoice) {
+      this.loadLinkedInvoiceFile(this.currentDbnId);
+    }
+    this.cdr.markForCheck();
+  }
+
+  closeInvoiceDocument(): void {
+    this.invoiceReaderOpen = false;
+    this.invoiceBusy = false;
+    this.invoiceResult = null;
+    this.invoicePendingBase64 = '';
+    this.clearInvoicePreview();
+    if (this.invoiceFileInput?.nativeElement) {
+      this.invoiceFileInput.nativeElement.value = '';
+    }
+    this.cdr.markForCheck();
+  }
+
+  onInvoiceFilePicked(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) {
+      return;
+    }
+    this.readInvoiceFile(file);
+  }
+
+  saveValidatedInvoice(): void {
+    if (!this.invoiceResult?.isValidInvoice || !this.invoicePendingBase64) {
+      this.toastService.showMyToast(
+        'El documento no es válido o no hay archivo para guardar',
+        toastType.warning
+      );
+      return;
+    }
+    this.invoiceBusy = true;
+    this.purchaseService
+      .saveInvoiceMedia({
+        fileName: this.invoiceFileName,
+        contentType: this.invoicePendingContentType,
+        fileDataBase64: this.invoicePendingBase64,
+        organizationId: this.purchaseService.currentOrganizationId,
+        vendorId: Number(this.orderForm.getRawValue().providerId) || null,
+        debitNoteId: this.currentDbnId > 0 ? this.currentDbnId : null,
+      })
+      .pipe(take(1))
+      .subscribe({
+        next: (saved) => {
+          this.invoiceBusy = false;
+          if (saved?.saved) {
+            this.hasLinkedInvoice = true;
+            this.invoiceResult = saved.prevalidation ?? this.invoiceResult;
+          } else if (saved?.prevalidation) {
+            this.invoiceResult = saved.prevalidation;
+            this.toastService.showMyToast(
+              'El documento no se guardó: no superó la prevalidación',
+              toastType.warning
+            );
+          }
+          this.cdr.markForCheck();
+        },
+        error: () => {
+          this.invoiceBusy = false;
+          this.cdr.markForCheck();
+        },
+      });
+  }
+
+  private refreshLinkedInvoice(dbnId: number): void {
+    if (dbnId <= 0) {
+      this.hasLinkedInvoice = false;
+      this.cdr.markForCheck();
+      return;
+    }
+    this.purchaseService
+      .getInvoiceMediaByDebitNote(dbnId)
+      .pipe(take(1))
+      .subscribe((media) => {
+        this.hasLinkedInvoice = !!media?.mediaId;
+        this.cdr.markForCheck();
+      });
+  }
+
+  private loadLinkedInvoiceFile(dbnId: number): void {
+    this.invoiceBusy = true;
+    this.purchaseService
+      .getInvoiceMediaByDebitNote(dbnId)
+      .pipe(
+        take(1),
+        switchMap((media) => {
+          if (!media?.mediaId) {
+            this.hasLinkedInvoice = false;
+            return of(null);
+          }
+          this.invoiceFileName = media.fileName || '';
+          return this.purchaseService.getInvoiceMediaFile(media.mediaId);
+        })
+      )
+      .subscribe({
+        next: (file) => {
+          this.invoiceBusy = false;
+          if (file?.fileDataBase64) {
+            this.showInvoicePreview(file.fileDataBase64, file.contentType || '');
+          }
+          this.cdr.markForCheck();
+        },
+        error: () => {
+          this.invoiceBusy = false;
+          this.cdr.markForCheck();
+        },
+      });
+  }
+
+  private readInvoiceFile(file: File): void {
+    const allowed = /pdf|png|jpe?g|gif|bmp|tiff?|webp$/i;
+    if (!allowed.test(file.type || file.name)) {
+      this.toastService.showMyToast(
+        'Use PDF o imagen (png, jpg, gif, bmp, tif, webp)',
+        toastType.warning
+      );
+      return;
+    }
+    if (file.size > 12 * 1024 * 1024) {
+      this.toastService.showMyToast(
+        'El archivo no debe superar 12 MB',
+        toastType.warning
+      );
+      return;
+    }
+
+    this.invoiceBusy = true;
+    this.invoiceFileName = file.name;
+    this.invoicePendingContentType = file.type || 'application/octet-stream';
+    this.invoiceResult = null;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const dataUrl = String(reader.result || '');
+      this.invoicePendingBase64 = dataUrl;
+      this.showInvoicePreview(dataUrl, this.invoicePendingContentType);
+      this.purchaseService
+        .prevalidateInvoice({
+          fileName: file.name,
+          contentType: this.invoicePendingContentType,
+          fileDataBase64: dataUrl,
+          organizationId: this.purchaseService.currentOrganizationId,
+          vendorId: Number(this.orderForm.getRawValue().providerId) || null,
+          debitNoteId: this.currentDbnId > 0 ? this.currentDbnId : null,
+        })
+        .pipe(take(1))
+        .subscribe({
+          next: (result) => {
+            this.invoiceBusy = false;
+            this.invoiceResult = result;
+            this.cdr.markForCheck();
+          },
+          error: () => {
+            this.invoiceBusy = false;
+            this.cdr.markForCheck();
+          },
+        });
+    };
+    reader.onerror = () => {
+      this.invoiceBusy = false;
+      this.toastService.showMyToast('No se pudo leer el archivo', toastType.error);
+      this.cdr.markForCheck();
+    };
+    reader.readAsDataURL(file);
+  }
+
+  private showInvoicePreview(data: string, contentType: string): void {
+    this.clearInvoicePreview();
+    const type = (contentType || '').toLowerCase();
+    const isPdf =
+      type.includes('pdf') || this.invoiceFileName.toLowerCase().endsWith('.pdf');
+    this.invoicePreviewKind = isPdf ? 'pdf' : 'image';
+    let base64 = data;
+    if (data.startsWith('data:')) {
+      const comma = data.indexOf(',');
+      base64 = comma >= 0 ? data.substring(comma + 1) : data;
+    }
+    const mime = type || (isPdf ? 'application/pdf' : 'image/png');
+    const bytes = Uint8Array.from(atob(base64), (ch) => ch.charCodeAt(0));
+    const blob = new Blob([bytes], { type: mime });
+    this.invoiceObjectUrl = URL.createObjectURL(blob);
+    this.invoicePreviewUrl = this.sanitizer.bypassSecurityTrustResourceUrl(
+      this.invoiceObjectUrl
+    );
+  }
+
+  private clearInvoicePreview(): void {
+    if (this.invoiceObjectUrl) {
+      URL.revokeObjectURL(this.invoiceObjectUrl);
+      this.invoiceObjectUrl = null;
+    }
+    this.invoicePreviewUrl = null;
+    this.invoicePreviewKind = null;
   }
 
   onAcceptClick(): void {
@@ -639,6 +909,7 @@ export class DebitNoteDetailComponent
   private patchOrder(order: IDebitNote): void {
     this.currentDbnId = Number(order.dbnId) || 0;
     this.currentOrder = order;
+    this.refreshLinkedInvoice(this.currentDbnId);
     this.lines = [...(order.lines ?? [])];
     this.discounts = [...(order.discounts ?? [])];
     this.taxes = [...(order.taxes ?? [])];

@@ -20,6 +20,7 @@ import {
 } from '@syncfusion/ej2-angular-grids';
 import {
   ClickEventArgs,
+  SelectEventArgs,
   TabComponent,
 } from '@syncfusion/ej2-angular-navigations';
 import {
@@ -119,12 +120,8 @@ export class TreasuryComponent implements OnInit, AfterViewInit, OnDestroy {
       const title =
         this.treasuryType === TREASURY_TYPE_CASHBOX ? 'Cajas' : 'Bancos';
       this.toolbar = withToolbarTitle(MiniToolbar as object[], title);
-      this.headerText = [
-        {
-          text: this.treasuryType === TREASURY_TYPE_CASHBOX ? 'caja' : 'banco',
-        },
-        { text: 'movimientos' },
-      ];
+      this.headerText[0].text =
+        this.treasuryType === TREASURY_TYPE_CASHBOX ? 'caja' : 'banco';
 
       this.treasuryService.setTreasuryTypeFilter(this.treasuryType);
       this.clearTreasurySelection();
@@ -256,6 +253,12 @@ export class TreasuryComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   onRowDeselected(_args: RowDeselectEventArgs): void {}
+
+  onTabSelected(args: SelectEventArgs): void {
+    if (args.selectedIndex === 1) {
+      this.treasuryService.notifyMovementsVisible();
+    }
+  }
 
   private selectTreasury(treasury: ITreasury): void {
     this.selectedTreasurySubject.next(treasury);

@@ -36,7 +36,7 @@ import {
 } from 'rxjs';
 import { debounceTime } from 'rxjs/operators';
 import MiniToolbar from '@assets/json/minitoolbar.json';
-import { withToolbarTitle } from '@shared/utils/grid-toolbar';
+import { withToolbarTitle, bindGridSearchAsYouType } from '@shared/utils/grid-toolbar';
 import {
   applyGridHeightAboveFooter,
   contentGridHeight,
@@ -63,7 +63,11 @@ export class AccountsComponent implements OnInit, AfterViewInit, OnDestroy {
   enabled$!: Observable<boolean>;
   disabledGrid$!: Observable<boolean>;
 
-  headerText: { text: string }[] = [{ text: 'cuenta' }];
+  headerText: { text: string }[] = [
+    { text: 'cuenta' },
+    { text: 'movimientos' },
+    { text: 'saldos mensuales' },
+  ];
 
   @ViewChild('grid') grid!: GridComponent;
   @ViewChild('tabs') tabObj?: TabComponent;
@@ -85,6 +89,11 @@ export class AccountsComponent implements OnInit, AfterViewInit, OnDestroy {
     }
     this.updateGridHeight();
     setTimeout(() => this.updateGridHeight(), 0);
+    bindGridSearchAsYouType(
+      () => this.grid,
+      (value) => this.searchStringSubject.next(value),
+      this.destroy$
+    );
   }
 
   ngOnInit(): void {
